@@ -30,7 +30,7 @@ const Save = {
         level: n(r.level, 0, LEVELS.length - 1, 0),
         lives: n(r.lives, 1, 99, 3),
         score: n(r.score, 0, 9999999, 0),
-        coins: n(r.coins, 0, 99, 0),
+        coins: n(r.coins, 0, COINS_PER_LIFE - 1, 0),
         hearts: n(r.hearts, 1, 3, 3),
         power: n(r.power, 0, 1, 0),
         checkpoint: !!r.checkpoint,

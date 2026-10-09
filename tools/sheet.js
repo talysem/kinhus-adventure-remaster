@@ -17,7 +17,7 @@ const add = (n, c) => { if (!filter || filter.test(n)) list.push([n, c]); };
 const K = SPR.kinhu;
 add('k-idle', K.idle.r); add('k-blink', K.blink.r); K.run.forEach((s, i) => add('k-run' + i, s.r));
 add('k-jump', K.jump.r); add('k-fall', K.fall.r); add('k-hurt', K.hurt.r); add('k-win', K.win.r); add('k-left', K.idle.l);
-add('k-cafe', SPR.kinhuCafe.idle.r); SPR.kinhuWild.forEach((s, i) => add('k-wild' + i, s.run[0].r));
+add('k-coca', SPR.kinhuCoca.idle.r); SPR.kinhuWild.forEach((s, i) => add('k-wild' + i, s.run[0].r));
 for (const k in SPR) {
   const v = SPR[k];
   if (/^kinhu/.test(k)) continue;

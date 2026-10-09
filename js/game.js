@@ -94,7 +94,7 @@ function shake(n) { World.cam.shake = Math.max(World.cam.shake, n); }
 function addScore(n, x, y) { Game.score += n; if (x !== undefined) popup(x, y, String(n)); }
 function addCoin(x, y) {
   Game.coins++; Game.score += 100; Sound.fx('coin');
-  if (Game.coins >= 100) { Game.coins -= 100; oneUp(x, y); }
+  if (Game.coins >= COINS_PER_LIFE) { Game.coins -= COINS_PER_LIFE; oneUp(x, y); }
 }
 function oneUp(x, y) { Game.lives = Math.min(99, Game.lives + 1); Sound.fx('oneup'); popup(x, y - 8, '1UP', '#80ff80'); }
 
@@ -229,7 +229,8 @@ function updatePlayer(p) {
   if (p.jumpBuf > 0 && p.coyote > 0) {
     if (ctl && Input.down('down') && onOneWay(p)) { p.drop = 12; p.y += 2; p.ride = null; }
     else {
-      p.vy = -(5.9 + Math.abs(p.vx) * 0.22);
+      // Segurando o botão: ~89 px parado, suficiente para subir os blocos a 80 px.
+      p.vy = -(7.2 + Math.abs(p.vx) * 0.22);
       p.onGround = false; p.ride = null;
       Sound.fx('jump');
     }
@@ -238,7 +239,7 @@ function updatePlayer(p) {
   const hold = ctl && Input.down('jump');
   p.vy += p.vy < 0 && hold ? 0.28 : 0.55;
   if (p.vy > 6.5) p.vy = 6.5;
-  if (ctl && Input.pressed('run') && Game.power === 1) throwBean(p);
+  if (ctl && Input.pressed('run') && Game.power === 1) throwCan(p);
   p.prevY = p.y;
   const wasGround = p.onGround;
   moveBody(p, { corner: true, drop: p.drop > 0 });
@@ -312,7 +313,7 @@ function splash(x, y) { Sound.fx('splash'); for (let i = 0; i < 10; i++) part({ 
 function hurtPlayer() {
   const p = World.player;
   if (p.dead || p.inv > 0 || p.wild > 0 || World.clear) return;
-  if (Game.power === 1) { Game.power = 0; p.inv = 120; Sound.fx('hurt'); popup(p.x, p.y - 8, 'SEM CAFÉ!', '#ffb0a0'); }
+  if (Game.power === 1) { Game.power = 0; p.inv = 120; Sound.fx('hurt'); popup(p.x, p.y - 8, 'SEM COCA!', '#ffb0a0'); }
   else {
     Game.hearts--;
     if (Game.hearts <= 0) { killPlayer('hit'); return; }
@@ -336,9 +337,9 @@ function updateDeath(p) {
   if (p.deadT > 170) App.onDeath();
 }
 
-function throwBean(p) {
-  if (World.projs.filter(b => b.type === 'bean').length >= 2) return;
-  World.projs.push({ type: 'bean', x: p.x + (p.facing > 0 ? p.w : -6), y: p.y + 8, w: 6, h: 6, vx: p.facing * 3.6 + p.vx * 0.3, vy: -1.5, life: 150, hostile: false, t: 0 });
+function throwCan(p) {
+  if (World.projs.filter(b => b.type === 'can').length >= 2) return;
+  World.projs.push({ type: 'can', x: p.x + (p.facing > 0 ? p.w : -6), y: p.y + 8, w: 6, h: 6, vx: p.facing * 3.6 + p.vx * 0.3, vy: -1.5, life: 150, hostile: false, t: 0 });
   Sound.fx('throw');
 }
 
@@ -351,7 +352,7 @@ function bumpBlock(tx, ty) {
     World.bumps.push({ tx, ty, t: 0 });
     if (t === '?') popCoin(bx, by);
     else {
-      const kind = t === 'L' ? 'badge' : t === '!' ? 'claws' : Game.hearts < Game.maxHearts ? 'hotdog' : 'coffee';
+      const kind = t === 'L' ? 'badge' : t === '!' ? 'claws' : Game.hearts < Game.maxHearts ? 'hotdog' : 'coca';
       spawnItem(kind, bx, by);
       Sound.fx('appear');
     }
@@ -404,8 +405,9 @@ function killEnemy(e, how) {
   let pts = e.score;
   if (how === 'stomp') {
     const table = [100, 200, 400, 800, 1000, 2000, 4000, 8000];
-    if (p.combo >= table.length) { oneUp(e.x, e.y); pts = 0; }
-    else pts = Math.max(e.score, table[p.combo]);
+    // Uma vida no nono pisão; continuar o mesmo combo rende apenas pontos.
+    if (p.combo === table.length) { oneUp(e.x, e.y); pts = 0; }
+    else pts = Math.max(e.score, table[Math.min(p.combo, table.length - 1)]);
     p.combo++;
   }
   if (pts) addScore(pts, e.x, e.y - 4);
@@ -558,6 +560,7 @@ function updateEnt(e) {
 }
 
 function updateItem(e, p) {
+  if (!e.alive) return;
   e.t++;
   if (e.emerge > 0) { e.y -= 0.5; e.emerge -= 0.5; return; }
   switch (e.item) {
@@ -565,7 +568,7 @@ function updateItem(e, p) {
       e.vx = e.dir * 0.9; e.vy = Math.min(e.vy + 0.35, 6); moveBody(e);
       if (e.hitWall) e.dir = -e.hitWall;
       break;
-    case 'coffee': e.vy = Math.min(e.vy + 0.35, 6); e.vx = 0; moveBody(e); break;
+    case 'coca': e.vy = Math.min(e.vy + 0.35, 6); e.vx = 0; moveBody(e); break;
     case 'claws':
       e.vx = e.dir * 1.1; e.vy = Math.min(e.vy + 0.3, 6); moveBody(e);
       if (e.onGround) e.vy = -4.2;
@@ -584,14 +587,15 @@ function updateItem(e, p) {
       case 'hotdog':
         if (Game.hearts < Game.maxHearts) { Game.hearts++; popup(cx - 6, cy, '+♥', '#ff8090'); } else addScore(1000, cx, cy);
         Sound.fx('eat'); break;
-      case 'coffee': {
-        Game.power = 1; Sound.fx('power'); popup(cx - 10, cy, 'CAFÉ!', '#ffd0a0'); Game.score += 1000;
+      case 'coca': {
+        Game.power = 1; Sound.fx('power'); popup(cx - 10, cy, 'COCA-COLA!', '#ffd0a0'); Game.score += 1000;
         const touch = typeof document !== 'undefined' && document.body && document.body.classList.contains('touch');
-        World.banner = touch ? 'APERTE B PARA JOGAR GRÃOS!' : 'APERTE X PARA JOGAR GRÃOS!'; World.bannerT = 160;
+        World.banner = touch ? 'APERTE B PARA JOGAR LATAS!' : 'APERTE X PARA JOGAR LATAS!'; World.bannerT = 160;
         break;
       }
       case 'claws':
-        p.wild = 600; Sound.fx('kinhurine'); Sound.play('kinhurine', true);
+        p.wild = 600;
+        if (!Kinhurine.begin()) { Sound.fx('kinhurine'); Sound.play('kinhurine', true); }
         popup(cx - 24, cy, 'KINHURINE!', '#ffe040'); Game.score += 1000; shake(6);
         break;
       case 'badge': oneUp(cx, cy); break;
@@ -701,7 +705,7 @@ function updateProjs() {
   const p = World.player;
   for (const b of World.projs) {
     b.t++; b.life--;
-    if (b.type === 'bean') {
+    if (b.type === 'can') {
       b.vy = Math.min(b.vy + 0.32, 5);
       moveBody(b);
       if (b.onGround) b.vy = -3.3;
@@ -711,7 +715,7 @@ function updateProjs() {
           b.dead = true;
           if (e.kind === 'boss') hitBoss(e, 1);
           else if (e.type === 'lady') { popup(e.x - 4, e.y - 6, 'HMPF!', '#ffc0e0'); Sound.fx('bump'); }
-          else killEnemy(e, 'bean');
+          else killEnemy(e, 'can');
           break;
         }
       }
@@ -776,7 +780,7 @@ function playerVsEnemies() {
 
 /* ---------------- chefe: MEGA BUG ---------------- */
 function makeBoss(px, bottom) {
-  return { kind: 'boss', x: px - 10, y: bottom - 30, w: 36, h: 30, vx: 0, vy: 0, hp: 12, maxHp: 12, state: 'sleep', t: 0, dir: -1, inv: 0, phase: 1, step: 0, onGround: true };
+  return { kind: 'boss', x: px - 10, y: bottom - 30, w: 36, h: 30, vx: 0, vy: 0, hp: 24, maxHp: 24, state: 'sleep', t: 0, dir: -1, inv: 0, phase: 1, step: 0, onGround: true };
 }
 function updateBoss(b, p) {
   b.t++;
@@ -853,13 +857,13 @@ function hitBoss(b, dmg) {
   b.hp -= dmg; b.inv = dmg >= 4 ? 70 : 12;
   Sound.fx('bosshit'); shake(dmg >= 4 ? 8 : 3);
   addScore(dmg >= 4 ? 1000 : 200, b.x + 8, b.y - 6);
-  if (b.hp <= 6 && b.phase === 1) { b.phase = 2; World.banner = 'ELE FICOU BRAVO!'; World.bannerT = 90; }
+  if (b.hp <= b.maxHp / 2 && b.phase === 1) { b.phase = 2; World.banner = 'ELE FICOU BRAVO!'; World.bannerT = 90; }
   if (b.hp <= 0) {
     b.state = 'dead'; b.t = 0; b.vy = -2;
     Sound.stop(); Sound.fx('bossdie');
     addScore(10000, b.x, b.y - 10);
     World.projs = World.projs.filter(q => !q.hostile);
-    for (const e of World.ents) if (e.enemy && !e.dying) killEnemy(e, 'bean');
+    for (const e of World.ents) if (e.enemy && !e.dying) killEnemy(e, 'can');
   } else if (dmg >= 4) { b.state = 'hurt'; b.t = 0; b.vy = -2; }
 }
 
@@ -929,6 +933,7 @@ function updateClear() {
 
 /* ---------------- atualização geral ---------------- */
 function updateWorld() {
+  if (App.state === 'transform') return;
   const Wd = World, p = Wd.player;
   Wd.t++;
   Wd.busX = (Wd.busX || 0) + Wd.busSpeed;
@@ -940,6 +945,7 @@ function updateWorld() {
     const far = e.x > Wd.cam.x + W + 64 || e.x + (e.w || 16) < Wd.cam.x - 96;
     if (far && e.kind !== 'lane' && e.kind !== 'car' && e.kind !== 'boss' && !e.dying && e.kind !== 'popcoin') continue;
     updateEnt(e);
+    if (App.state === 'transform') return;
   }
   playerVsEnemies();
   updateProjs();
@@ -1182,7 +1188,7 @@ function drawWorld() {
   for (const b of Wd.projs) {
     const bx = Math.round(b.x), by = Math.round(b.y);
     switch (b.type) {
-      case 'bean': ctx.drawImage(SPR.bean[Math.floor(b.t / 4) % 2].r, bx - 1, by - 1); break;
+      case 'can': ctx.drawImage(SPR.can[Math.floor(b.t / 4) % 2].r, bx - 1, by - 1); break;
       case 'poop': ctx.drawImage(SPR.poop.r, bx - 1, by - 1); break;
       case 'plane': ctx.drawImage(b.dir < 0 ? SPR.plane.l : SPR.plane.r, bx - 1, by - 1); break;
       case 'paper': ctx.drawImage(SPR.paper.r, bx - 1, by - 1); break;
@@ -1211,8 +1217,8 @@ function drawWorld() {
 }
 
 function drawItem(e) {
-  const spr = { hotdog: SPR.hotdog, coffee: SPR.coffee, claws: SPR.claws, badge: SPR.badge, trophy: SPR.trophy }[e.item];
-  const bob = e.item === 'coffee' && e.emerge <= 0 ? Math.round(Math.sin(e.t * 0.1)) : 0;
+  const spr = { hotdog: SPR.hotdog, coca: SPR.coca, claws: SPR.claws, badge: SPR.badge, trophy: SPR.trophy }[e.item];
+  const bob = e.item === 'coca' && e.emerge <= 0 ? Math.round(Math.sin(e.t * 0.1)) : 0;
   ctx.drawImage(e.dir < 0 ? spr.l : spr.r, Math.round(e.x - 2), Math.round(e.y - 4 + bob));
 }
 
@@ -1231,7 +1237,7 @@ function drawBoss(b) {
 function drawPlayer(p) {
   if (p.hidden) return;
   if (p.inv > 0 && !p.dead && Math.floor(p.inv / 3) % 2) return;
-  let set = Game.power === 1 ? SPR.kinhuCafe : SPR.kinhu;
+  let set = Game.power === 1 ? SPR.kinhuCoca : SPR.kinhu;
   if (p.wild > 0 && (p.wild > 120 || Math.floor(p.wild / 4) % 2)) set = SPR.kinhuWild[Math.floor(World.t / 3) % 3];
   let s = set.idle;
   if (p.dead) s = set.hurt;

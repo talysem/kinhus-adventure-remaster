@@ -83,6 +83,16 @@ function compileSong(def) {
 }
 
 const SONGS = {
+  home: {
+    bpm: 82, chords: ['Cmaj7', 'Am7', 'Dm7', 'G7'],
+    mel: ['E5:4 G5:2 E5:2 D5:4 r:4', 'C5:4 E5:4 A5:4 G5:4', 'F5:4 E5:2 D5:2 A4:4 r:4', 'B4:4 D5:4 G5:4 r:4'],
+    bass: 'bossa', arp: 'pad', leadDuty: 50, leadVol: 0.055, bassVol: 0.13,
+  },
+  night: {
+    bpm: 72, chords: ['Fmaj7', 'Cmaj7', 'Dm7', 'G7'],
+    mel: ['A5:8 G5:4 E5:4', 'G5:8 E5:8', 'F5:8 E5:4 D5:4', 'B4:8 r:8'],
+    bass: 'long', arp: 'pad', leadDuty: 50, leadVol: 0.035, bassVol: 0.10, arpVol: 0.02,
+  },
   title: {
     bpm: 120, chords: ['C', 'G', 'Am', 'F', 'C', 'G', 'F', 'G'],
     mel: ['E5:2 G5:2 C6:6 B5:2 G5:4', 'D5:2 G5:2 B5:6 A5:2 G5:4', 'A5:3 G5:1 E5:4 A5:2 B5:2 C6:4', 'C6:2 A5:2 F5:4 G5:2 A5:2 G5:4',
@@ -125,10 +135,19 @@ const SONGS = {
       'C6:2 r:2 G5:2 r:2 Eb5:2 r:2 C5:4', 'Eb5:2 F5:2 G5:2 Ab5:2 Bb5:2 B5:2 C6:4', 'C6:4 Ab5:4 Eb5:4 C5:4', 'B4:2 D5:2 G5:2 B5:2 D6:4 B5:4'],
     bass: 'drive', arp: 'up16', drums: ['k.hks.hkk.hks.hs'],
   },
+  kinhurineTransform: {
+    // Dois compassos de tensão acompanham os quatro segundos da transformação.
+    bpm: 120, loop: false, chords: ['Dm', 'Eb'],
+    mel: ['D3:4 D4:4 Eb4:2 E4:2 F4:2 A4:2', 'D5:8 A4:4 D4:4'],
+    bass: 'half', arp: 'up16', leadDuty: 12,
+    leadVol: 0.065, bassVol: 0.20, arpVol: 0.025,
+    drums: ['k.......k...k.k.', 'k.......s.......'], drumVol: 0.35,
+  },
   kinhurine: {
-    bpm: 168, chords: ['F', 'Bb', 'C', 'F'],
-    mel: ['F5:2 A5:2 C6:2 F6:2 E6:2 C6:2 A5:2 C6:2', 'D6:2 F6:2 D6:2 Bb5:2 F5:4 Bb5:4', 'C6:2 E6:2 G6:2 E6:2 C6:2 G5:2 E5:2 G5:2', 'F5:2 A5:2 C6:4 F6:4 r:4'],
-    bass: 'drive', arp: 'up16', drums: ['k.hsk.hsk.hsk.hs'],
+    bpm: 168, chords: ['Dm', 'Bb', 'C', 'A'],
+    mel: ['D5:2 D5:1 D5:1 F5:2 A5:2 D6:4 C6:2 A5:2', 'Bb5:2 A5:2 F5:2 D5:2 Bb4:4 F5:4', 'C5:2 C5:1 C5:1 E5:2 G5:2 C6:4 Bb5:2 G5:2', 'A5:2 G5:2 E5:2 C#5:2 A4:4 r:4'],
+    bass: 'drive', arp: 'up16', leadDuty: 12, arpVol: 0.035,
+    drums: ['k.hks.hkk.hks.hs', 'k.h.s.hkk.h.s.ss'], drumVol: 0.45,
   },
   ending: {
     bpm: 104, chords: ['C', 'G', 'Am', 'F', 'C', 'G', 'F', 'G'],
@@ -211,6 +230,8 @@ const Sound = {
   stop() {
     if (this.song) {
       const out = this.song.out, t = this.ctx.currentTime;
+      out.gain.cancelScheduledValues(t);
+      out.gain.setValueAtTime(out.gain.value, t);
       out.gain.setTargetAtTime(0, t, 0.03);
       setTimeout(() => out.disconnect(), 300);
     }
@@ -299,9 +320,56 @@ const Sound = {
     src.connect(f); f.connect(g); g.connect(this.sfx); src.start(t, Math.random() * 0.4); src.stop(t + dur + 0.02);
   },
   arp(notes, step, vol, duty = 25) { notes.forEach((n, i) => this.tone(mtof(noteMidi(n)), mtof(noteMidi(n)), step * 1.4, vol, { delay: i * step, duty })); },
+  wildRoar() {
+    const c = this.ctx, t = c.currentTime, dur = 1.5;
+    // Voz áspera em "AAH": dois formantes, subida de tom e vibrato irregular.
+    const voice = c.createOscillator(), vibrato = c.createOscillator(), depth = c.createGain();
+    const envelope = c.createGain();
+    voice.type = 'sawtooth';
+    voice.frequency.setValueAtTime(125, t);
+    voice.frequency.exponentialRampToValueAtTime(290, t + 0.16);
+    voice.frequency.exponentialRampToValueAtTime(210, t + 0.85);
+    voice.frequency.exponentialRampToValueAtTime(85, t + dur);
+    vibrato.type = 'triangle'; vibrato.frequency.setValueAtTime(27, t);
+    vibrato.frequency.linearRampToValueAtTime(39, t + dur);
+    depth.gain.value = 24; vibrato.connect(depth); depth.connect(voice.detune);
+    envelope.gain.setValueAtTime(0, t);
+    envelope.gain.linearRampToValueAtTime(0.22, t + 0.04);
+    envelope.gain.linearRampToValueAtTime(0.16, t + 0.85);
+    envelope.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    envelope.connect(this.sfx);
+    const filters = [750, 1250].map(hz => {
+      const f = c.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 1.5;
+      f.frequency.setValueAtTime(hz, t);
+      f.frequency.linearRampToValueAtTime(hz * 0.7, t + dur);
+      voice.connect(f); f.connect(envelope); return f;
+    });
+    voice.onended = () => {
+      voice.disconnect(); vibrato.disconnect(); depth.disconnect();
+      filters.forEach(f => f.disconnect()); envelope.disconnect();
+    };
+    voice.start(t); voice.stop(t + dur + 0.02);
+    vibrato.start(t); vibrato.stop(t + dur + 0.02);
+    this.tone(95, 42, 0.7, 0.12, { wave: 'triangle' });
+    this.hiss(0.85, 0.11, { f0: 1600, f1: 550, q: 1.5 });
+    // Só abaixa a trilha atual; pular a cena cria uma nova saída com volume normal.
+    if (this.song) {
+      const gain = this.song.out.gain;
+      gain.cancelScheduledValues(t); gain.setValueAtTime(gain.value, t);
+      gain.linearRampToValueAtTime(0.28, t + 0.04);
+      gain.setValueAtTime(0.28, t + 1.05);
+      gain.linearRampToValueAtTime(1, t + 1.65);
+    }
+  },
   fx(name) {
     if (!this.ctx || this.ctx.state !== 'running' || this.muted) return;
     switch (name) {
+      case 'wildcharge': this.tone(65, 220, 0.65, 0.10, { wave: 'sawtooth' }); this.hiss(0.6, 0.10, { f0: 200, f1: 1500 }); break;
+      case 'clawmetal': this.tone(1800, 4200, 0.22, 0.07, { duty: 12 }); this.tone(2600, 1300, 0.26, 0.05, { duty: 25 }); this.hiss(0.23, 0.14, { f0: 4400, f1: 1700, q: 5 }); break;
+      case 'wildroar': this.wildRoar(); break;
+      case 'notification': this.arp(['E6', 'B6', 'E7'], 0.09, 0.08, 50); break;
+      case 'alarm': this.tone(1046, 1046, 0.10, 0.09, { duty: 25 }); this.tone(1568, 1568, 0.10, 0.08, { duty: 25, delay: 0.15 }); break;
+      case 'step': this.hiss(0.035, 0.035, { f0: 500, f1: 120 }); break;
       case 'jump': this.tone(260, 640, 0.14, 0.13, { duty: 25 }); break;
       case 'coin': this.tone(1318, 1318, 0.06, 0.1, { duty: 50 }); this.tone(1976, 1976, 0.22, 0.1, { duty: 50, delay: 0.06 }); break;
       case 'stomp': this.tone(520, 120, 0.12, 0.16, { duty: 50 }); this.hiss(0.08, 0.15, { f0: 900 }); break;

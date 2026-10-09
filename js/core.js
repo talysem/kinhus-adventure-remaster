@@ -5,6 +5,7 @@
    ========================================================= */
 
 const W = 256, H = 224, TS = 16;
+const COINS_PER_LIFE = 200;
 
 const cv = document.getElementById('screen');
 const ctx = cv.getContext('2d', { alpha: false });

@@ -14,6 +14,8 @@ html = html.replace(/<link rel="icon" type="image\/png" href="assets\/icon.png">
 html = html.replace(/\s*<meta property="og:image"[^>]*>/, '');
 html = html.replace(/<script src="(js\/[a-z]+\.js)"><\/script>/g, (m, f) => {
   let js = read(f);
+  // Inclui as ilustrações otimizadas: nenhuma requisição externa no arquivo único.
+  js = js.replace(/(['"])(assets\/cutscenes\/runtime\/[\w-]+\.png)\1/g, (match, quote, image) => quote + dataUri(image) + quote);
   if (js.includes('</script')) throw new Error('</script dentro de ' + f);
   return '<script>\n' + js + '\n</script>';
 });

@@ -23,13 +23,16 @@ function parseColor(s) {
 class Ctx {
   constructor(cv) {
     this.canvas = cv; this.fillStyle = '#000'; this.globalAlpha = 1;
-    this.tx = 0; this.ty = 0; this.stack = []; this.imageSmoothingEnabled = false;
+    this.tx = 0; this.ty = 0; this.sx = 1; this.sy = 1; this.stack = []; this.imageSmoothingEnabled = false;
     this.globalCompositeOperation = 'source-over';
   }
-  save() { this.stack.push([this.tx, this.ty, this.globalAlpha, this.fillStyle]); }
-  restore() { const s = this.stack.pop(); if (s) [this.tx, this.ty, this.globalAlpha, this.fillStyle] = s; }
-  translate(x, y) { this.tx += x; this.ty += y; }
-  setTransform() { this.tx = 0; this.ty = 0; }
+  save() { this.stack.push([this.tx, this.ty, this.sx, this.sy, this.globalAlpha, this.fillStyle]); }
+  restore() { const s = this.stack.pop(); if (s) [this.tx, this.ty, this.sx, this.sy, this.globalAlpha, this.fillStyle] = s; }
+  translate(x, y) { this.tx += x * this.sx; this.ty += y * this.sy; }
+  setTransform(a = 1, b = 0, c = 0, d = 1, e = 0, f = 0) {
+    if (b || c) throw new Error('SoftCanvas suporta apenas escala e translação.');
+    this.sx = a; this.sy = d; this.tx = e; this.ty = f;
+  }
   _blend(i, r, g, b, a) {
     const d = this.canvas.data;
     a = (a / 255) * this.globalAlpha;
@@ -41,7 +44,7 @@ class Ctx {
   fillRect(x, y, w, h) {
     const [r, g, b, a] = parseColor(this.fillStyle);
     const W = this.canvas.width, H = this.canvas.height;
-    let x0 = Math.round(x + this.tx), y0 = Math.round(y + this.ty), x1 = Math.round(x + this.tx + w), y1 = Math.round(y + this.ty + h);
+    let x0 = Math.round(x * this.sx + this.tx), y0 = Math.round(y * this.sy + this.ty), x1 = Math.round((x + w) * this.sx + this.tx), y1 = Math.round((y + h) * this.sy + this.ty);
     x0 = Math.max(0, x0); y0 = Math.max(0, y0); x1 = Math.min(W, x1); y1 = Math.min(H, y1);
     for (let yy = y0; yy < y1; yy++) for (let xx = x0; xx < x1; xx++) this._blend((yy * W + xx) * 4, r, g, b, a);
   }
@@ -54,7 +57,7 @@ class Ctx {
     if (e === undefined) { dx = a; dy = b; dw = c === undefined ? sw : c; dh = d === undefined ? sh : d; }
     else { sx = a; sy = b; sw = c; sh = d; dx = e; dy = f; dw = g; dh = h; }
     if (!img.data) return;
-    dx = Math.round(dx + this.tx); dy = Math.round(dy + this.ty); dw = Math.round(dw); dh = Math.round(dh);
+    dx = Math.round(dx * this.sx + this.tx); dy = Math.round(dy * this.sy + this.ty); dw = Math.round(dw * this.sx); dh = Math.round(dh * this.sy);
     const W = this.canvas.width, H = this.canvas.height, sd = img.data;
     for (let yy = 0; yy < dh; yy++) {
       const ty = dy + yy; if (ty < 0 || ty >= H) continue;
@@ -165,7 +168,7 @@ function boot(root, files) {
   def('localStorage', { getItem: k => (k in store ? store[k] : null), setItem: (k, v) => { store[k] = String(v); }, removeItem: k => { delete store[k]; } });
   def('navigator', { getGamepads: () => [], userAgent: 'node' });
   def('requestAnimationFrame', () => 0);
-  global.Image = class { constructor() { this.width = 0; this.height = 0; this.data = null; } set src(v) { try { const im = decodePNG(fs.readFileSync(path.join(root, v))); Object.assign(this, im); this.complete = true; if (this.onload) setTimeout(() => this.onload(), 0); } catch (e) { if (this.onerror) this.onerror(e); } } };
+  global.Image = class { constructor() { this.width = 0; this.height = 0; this.data = null; } set src(v) { try { const buf = v.startsWith('data:image/png;base64,') ? Buffer.from(v.split(',')[1], 'base64') : fs.readFileSync(path.join(root, v)); const im = decodePNG(buf); Object.assign(this, im); this.complete = true; if (this.onload) setTimeout(() => this.onload(), 0); } catch (e) { if (this.onerror) this.onerror(e); } } };
   global.__NODE_TEST__ = true;
   for (const f of files) vm.runInThisContext(fs.readFileSync(path.join(root, f), 'utf8'), { filename: f });
   return { screen };

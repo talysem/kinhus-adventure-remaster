@@ -3,17 +3,6 @@
    Telas, menus, HUD, transições, salvamento e laço principal.
    ========================================================= */
 
-const STORY = [
-  'SEGUNDA-FEIRA, 07:42.',
-  'O DESPERTADOR NÃO TOCOU...',
-  '',
-  'KINHU ESTÁ ATRASADO',
-  'PARA O TRABALHO!',
-  '',
-  'AJUDE KINHU A PEGAR O ÔNIBUS,',
-  'ATRAVESSAR O CENTRO DA CIDADE',
-  'E SOBREVIVER AO ESCRITÓRIO!',
-];
 const CREDITS = [
   'PARABÉNS, KINHU!', '',
   'O MEGA BUG FOI CORRIGIDO', 'E O SISTEMA VOLTOU AO AR.', '',
@@ -25,9 +14,10 @@ const CREDITS = [
 
 const App = {
   state: 'title', t: 0, sub: null, menu: null, trans: null, toastMsg: null, toastT: 0, saveIcon: 0,
-  storyT: 0,
 
   init() {
+    IntroArt.preload();
+    Kinhurine.preload();
     Input.init();
     Save.load();
     Game.hiscore = Save.data.hiscore;
@@ -80,13 +70,13 @@ const App = {
       if (!r.ok) { Sound.fx('hurt'); return; }
       Sound.fx('check');
       Game.hiscore = Save.data.hiscore; Game.unlocked = Save.data.unlocked;
-      if (Save.data.run && (this.state === 'play' || this.state === 'pause' || this.state === 'gameover')) this.continueRun();
+      if (Save.data.run && (this.state === 'play' || this.state === 'pause' || this.state === 'gameover' || this.state === 'transform')) this.continueRun();
       else if (this.state === 'title' || this.state === 'select') { this.openTitleMenu(); }
     };
     rd.readAsText(file);
   },
   exportSave() {
-    if (this.state === 'play' || this.state === 'pause') this.saveProgress(false, true);
+    if (this.state === 'play' || this.state === 'pause' || this.state === 'transform') this.saveProgress(false, true);
     const ok = Save.exportFile();
     this.toast(ok ? 'ARQUIVO DE SAVE BAIXADO!' : 'NÃO FOI POSSÍVEL SALVAR');
   },
@@ -142,6 +132,7 @@ const App = {
 
   /* ---------- transições ---------- */
   go(state, fn, instant) {
+    if (this.state === 'transform' && state !== 'transform') Kinhurine.active = false;
     const apply = () => { this.state = state; this.t = 0; this.menu = null; if (fn) fn(); this.enter(state); };
     if (instant) { apply(); return; }
     this.trans = { t: 0, dur: 18, apply, done: false };
@@ -150,7 +141,7 @@ const App = {
     Input.clear();
     switch (state) {
       case 'title': Sound.play('title'); break;
-      case 'story': Sound.play('title'); this.storyT = 0; break;
+      case 'story': Cutscenes.begin(); break;
       case 'intro': Sound.stop(); break;
       case 'play':
         loadLevel(Game.levelIdx, Game.checkpoint);
@@ -254,15 +245,13 @@ const App = {
         else if (Input.pressed('start') || Input.pressed('confirm') || Input.pressed('jump')) { Sound.unlock(); Sound.fx('select'); this.openTitleMenu(); }
         break;
       case 'story':
-        this.storyT++;
-        if ((Input.pressed('start') || Input.pressed('confirm')) && this.storyT > 20) {
-          const total = STORY.join('').length;
-          if (this.storyT * 0.7 < total + 10) this.storyT = Math.ceil((total + 10) / 0.7);
-          else { Game.levelIdx = 0; this.go('intro'); }
-        }
+        Cutscenes.update();
+        break;
+      case 'transform':
+        if (!this.trans) Kinhurine.update();
         break;
       case 'intro':
-        if (this.t > 170 || (this.t > 30 && (Input.pressed('start') || Input.pressed('confirm')))) this.go('play');
+        if (!this.trans && (this.t > 170 || (this.t > 30 && (Input.pressed('start') || Input.pressed('confirm'))))) this.go('play');
         break;
       case 'play':
         if (Input.pressed('start') && !World.clear && !World.player.dead) { this.openPause(); break; }
@@ -317,9 +306,16 @@ const App = {
 
   /* ---------- desenho ---------- */
   render() {
+    const scale = this.state === 'story' || this.state === 'transform' ? 3 : 1;
+    if (cv.width !== W * scale) {
+      cv.width = W * scale; cv.height = H * scale;
+      ctx.imageSmoothingEnabled = false;
+    }
+    ctx.setTransform(scale, 0, 0, scale, 0, 0);
     switch (this.state) {
       case 'title': this.drawTitle(); break;
       case 'story': this.drawStory(); break;
+      case 'transform': Kinhurine.draw(); break;
       case 'intro': this.drawIntro(); break;
       case 'play': case 'pause': drawWorld(); this.drawHUD(); if (this.state === 'pause') { ctx.fillStyle = 'rgba(0,10,30,0.55)'; ctx.fillRect(0, 0, W, H); this.drawMenu(this.menu, W / 2, 62); } break;
       case 'gameover': this.drawGameOver(); break;
@@ -339,7 +335,7 @@ const App = {
       // efeito mosaico (marca registrada do SNES)
       if (!this.mos) this.mos = U.canvas(W, H);
       const sw = Math.ceil(W / m), sh = Math.ceil(H / m);
-      this.mos.x.drawImage(cv, 0, 0, W, H, 0, 0, sw, sh);
+      this.mos.x.drawImage(cv, 0, 0, cv.width, cv.height, 0, 0, sw, sh);
       ctx.drawImage(this.mos.c, 0, 0, sw, sh, 0, 0, sw * m, sh * m);
     }
     ctx.fillStyle = 'rgba(0,0,0,' + U.clamp(k * 1.1, 0, 1).toFixed(3) + ')';
@@ -359,24 +355,14 @@ const App = {
     const L = [
       ['COMO JOGAR', '#ffbf30'], ['', ''],
       ['SETAS / A D: ANDAR', '#e9effb'], ['Z / ESPAÇO / ▲: PULAR', '#e9effb'], ['X / SHIFT: CORRER', '#e9effb'],
-      ['X COM CAFÉ: JOGAR GRÃOS', '#e9effb'], ['▼ + PULAR: DESCER PLATAFORMA', '#e9effb'], ['ENTER: PAUSA   M: SOM   F: TELA CHEIA', '#e9effb'], ['', ''],
-      ['CACHORRO-QUENTE: +1 CORAÇÃO', '#ffb0a0'], ['CAFÉ: PODER DE ARREMESSO', '#ffd0a0'], ['GARRAS: MODO KINHURINE!', '#ffe384'], ['CRACHÁ: VIDA EXTRA', '#a0ffa0'], ['', ''],
+      ['X COM COCA: JOGAR LATAS', '#e9effb'], ['▼ + PULAR: DESCER PLATAFORMA', '#e9effb'], ['ENTER: PAUSA   M: SOM   F: TELA CHEIA', '#e9effb'], ['', ''],
+      ['CACHORRO-QUENTE: +1 CORAÇÃO', '#ffb0a0'], ['COCA-COLA: PODER DE ARREMESSO', '#ffd0a0'], ['GARRAS: MODO KINHURINE!', '#ffe384'], ['CRACHÁ: VIDA EXTRA', '#a0ffa0'], ['', ''],
       ['O JOGO SALVA SOZINHO NO NAVEGADOR.', '#a2c4ff'], ['NA PAUSA DÁ PARA BAIXAR O SAVE', '#a2c4ff'], ['E CARREGAR EM OUTRO LUGAR.', '#a2c4ff'],
     ];
     L.forEach(([t, c], i) => { if (t) Font.draw(t.replace('↑', '▲'), W / 2, 28 + i * 10, c, { align: 'center' }); });
   },
   drawStory() {
-    BG.draw('bairro', this.storyT * 0.5, this.storyT);
-    ctx.fillStyle = 'rgba(0,21,59,0.82)'; ctx.fillRect(14, 30, W - 28, 140);
-    let n = Math.floor(this.storyT * 0.7);
-    STORY.forEach((line, i) => {
-      if (n <= 0) return;
-      const s = line.slice(0, n); n -= line.length;
-      Font.draw(s, W / 2 - Font.width(line) / 2, 44 + i * 13, i < 2 ? '#ffe384' : '#ffffff');
-    });
-    const k = SPR.kinhu, frame = k.run[Math.floor(this.storyT / 6) % 4];
-    ctx.drawImage(frame.r, W / 2 - 10, 182);
-    if (this.storyT * 0.7 > STORY.join('').length && Math.floor(this.t / 20) % 2) Font.draw('APERTE ENTER', W / 2, 212, '#ffffff', { align: 'center' });
+    Cutscenes.draw();
   },
   drawIntro() {
     const L = LEVELS[Game.levelIdx];
@@ -425,9 +411,9 @@ const App = {
     ctx.drawImage(SPR.kinhuHead, 0, 0, 20, 12, 1, 1, 20, 12);
     Font.draw('×' + Game.lives, 20, 5);
     for (let i = 0; i < Game.maxHearts; i++) ctx.drawImage((i < Game.hearts ? SPR.heart : SPR.heartEmpty).r, 38 + i * 10, 3);
-    if (Game.power === 1) ctx.drawImage(SPR.coffee.r, 69, -2);
+    if (Game.power === 1) ctx.drawImage(SPR.coca.r, 69, -2);
     ctx.drawImage(SPR.coinSmall, 90, 5);
-    Font.draw('×' + String(Game.coins).padStart(2, '0'), 97, 5);
+    Font.draw('×' + String(Game.coins).padStart(3, '0'), 97, 5);
     Font.draw(String(Game.score).padStart(7, '0'), 128, 5);
     ctx.drawImage(SPR.clock, 180, 2);
     Font.draw(String(Math.max(0, Wd.time)).padStart(3, '0'), 191, 5, Wd.hurry && Wd.t % 20 < 10 ? '#ff6040' : '#ffffff');

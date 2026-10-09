@@ -127,7 +127,7 @@ function buildKinhu(palOverride = {}, extra = {}) {
 }
 
 SPR.kinhu = buildKinhu();
-SPR.kinhuCafe = buildKinhu({ o: '#e8402e', O: '#ff8a6a', r: '#a8221c' });
+SPR.kinhuCoca = buildKinhu({ o: '#e8402e', O: '#ff8a6a', r: '#a8221c' });
 SPR.kinhuWild = [
   buildKinhu({ o: '#ffd23a', O: '#fff2a0', r: '#d89a10', h: '#4a2a14' }, { wild: true, claws: true }),
   buildKinhu({ o: '#ff7ab8', O: '#ffc0e0', r: '#c8407a', h: '#4a2a14' }, { wild: true, claws: true }),
@@ -351,21 +351,25 @@ SPR.hotdog = mkSprite(build([
   '...pppp.........',
 ], { p: '#b06a30', b: '#e0a060', q: '#d84030', Q: '#ff8a70', y: '#ffd830' }, { h: 16 }));
 
-// café (poder: arremessar grãos de café)
-SPR.coffee = mkSprite(build([
-  '.....s..s.......',
-  '......s..s......',
-  '.....s..s.......',
-  '...wwwwwwwww....',
-  '...WWWWWWWWW....',
-  '....wwwwwww.....',
-  '....bbbbbbb.....',
-  '....bBbbbbb.....',
-  '....bbbbbbb.....',
-  '....wwwwwww.....',
-  '.....wwwww......',
-  '.....WWWWW......',
-], { w: '#ffffff', W: '#c8c8d8', b: '#9a5a2a', B: '#d08a48', s: '#e8e8f0' }, { h: 16 }));
+// Lata de Coca-Cola: alumínio, corpo vermelho e faixa branca do rótulo.
+SPR.coca = mkSprite(build([
+  '.....ssssss.....',
+  '....swwSSwws....',
+  '....SssssssS....',
+  '....rRrrrrdR....',
+  '....rRrrrrdR....',
+  '....rRwwrrdR....',
+  '....rwwrrwdR....',
+  '....rwrrwrdR....',
+  '....rrwwrrdR....',
+  '....rRrrrrwR....',
+  '....rRrwwwdR....',
+  '....rwwrrrdR....',
+  '....rRrrrrdR....',
+  '....SssssssS....',
+  '.....SSSSSS.....',
+  '................',
+], { r: '#e52230', R: '#ff6265', d: '#a90f25', w: '#ffffff', s: '#d6e0eb', S: '#7e899b' }));
 
 // garras (modo Kinhurine: invencível)
 SPR.claws = mkSprite(build([
@@ -412,11 +416,18 @@ SPR.trophy = mkSprite(build([
   '....dddddddd....',
 ], { y: '#ffd030', Y: '#fff4a0', d: '#8a5a20', D: '#c08a40' }, { h: 16 }));
 
-// grão de café (projétil do Kinhu)
-SPR.bean = [0, 1].map(f => {
+// Minilata girando (projétil do Kinhu).
+SPR.can = [0, 1].map(f => {
   const g = new Grid(8, 8);
-  g.ellipse(4, 4, f ? 2.4 : 3, f ? 3 : 2.4, (nx, ny) => (nx + ny < -0.5 ? '#c88a50' : '#7a4422'));
-  if (f) g.line(4, 2, 4, 5, '#3a1e0e'); else g.line(2, 4, 5, 4, '#3a1e0e');
+  if (f) {
+    g.rect(1, 2, 6, 4, '#e52230');
+    g.line(1, 2, 1, 5, '#d6e0eb'); g.line(6, 2, 6, 5, '#7e899b');
+    g.line(3, 3, 4, 4, '#ffffff');
+  } else {
+    g.rect(2, 1, 4, 6, '#e52230');
+    g.line(2, 1, 5, 1, '#d6e0eb'); g.line(2, 6, 5, 6, '#7e899b');
+    g.line(3, 4, 4, 3, '#ffffff');
+  }
   g.outline(OUT);
   return mkSprite(g);
 });

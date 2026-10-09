@@ -24,7 +24,7 @@
   const K = SPR.kinhu;
   add('idle', K.idle.r); add('blink', K.blink.r); K.run.forEach((s, i) => add('run' + i, s.r));
   add('jump', K.jump.r); add('fall', K.fall.r); add('hurt', K.hurt.r); add('win', K.win.r);
-  add('cafe', SPR.kinhuCafe.idle.r); add('wild', SPR.kinhuWild[0].run[0].r); add('left', K.idle.l);
+  add('coca', SPR.kinhuCoca.idle.r); add('wild', SPR.kinhuWild[0].run[0].r); add('left', K.idle.l);
   SPR.dog.forEach((s, i) => add('dog' + i, s.r)); add('bark', SPR.dogBark.r);
   SPR.pigeon.forEach((s, i) => add('pigeon' + i, s.r));
   SPR.roach.forEach((s, i) => add('roach' + i, s.r));
@@ -33,8 +33,8 @@
   SPR.flybug.forEach((s, i) => add('fly' + i, s.r));
   for (const k in SPR.boss) add('boss-' + k, SPR.boss[k].r);
   SPR.coin.forEach((s, i) => add('coin' + i, s.r));
-  for (const k of ['hotdog', 'coffee', 'claws', 'badge', 'trophy', 'heart', 'heartEmpty', 'poop', 'plane', 'paper', 'water']) add(k, SPR[k].r);
-  SPR.bean.forEach((s, i) => add('bean' + i, s.r));
+  for (const k of ['hotdog', 'coca', 'claws', 'badge', 'trophy', 'heart', 'heartEmpty', 'poop', 'plane', 'paper', 'water']) add(k, SPR[k].r);
+  SPR.can.forEach((s, i) => add('can' + i, s.r));
   SPR.glitch.forEach((s, i) => add('glitch' + i, s.r));
   add('head', SPR.kinhuHead); add('clock', SPR.clock);
   if (typeof previewWorld === 'function') previewWorld(add);
