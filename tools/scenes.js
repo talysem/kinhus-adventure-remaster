@@ -7,7 +7,7 @@ const { boot } = require('./softcanvas');
 const root = path.join(__dirname, '..');
 const out = process.argv[2] || path.join(root, 'tools', 'out');
 fs.mkdirSync(out, { recursive: true });
-const { screen } = boot(root, ['js/core.js', 'js/progression.js', 'js/sprites.js', 'js/world.js', 'js/audio.js', 'js/levels.js', 'js/settings.js', 'js/exploration.js', 'js/save.js', 'js/game.js', 'js/title.js', 'js/introart.js', 'js/cutscenes.js', 'js/origin.js', 'js/kinhurine.js', 'js/main.js']);
+const { screen } = boot(root, ['js/core.js', 'js/mobile.js', 'js/progression.js', 'js/sprites.js', 'js/world.js', 'js/audio.js', 'js/levels.js', 'js/settings.js', 'js/exploration.js', 'js/save.js', 'js/game.js', 'js/title.js', 'js/introart.js', 'js/cutscenes.js', 'js/origin.js', 'js/kinhurine.js', 'js/main.js']);
 const press = {};
 Input.update = function () { this.prev = this.cur; const cur = {}; for (const a in this.map) { cur[a] = !!press[a]; cur[a + '!'] = false; } this.cur = cur; };
 const shot = n => { App.render(); fs.writeFileSync(path.join(out, n + '.png'), screen.toPNG()); };

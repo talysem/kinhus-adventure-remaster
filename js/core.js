@@ -61,9 +61,16 @@ const U = {
 function fitScreen() {
   const touch = document.body.classList.contains('touch');
   const vw = window.innerWidth, vh = window.innerHeight;
-  const portrait = vh > vw;
-  const availW = vw - 32, availH = touch ? (portrait ? vh - 270 : vh - 8) : vh - 56;
-  let s = Math.min(availW / W, availH / H);
+  let availW = vw - 32, availH = vh - 56;
+  if (touch) {
+    // O CSS reserva espaço para controles, barra e áreas seguras do celular.
+    const wrap = document.getElementById('wrap');
+    const rect = wrap.getBoundingClientRect(), style = window.getComputedStyle(wrap);
+    const bar = document.getElementById('bar');
+    availW = rect.width - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight) - 12;
+    availH = rect.height - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom) - bar.getBoundingClientRect().height - 22;
+  }
+  let s = Math.max(0.1, Math.min(availW / W, availH / H));
   if (s >= 2) s = Math.floor(s);
   cv.style.width = Math.floor(W * s) + 'px';
   cv.style.height = Math.floor(H * s) + 'px';
@@ -106,7 +113,7 @@ const Input = {
     for (const action of ['jump', 'run', 'propel', 'confirm', 'back']) this.map[action] = bindings[action].slice();
     // Toques pendentes continuam sendo reconhecidos após trocar o teclado.
     for (const action of Object.keys(this.map)) if (!this.map[action].includes('touch-' + action)) this.map[action].push('touch-' + action);
-    this.keys = {}; this.hits = {}; this.cur = {}; this.prev = {}; this.touch = {};
+    this.releaseAll();
     if (persist) { try { localStorage.setItem(this.PRESET_KEY, id); } catch (e) { /* funciona sem armazenamento */ } }
     return true;
   },
@@ -124,6 +131,10 @@ const Input = {
     return compact && action === 'jump' ? p.shortJump : compact && action === 'run' ? p.shortRun : p[action] || '';
   },
   sceneHint() { return this.device === 'keyboard' ? this.label('confirm') + ': AVANÇAR  ESC: PULAR' : 'A: AVANÇAR  START/B: PULAR'; },
+  releaseAll() {
+    this.keys = {}; this.hits = {}; this.cur = {}; this.prev = {}; this.touch = {}; this.anyKey = false;
+    if (this.resetTouch) this.resetTouch();
+  },
   init() {
     this.loadPreset();
     const block = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space']);
@@ -134,7 +145,8 @@ const Input = {
       this.keys[e.code] = true;
     });
     window.addEventListener('keyup', e => { this.keys[e.code] = false; });
-    window.addEventListener('blur', () => { this.keys = {}; this.touch = {}; });
+    window.addEventListener('blur', () => this.releaseAll());
+    document.addEventListener('visibilitychange', () => { if (document.hidden) this.releaseAll(); });
   },
   update() {
     this.prev = this.cur;

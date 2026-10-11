@@ -16,29 +16,31 @@
 <main id="wrap">
   <canvas id="screen" width="256" height="224" aria-label="Tela do jogo Kinhu's Adventure"></canvas>
   <nav id="bar" aria-label="Opções">
+    <span id="mobileHint">MODO TOQUE</span>
     <button id="btnOptions" type="button" title="Abre as configurações; durante a partida, pausa o jogo">Configurações</button>
     <button id="btnFull" type="button" title="Tela cheia (tecla F)">Tela cheia</button>
   </nav>
 </main>
 
-<div id="touch" aria-hidden="true">
+<div id="touch" role="group" aria-label="Controles de toque" aria-hidden="true">
   <div class="pad">
-    <button class="up" data-act="up">▲</button>
-    <button class="left" data-act="left">◀</button>
-    <button class="right" data-act="right">▶</button>
-    <button class="down" data-act="down">▼</button>
+    <button type="button" class="up" data-act="up" aria-label="Cima">▲</button>
+    <button type="button" class="left" data-act="left" aria-label="Esquerda">◀</button>
+    <button type="button" class="right" data-act="right" aria-label="Direita">▶</button>
+    <button type="button" class="down" data-act="down" aria-label="Baixo / agachar">▼</button>
   </div>
-  <button class="start" data-act="start">START</button>
+  <button type="button" class="start" data-act="start" aria-label="Start / pausar">START<small>PAUSA</small></button>
   <div class="ab">
-    <button class="c" data-act="propel" aria-label="Pum propulsor" hidden>C</button>
-    <button class="b" data-act="run,back">B</button>
-    <button class="a" data-act="jump,confirm">A</button>
+    <button type="button" class="c" data-act="propel" aria-label="Pum propulsor" hidden>C<small>PUM</small></button>
+    <button type="button" class="b" data-act="run,back" aria-label="Correr / lançar lata / voltar">B<small>CORRER</small></button>
+    <button type="button" class="a" data-act="jump,confirm" aria-label="Pular / confirmar">A<small>PULAR</small></button>
   </div>
 </div>
 
 <input type="file" id="loadFile" accept=".json,application/json" hidden>
 
 <script src="js/core.js"></script>
+<script src="js/mobile.js"></script>
 <script src="js/progression.js"></script>
 <script src="js/sprites.js"></script>
 <script src="js/world.js"></script>

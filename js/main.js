@@ -47,15 +47,7 @@ const App = {
     btn('btnOptions', () => this.openOptions());
     btn('btnFull', () => this.toggleFull());
     // controles de toque
-    const touchy = 'ontouchstart' in window || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
-    if (touchy) document.body.classList.add('touch');
-    document.querySelectorAll('[data-act]').forEach(el => {
-      const acts = el.dataset.act.split(',');
-      const set = v => { for (const a of acts) Input.touch[a] = v; if (v) { Input.device = 'touch'; for (const a of acts) Input.hits['touch-' + a] = true; } };
-      el.addEventListener('pointerdown', e => { e.preventDefault(); el.setPointerCapture && el.setPointerCapture(e.pointerId); set(true); el.classList.add('on'); });
-      const off = e => { e.preventDefault(); set(false); el.classList.remove('on'); };
-      el.addEventListener('pointerup', off); el.addEventListener('pointercancel', off); el.addEventListener('lostpointercapture', off);
-    });
+    TouchControls.init();
     // tocar na tela do título/história também avança
     const pointer = e => { const r = cv.getBoundingClientRect(); return { x: (e.clientX - r.left) * W / r.width, y: (e.clientY - r.top) * H / r.height }; };
     cv.addEventListener('pointerdown', e => {
@@ -69,7 +61,6 @@ const App = {
     });
     // toques valem como "apertou" também
     for (const a of ['jump', 'run', 'propel', 'start', 'confirm', 'left', 'right', 'up', 'down', 'back']) if (!Input.map[a].includes('touch-' + a)) Input.map[a].push('touch-' + a);
-    window.addEventListener('keydown', () => { if (!touchy) return; document.body.classList.remove('touch'); fitScreen(); }, { once: true });
   },
   openFile() { const f = document.getElementById('loadFile'); if (f) f.click(); },
   readFile(file) {
@@ -335,6 +326,7 @@ const App = {
   syncAbilityControls() {
     const button = document.querySelector ? document.querySelector('[data-act="propel"]') : null;
     if (button) button.hidden = !Progression.usable(Game.progress, 'propulsion') || this.state !== 'play';
+    if (TouchControls.buttons) TouchControls.sync();
   },
   acknowledgeUnlock(id, skipped = false) {
     if (!Progression.acknowledge(Game.progress, id, skipped)) return false;

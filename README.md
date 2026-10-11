@@ -66,6 +66,8 @@ Nos conjuntos WASD, **W não aciona pulo**. Barrigada: **S + novo toque em pular
 
 No controle, os comandos continuam: direcional/analógico para andar, **A** para pular, **B/X** para correr/latas, **RB** para pum, **baixo + A** para barrigada/descida e **Start** para pausa. No celular: **A**, **B**, **C**, direcional e **START**. Passo firme é passivo em todos os dispositivos.
 
+**Celulares e tablets** são identificados pela capacidade de toque; o primeiro toque também ativa os controles em aparelhos híbridos. Em retrato, os botões ficam abaixo do jogo; em paisagem, nas laterais, respeitando as áreas seguras da tela. **A** pula/confirma, **B** corre/lança latas/volta e **START** pausa. **C** aparece quando o pum está disponível. É possível segurar direção + B + A ao mesmo tempo e deslizar o dedo entre as setas. Para o pulo duplo, solte A e toque novamente. Configurações e tela cheia continuam acessíveis; tela cheia depende do suporte do navegador. Usar um teclado não remove os botões de toque.
+
 ## Itens
 
 - **Moeda**: 200 moedas dão uma vida extra; a contagem continua entre fases e fica salva.
@@ -155,6 +157,7 @@ Depois acesse `http://localhost:8765`.
 index.html          página do jogo (256×224 no gameplay; 768×672 nas cutscenes)
 css/style.css       moldura, barra de opções e controles de toque
 js/core.js          tela, entrada (teclado/controle/toque), fonte bitmap, ferramentas de pixel art
+js/mobile.js        detecção de toque, multitoque, arraste no direcional e liberação dos botões
 js/progression.js   marcos da campanha, catálogo de habilidades, roteiro e feedback
 js/sprites.js       Kinhu, inimigos, itens e projéteis (pixel art desenhada em código)
 js/world.js         temas, blocos, fundos com parallax, decoração, carros, ônibus, prédios
@@ -213,6 +216,8 @@ Gera prints de todas as fases sem abrir o navegador. `tools/sheet.js`, `tools/sc
 As quatro novas imagens foram produzidas com ImageGen integrado, com a abertura original como referência. Prompts: [PROMPTS-PODERES.md](assets/cutscenes/PROMPTS-PODERES.md). Regras de apresentação: [ORIGEM-PODERES.md](assets/cutscenes/ORIGEM-PODERES.md).
 
 `node tools/test-controls.js` verifica os três conjuntos, seleção no menu, persistência, dicas, movimento, pulo duplo, pum, barrigada, latas e compatibilidade de gamepad/toque, preservando o save. Acrescente `--bundle` para validar o HTML offline.
+
+`node tools/test-mobile.js` verifica detecção de celular/tablet/desktop, ativação pelo primeiro toque, múltiplos dedos, arraste no direcional, pulo duplo, toques rápidos, cancelamento e liberação ao perder foco, ocultar a aba ou girar a tela. Acrescente `--bundle` para validar o HTML offline.
 
 
 `node tools/test-items-difficulty.js` testa duração, renovação/troca, coexistência, dano e perigos fatais, física do café, raio/parede do ímã, congelamento, consumo persistente e migração v3→v4. Verifica os quatro modos, parâmetros de inimigos/ataques/chefe, conclusão no Kinhu, menus, preferências, retomada e replay. Acrescente `--bundle` para o HTML offline. Gera prévias em `tools/out/`.

@@ -73,16 +73,22 @@ canvas {
 #bar button:hover, #bar button:focus-visible { border-color: var(--gold); color: var(--gold); outline: none; }
 #bar button:disabled { opacity: 0.4; cursor: default; }
 
-/* ---------- toque ---------- */
-#touch { display: none; }
-body.touch #bar { display: none; }
-body.touch #wrap { justify-content: flex-start; padding-top: calc(12px + env(safe-area-inset-top, 0px)); }
+/* ---------- toque: espaço reservado, sem cobrir o jogo ---------- */
+#touch, #mobileHint { display: none; }
+body.touch { --controls-height: 226px; --side-controls: 174px; }
+body.touch #wrap {
+  bottom: calc(var(--controls-height) + env(safe-area-inset-bottom, 0px));
+  padding: calc(12px + env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-right, 0px)) 0 max(12px, env(safe-area-inset-left, 0px));
+}
+body.touch #bar { align-items: center; gap: 6px; }
+body.touch #bar button { min-height: 36px; font-size: 10px; padding: 5px 8px; }
+body.touch #mobileHint { display: block; color: var(--gold); font-size: 9px; letter-spacing: 0.08em; }
 body.touch #touch {
   display: flex;
   position: fixed;
   left: 0; right: 0; bottom: 0;
-  height: 250px;
-  padding: 0 18px calc(18px + env(safe-area-inset-bottom, 0px));
+  height: calc(var(--controls-height) + env(safe-area-inset-bottom, 0px));
+  padding: 0 max(12px, env(safe-area-inset-right, 0px)) calc(14px + env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
   align-items: flex-end;
   justify-content: space-between;
   pointer-events: none;
@@ -95,39 +101,48 @@ body.touch #touch {
   background: var(--pad);
   border: 2px solid rgba(233, 239, 251, 0.35);
   touch-action: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  padding: 0;
 }
 #touch button.on { background: var(--pad-on); border-color: var(--gold); }
-.pad { position: relative; flex-shrink: 0; width: 162px; height: 162px; pointer-events: none; }
-.pad button { position: absolute; width: 56px; height: 56px; border-radius: 10px; font-size: 18px; }
-.pad .up { left: 53px; top: 0; }
-.pad .left { left: 0; top: 53px; }
-.pad .right { left: 106px; top: 53px; }
-.pad .down { left: 53px; top: 106px; }
-.ab { position: relative; flex-shrink: 0; width: 150px; height: 130px; pointer-events: none; }
-.ab button { position: absolute; width: 70px; height: 70px; border-radius: 50%; font-size: 22px; }
-.ab .a { right: 0; top: 0; background: rgba(206, 29, 0, 0.45); }
-.ab .b { left: 0; top: 52px; background: rgba(255, 191, 48, 0.3); }
-.ab .c { left: 0; top: -22px; width: 56px; height: 56px; background: rgba(96, 224, 255, 0.3); }
+#touch button:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+#touch small { display: block; font-size: 9px; letter-spacing: 0.02em; }
+.pad { position: relative; flex-shrink: 0; width: 156px; height: 156px; pointer-events: none; }
+.pad button { position: absolute; width: 52px; height: 52px; border-radius: 10px; font-size: 18px; }
+.pad .up { left: 52px; top: 0; }
+.pad .left { left: 0; top: 52px; }
+.pad .right { left: 104px; top: 52px; }
+.pad .down { left: 52px; top: 104px; }
+.ab { position: relative; flex-shrink: 0; width: 144px; height: 156px; pointer-events: none; }
+.ab button { position: absolute; width: 66px; height: 66px; border-radius: 50%; font-size: 22px; }
+.ab .a { right: 0; top: 36px; background: rgba(206, 29, 0, 0.45); }
+.ab .b { left: 0; top: 88px; background: rgba(255, 191, 48, 0.3); }
+.ab .c { left: 0; top: 12px; width: 56px; height: 56px; background: rgba(96, 224, 255, 0.3); }
 #touch button[hidden] { display: none; }
-#touch .start { position: absolute; left: 50%; top: 14px; transform: translateX(-50%); padding: 8px 14px; border-radius: 16px; font-size: 12px; }
+#touch .start { position: absolute; left: 50%; top: 8px; transform: translateX(-50%); width: 72px; min-height: 44px; border-radius: 16px; font-size: 12px; }
 
-@media (max-width: 380px) {
-  body.touch #touch { padding-left: 10px; padding-right: 10px; }
-  .pad { width: 145px; height: 145px; }
-  .pad button { width: 50px; height: 50px; }
-  .pad .up { left: 47px; }
-  .pad .left { top: 47px; }
-  .pad .right { left: 94px; top: 47px; }
-  .pad .down { left: 47px; top: 94px; }
-  .ab { width: 132px; height: 122px; }
-  .ab button { width: 62px; height: 62px; }
-  .ab .c { width: 50px; height: 50px; top: -8px; }
+@media (max-width: 359px) {
+  .pad { width: 144px; height: 144px; }
+  .pad button { width: 48px; height: 48px; }
+  .pad .up { left: 48px; }
+  .pad .left { top: 48px; }
+  .pad .right { left: 96px; top: 48px; }
+  .pad .down { left: 48px; top: 96px; }
+  .ab { width: 132px; }
+  .ab button { width: 60px; height: 60px; }
 }
 
 @media (orientation: landscape) {
-  body.touch #wrap { justify-content: center; padding-top: 0; }
-  body.touch #touch { height: 100%; opacity: 0.6; }
-  #touch .start { top: auto; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); }
+  body.touch #wrap {
+    left: calc(var(--side-controls) + env(safe-area-inset-left, 0px));
+    right: calc(var(--side-controls) + env(safe-area-inset-right, 0px));
+    bottom: env(safe-area-inset-bottom, 0px);
+    padding: calc(8px + env(safe-area-inset-top, 0px)) 0 0;
+  }
+  body.touch #touch { height: 100%; align-items: center; padding-top: env(safe-area-inset-top, 0px); }
+  body.touch #mobileHint { display: none; }
+  #touch .start { left: calc(90px + env(safe-area-inset-left, 0px)); top: auto; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
 }
 
 </style>
@@ -136,23 +151,24 @@ body.touch #touch {
 <main id="wrap">
   <canvas id="screen" width="256" height="224" aria-label="Tela do jogo Kinhu's Adventure"></canvas>
   <nav id="bar" aria-label="Opções">
+    <span id="mobileHint">MODO TOQUE</span>
     <button id="btnOptions" type="button" title="Abre as configurações; durante a partida, pausa o jogo">Configurações</button>
     <button id="btnFull" type="button" title="Tela cheia (tecla F)">Tela cheia</button>
   </nav>
 </main>
 
-<div id="touch" aria-hidden="true">
+<div id="touch" role="group" aria-label="Controles de toque" aria-hidden="true">
   <div class="pad">
-    <button class="up" data-act="up">▲</button>
-    <button class="left" data-act="left">◀</button>
-    <button class="right" data-act="right">▶</button>
-    <button class="down" data-act="down">▼</button>
+    <button type="button" class="up" data-act="up" aria-label="Cima">▲</button>
+    <button type="button" class="left" data-act="left" aria-label="Esquerda">◀</button>
+    <button type="button" class="right" data-act="right" aria-label="Direita">▶</button>
+    <button type="button" class="down" data-act="down" aria-label="Baixo / agachar">▼</button>
   </div>
-  <button class="start" data-act="start">START</button>
+  <button type="button" class="start" data-act="start" aria-label="Start / pausar">START<small>PAUSA</small></button>
   <div class="ab">
-    <button class="c" data-act="propel" aria-label="Pum propulsor" hidden>C</button>
-    <button class="b" data-act="run,back">B</button>
-    <button class="a" data-act="jump,confirm">A</button>
+    <button type="button" class="c" data-act="propel" aria-label="Pum propulsor" hidden>C<small>PUM</small></button>
+    <button type="button" class="b" data-act="run,back" aria-label="Correr / lançar lata / voltar">B<small>CORRER</small></button>
+    <button type="button" class="a" data-act="jump,confirm" aria-label="Pular / confirmar">A<small>PULAR</small></button>
   </div>
 </div>
 
@@ -222,9 +238,16 @@ const U = {
 function fitScreen() {
   const touch = document.body.classList.contains('touch');
   const vw = window.innerWidth, vh = window.innerHeight;
-  const portrait = vh > vw;
-  const availW = vw - 32, availH = touch ? (portrait ? vh - 270 : vh - 8) : vh - 56;
-  let s = Math.min(availW / W, availH / H);
+  let availW = vw - 32, availH = vh - 56;
+  if (touch) {
+    // O CSS reserva espaço para controles, barra e áreas seguras do celular.
+    const wrap = document.getElementById('wrap');
+    const rect = wrap.getBoundingClientRect(), style = window.getComputedStyle(wrap);
+    const bar = document.getElementById('bar');
+    availW = rect.width - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight) - 12;
+    availH = rect.height - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom) - bar.getBoundingClientRect().height - 22;
+  }
+  let s = Math.max(0.1, Math.min(availW / W, availH / H));
   if (s >= 2) s = Math.floor(s);
   cv.style.width = Math.floor(W * s) + 'px';
   cv.style.height = Math.floor(H * s) + 'px';
@@ -267,7 +290,7 @@ const Input = {
     for (const action of ['jump', 'run', 'propel', 'confirm', 'back']) this.map[action] = bindings[action].slice();
     // Toques pendentes continuam sendo reconhecidos após trocar o teclado.
     for (const action of Object.keys(this.map)) if (!this.map[action].includes('touch-' + action)) this.map[action].push('touch-' + action);
-    this.keys = {}; this.hits = {}; this.cur = {}; this.prev = {}; this.touch = {};
+    this.releaseAll();
     if (persist) { try { localStorage.setItem(this.PRESET_KEY, id); } catch (e) { /* funciona sem armazenamento */ } }
     return true;
   },
@@ -285,6 +308,10 @@ const Input = {
     return compact && action === 'jump' ? p.shortJump : compact && action === 'run' ? p.shortRun : p[action] || '';
   },
   sceneHint() { return this.device === 'keyboard' ? this.label('confirm') + ': AVANÇAR  ESC: PULAR' : 'A: AVANÇAR  START/B: PULAR'; },
+  releaseAll() {
+    this.keys = {}; this.hits = {}; this.cur = {}; this.prev = {}; this.touch = {}; this.anyKey = false;
+    if (this.resetTouch) this.resetTouch();
+  },
   init() {
     this.loadPreset();
     const block = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space']);
@@ -295,7 +322,8 @@ const Input = {
       this.keys[e.code] = true;
     });
     window.addEventListener('keyup', e => { this.keys[e.code] = false; });
-    window.addEventListener('blur', () => { this.keys = {}; this.touch = {}; });
+    window.addEventListener('blur', () => this.releaseAll());
+    document.addEventListener('visibilitychange', () => { if (document.hidden) this.releaseAll(); });
   },
   update() {
     this.prev = this.cur;
@@ -536,6 +564,86 @@ class Grid {
 // sprite com versões para direita e esquerda
 function mkSprite(grid) { return { r: grid.canvas(), l: grid.flip().canvas(), w: grid.w, h: grid.h }; }
 function drawSpr(s, x, y, left, c = ctx) { c.drawImage(left ? s.l : s.r, Math.round(x), Math.round(y)); }
+
+</script>
+<script>
+'use strict';
+/* Controles por ponteiro: cada dedo mantém seu próprio botão pressionado. */
+const TouchControls = {
+  active: false,
+  pointers: new Map(),
+  init() {
+    this.root = document.getElementById('touch');
+    this.buttons = [...this.root.querySelectorAll('[data-act]')];
+    const coarse = window.matchMedia('(any-pointer: coarse)');
+    const detect = () => {
+      if (coarse.matches || (navigator.maxTouchPoints > 0 && Math.min(innerWidth, innerHeight) <= 1024)) this.enable();
+    };
+    Input.resetTouch = () => this.reset();
+    detect();
+    if (coarse.addEventListener) coarse.addEventListener('change', detect);
+    window.addEventListener('resize', () => { Input.releaseAll(); detect(); fitScreen(); });
+    window.addEventListener('orientationchange', () => Input.releaseAll());
+    if (window.visualViewport) window.visualViewport.addEventListener('resize', fitScreen);
+    window.addEventListener('pointerdown', e => { if (e.pointerType === 'touch') this.enable(); }, { capture: true });
+    this.root.addEventListener('contextmenu', e => e.preventDefault());
+    for (const button of this.buttons) {
+      button.setAttribute('aria-pressed', 'false');
+      button.addEventListener('pointerdown', e => {
+        if (e.button !== 0) return;
+        e.preventDefault();
+        this.enable();
+        button.setPointerCapture(e.pointerId);
+        this.pointers.set(e.pointerId, { button, directional: button.parentElement.classList.contains('pad') });
+        this.sync();
+      });
+      button.addEventListener('pointermove', e => {
+        const pointer = this.pointers.get(e.pointerId);
+        if (!pointer || !pointer.directional) return;
+        e.preventDefault();
+        const target = document.elementFromPoint(e.clientX, e.clientY);
+        pointer.button = this.buttons.includes(target) && target.parentElement.classList.contains('pad') ? target : null;
+        this.sync();
+      });
+      const release = e => {
+        if (!this.pointers.has(e.pointerId)) return;
+        e.preventDefault();
+        this.pointers.delete(e.pointerId);
+        this.sync();
+      };
+      for (const event of ['pointerup', 'pointercancel', 'lostpointercapture']) button.addEventListener(event, release);
+    }
+  },
+  enable() {
+    Input.device = 'touch';
+    if (this.active) return;
+    this.active = true;
+    document.body.classList.add('touch');
+    this.root.setAttribute('aria-hidden', 'false');
+    fitScreen();
+  },
+  sync() {
+    const next = {};
+    for (const [id, pointer] of this.pointers) if (pointer.button && pointer.button.hidden) this.pointers.delete(id);
+    for (const { button } of this.pointers.values()) {
+      if (button && !button.hidden) for (const action of button.dataset.act.split(',')) next[action] = true;
+    }
+    for (const action in next) if (!Input.touch[action]) {
+      Input.hits['touch-' + action] = true;
+      Input.anyKey = true;
+    }
+    Input.touch = next;
+    for (const button of this.buttons) {
+      const pressed = !button.hidden && [...this.pointers.values()].some(pointer => pointer.button === button);
+      button.classList.toggle('on', pressed);
+      button.setAttribute('aria-pressed', String(pressed));
+    }
+  },
+  reset() {
+    this.pointers.clear();
+    this.sync();
+  },
+};
 
 </script>
 <script>
@@ -5305,15 +5413,7 @@ const App = {
     btn('btnOptions', () => this.openOptions());
     btn('btnFull', () => this.toggleFull());
     // controles de toque
-    const touchy = 'ontouchstart' in window || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
-    if (touchy) document.body.classList.add('touch');
-    document.querySelectorAll('[data-act]').forEach(el => {
-      const acts = el.dataset.act.split(',');
-      const set = v => { for (const a of acts) Input.touch[a] = v; if (v) { Input.device = 'touch'; for (const a of acts) Input.hits['touch-' + a] = true; } };
-      el.addEventListener('pointerdown', e => { e.preventDefault(); el.setPointerCapture && el.setPointerCapture(e.pointerId); set(true); el.classList.add('on'); });
-      const off = e => { e.preventDefault(); set(false); el.classList.remove('on'); };
-      el.addEventListener('pointerup', off); el.addEventListener('pointercancel', off); el.addEventListener('lostpointercapture', off);
-    });
+    TouchControls.init();
     // tocar na tela do título/história também avança
     const pointer = e => { const r = cv.getBoundingClientRect(); return { x: (e.clientX - r.left) * W / r.width, y: (e.clientY - r.top) * H / r.height }; };
     cv.addEventListener('pointerdown', e => {
@@ -5327,7 +5427,6 @@ const App = {
     });
     // toques valem como "apertou" também
     for (const a of ['jump', 'run', 'propel', 'start', 'confirm', 'left', 'right', 'up', 'down', 'back']) if (!Input.map[a].includes('touch-' + a)) Input.map[a].push('touch-' + a);
-    window.addEventListener('keydown', () => { if (!touchy) return; document.body.classList.remove('touch'); fitScreen(); }, { once: true });
   },
   openFile() { const f = document.getElementById('loadFile'); if (f) f.click(); },
   readFile(file) {
@@ -5593,6 +5692,7 @@ const App = {
   syncAbilityControls() {
     const button = document.querySelector ? document.querySelector('[data-act="propel"]') : null;
     if (button) button.hidden = !Progression.usable(Game.progress, 'propulsion') || this.state !== 'play';
+    if (TouchControls.buttons) TouchControls.sync();
   },
   acknowledgeUnlock(id, skipped = false) {
     if (!Progression.acknowledge(Game.progress, id, skipped)) return false;
