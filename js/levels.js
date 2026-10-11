@@ -33,6 +33,7 @@ function segment32(parts, indoor = false) {
 }
 
 // items usa coordenadas de bloco: bônus flutuantes com coleta opcional.
+// Marmita/hora extra ficam em desvios altos; nunca são exigidos na rota principal.
 const LEVELS = [
   {
     id: 1, name: 'SAINDO DE CASA', clock: '07:42', theme: 'bairro', time: 900,
@@ -105,6 +106,7 @@ const LEVELS = [
   },
   {
     id: 2, name: 'VIAGEM DE ÔNIBUS', clock: '07:55', theme: 'onibus', time: 900, brakes: true, indoor: true, practiceEnd: 32,
+    duel: { door: [188, 10], type: 'fiscal', name: 'FISCAL DA LINHA' },
     items: [{ kind: 'backpack', x: 17, y: 10 }],
     goal: 'DESÇA NO CENTRO!',
     segs: [
@@ -168,7 +170,7 @@ const LEVELS = [
   },
   {
     id: 3, name: 'CENTRO DA CIDADE', clock: '08:20', theme: 'centro', time: 900, practiceEnd: 32, practiceAbility: 'propulsion',
-    items: [{ kind: 'coffee', x: 9, y: 11 }],
+    items: [{ kind: 'coffee', x: 9, y: 11 }, { kind: 'extraTime', x: 561, y: 8 }],
     goal: 'CHEGUE AO ESCRITÓRIO!',
     segs: [
       segment32([[11, 2, 'P'], [10, 8, 'ccc'], [10, 16, 'ccc'], [11, 25, 'T'], [7, 12, '?B?B?']]),
@@ -235,7 +237,9 @@ const LEVELS = [
   },
   {
     id: 4, name: 'O ESCRITÓRIO', clock: '09:00', theme: 'escritorio', time: 900, indoor: true, practiceEnd: 32, practiceAbility: 'bellySlam',
-    items: [{ kind: 'backpack', x: 4, y: 11 }, { kind: 'coffee', x: 16, y: 11 }, { kind: 'magnet', x: 23, y: 8 }],
+    bonus: { key: [281, 8], door: [285, 10], name: 'ARQUIVO DE MANUTENÇÃO' },
+    duel: { door: [447, 10], type: 'printer', name: 'IMPRESSORA DO RH' },
+    items: [{ kind: 'backpack', x: 4, y: 11 }, { kind: 'coffee', x: 16, y: 11 }, { kind: 'magnet', x: 23, y: 8 }, { kind: 'lunch', x: 236, y: 8 }, { kind: 'extraTime', x: 563, y: 8 }],
     switchGates: [{ switch: [20, 12], blocks: [[26, 9], [26, 10], [26, 11]] }],
     goal: 'DESÇA PARA OS SERVIDORES!',
     segs: [
@@ -296,7 +300,8 @@ const LEVELS = [
   },
   {
     id: 5, name: 'SALA DOS SERVIDORES', clock: '16:59', theme: 'servidores', time: 900, boss: true, indoor: true, practiceEnd: 32, practiceAbility: 'steadyStep',
-    items: [{ kind: 'backpack', x: 4, y: 11 }, { kind: 'coffee', x: 22, y: 11 }, { kind: 'magnet', x: 13, y: 9 }],
+    bonus: { key: [327, 8], door: [336, 10], name: 'PASSARELA DE MANUTENÇÃO' },
+    items: [{ kind: 'backpack', x: 4, y: 11 }, { kind: 'coffee', x: 22, y: 11 }, { kind: 'magnet', x: 13, y: 9 }, { kind: 'lunch', x: 366, y: 8 }, { kind: 'extraTime', x: 185, y: 8 }],
     goal: 'DERROTE O MEGA BUG!',
     segs: [
       segment32([[11, 2, 'P'], [7, 4, '?H?'], [12, 9, 'IIIIIIII'], [10, 10, 'cccccc']], true),

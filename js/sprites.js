@@ -136,6 +136,11 @@ SPR.kinhuWild = [
   buildKinhu({ o: '#4ad8f0', O: '#b0f4ff', r: '#1a90b8', h: '#4a2a14' }, { wild: true, claws: true }),
 ];
 SPR.kinhu1up = buildKinhu({ o: '#48c048', O: '#98f088', r: '#208a30' });
+SPR.costumes = {
+  blue: buildKinhu({ o: '#328fcb', O: '#87d5ff', r: '#185483' }),
+  green: buildKinhu({ o: '#48a85b', O: '#a0df80', r: '#246333' }),
+  purple: buildKinhu({ o: '#9250ba', O: '#d3a0ed', r: '#583273' }),
+};
 
 // cabeça do Kinhu para o HUD (recorte)
 SPR.kinhuHead = (() => {
@@ -213,11 +218,21 @@ function personRows(o, legs, pose) {
   if (o.hair === 'curly') { r[0] = '....hhhhhh......'; r[1] = '...hhhhhhhhh....'; r[2] = '..hhhhhssss.....'; r[3] = '..hhhSsssess....'; r[4] = '..hhhSssssss....'; r[5] = '...hhSssssms....'; }
   if (o.hair === 'cap') { r[0] = '....cccccc......'; r[1] = '...cccccccCC....'; r[2] = '...hhhssssss....'; }
   if (o.hair === 'hood') { r[0] = '.....kkkk.......'; r[1] = '....kkkkkkk.....'; r[2] = '...kkkmmmmm.....'; r[3] = '...kkmwmmwm.....'; r[4] = '...kkSssssss....'; r[5] = '....kSsssms.....'; }
+  if (o.hair === 'fedora') {
+    r[0] = '.....wwwwww.....'; r[1] = '....wwwwwwww....';
+    r[2] = '....kkkkkkkk....'; r[3] = '..wwwwwwwwwwww..';
+    r[4] = '...hhssssess....'; r[5] = '...hhSswsws.....';
+    r[6] = '....Swwwwww.....'; r[7] = '....ttwwwwtt....';
+  }
   if (o.tie) { for (const y of [7, 8, 9, 10, 11]) { const a = r[y].split(''); a[7] = 'y'; r[y] = a.join(''); } }
   if (o.stripes) { for (const y of [8, 10, 12]) r[y] = r[y].replace(/t/g, 'T'); }
   if (o.angry) { r[3] = r[3].replace('sess', 'eeSs'); r[5] = r[5].replace('ms', 'mm'); }
   if (pose === 'up') { r[9] = '..ttTtttttt.s...'; r[10] = '..tTttttttts....'; }
   if (pose === 'fwd') { r[9] = '..ttTttttttss...'; r[10] = '..tTtttttt......'; }
+  if (o.star) {
+    const put = (x, y) => { const line = r[y].split(''); line[x] = 'w'; r[y] = line.join(''); };
+    for (const [x, y] of [[7, 9], [5, 10], [6, 10], [7, 10], [8, 10], [9, 10], [6, 11], [7, 11], [8, 11], [5, 12], [9, 12]]) put(x, y);
+  }
   if (o.dress) {
     r = r.concat(['...pppppppp.....', '..pppppppppp....']);
     legs = [['....ss..ss......', '...nnn..nnn.....'], ['...ss....ss.....', '..nnn.....nnn...'], ['.....ssss.......', '.....nnnnn......']][PERSON_LEGS.indexOf(legs)];
@@ -244,8 +259,17 @@ function makePerson(o) {
 
 SPR.coworker = makePerson({ hair: 'spiky', tie: true, angry: true, actPose: 'up' });
 SPR.intern = makePerson({ hair: 'short', pal: { h: '#c88a3a', t: '#40a860', T: '#287040', p: '#3a4a7a' }, actPose: 'fwd' });
+SPR.fiscal = makePerson({ hair: 'cap', tie: true, angry: true, pal: { c: '#328fcb', C: '#185483', t: '#24436f', T: '#466c9e', y: '#ffe384' }, actPose: 'fwd', actExtra: g => g.rect(12, 10, 3, 5, '#fff4dc') });
+SPR.hrPrinter = [false, true].map(open => {
+  const g = new Grid(28, 24);
+  g.rect(5, 0, 18, 7, '#fff4dc'); g.rect(7, 2, 12, 1, '#64738d');
+  g.rect(2, 6, 24, 14, '#a8b5cb'); g.rect(3, 7, 22, 2, '#d9efff');
+  g.rect(5, 10, 18, 5, '#24397a'); g.rect(7, 11, 3, 2, '#ffbf30'); g.rect(18, 11, 3, 2, '#ffbf30');
+  g.rect(6, 16, 16, 4, '#20141c'); g.rect(8, 18, 12, open ? 6 : 2, open ? '#ffe384' : '#fff4dc');
+  g.rect(3, 21, 4, 2, '#64738d'); g.rect(21, 21, 4, 2, '#64738d'); g.outline(OUT); return mkSprite(g);
+});
 SPR.lady = makePerson({ hair: 'curly', dress: true, pal: { h: '#c8c8d8', t: '#9050b0', T: '#6a3088', p: '#9050b0' }, actPose: 'fwd' });
-SPR.thief = makePerson({ hair: 'hood', stripes: true, pal: { t: '#e8e8e8', T: '#303040', p: '#2a3050', m: '#101018' } });
+SPR.thief = makePerson({ hair: 'fedora', star: true, pal: { h: '#d9d9d0', t: '#d93232', T: '#a51f29', p: '#2a3050', k: '#161820', s: '#edc0a0', S: '#bd8f75' } });
 SPR.skater = makePerson({ hair: 'cap', pal: { t: '#f0c020', T: '#c08a10', p: '#4a6a9a', h: '#2a1a10' } });
 SPR.worker = makePerson({ hair: 'cap', pal: { c: '#f8c818', C: '#c09010', t: '#f87818', T: '#c05010', p: '#3a4a6a' } });
 
@@ -343,6 +367,30 @@ SPR.backpack = (() => {
   g.rect(2, 5, 2, 7, '#185c77'); g.rect(12, 5, 2, 7, '#185c77');
   g.rect(5, 8, 6, 5, '#f0c16b'); g.rect(5, 9, 6, 1, '#a65b35');
   g.rect(4, 5, 7, 1, '#94e5ef'); g.outline(OUT); return mkSprite(g);
+})();
+// Consumíveis imediatos: marmita aberta e relógio com símbolo de adição.
+SPR.lunch = (() => {
+  const g = new Grid(16, 16);
+  g.rect(2, 4, 12, 9, '#94b4c8'); g.rect(3, 5, 10, 6, '#fff4dc');
+  g.rect(3, 5, 5, 5, '#ffffff'); g.rect(9, 6, 3, 3, '#a65b35');
+  g.rect(8, 5, 2, 2, '#76b852'); g.rect(8, 9, 4, 1, '#76b852');
+  g.rect(2, 11, 12, 2, '#4f728e'); g.rect(0, 7, 2, 3, '#94b4c8');
+  g.rect(14, 7, 2, 3, '#94b4c8'); g.outline(OUT); return mkSprite(g);
+})();
+SPR.extraTime = (() => {
+  const g = new Grid(16, 16);
+  g.ellipse(7, 8, 6, 6, '#258b9b'); g.ellipse(7, 8, 4.5, 4.5, '#fff4dc');
+  g.rect(7, 5, 1, 4, OUT); g.rect(4, 8, 4, 1, OUT);
+  g.rect(5, 0, 4, 2, '#94e5ef'); g.rect(11, 1, 3, 5, '#ffe384');
+  g.rect(10, 2, 5, 3, '#ffe384'); g.rect(12, 2, 1, 3, '#a65b35');
+  g.rect(11, 3, 3, 1, '#a65b35'); g.outline(OUT); return mkSprite(g);
+})();
+SPR.maintenance = (() => {
+  const g = new Grid(16, 16);
+  g.rect(6, 0, 4, 4, '#94e5ef'); g.rect(3, 4, 10, 11, '#fff4dc');
+  g.rect(3, 4, 10, 3, '#ffbf30'); g.rect(6, 8, 2, 5, '#258b9b');
+  g.rect(5, 8, 4, 2, '#258b9b'); g.rect(6, 8, 2, 1, '#fff4dc');
+  g.rect(10, 10, 2, 1, '#a65b35'); g.outline(OUT); return mkSprite(g);
 })();
 // moeda girando
 SPR.memories = [0, 1, 2].map(slot => {

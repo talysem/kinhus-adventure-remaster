@@ -42,7 +42,7 @@ assert.equal(Save.data.completed, true);
 localStorage.setItem(Save.KEY, JSON.stringify(legacy(2)));
 Save.load();
 assert.deepStrictEqual(Save.data.campaign.abilities, ids(2));
-assert.equal(JSON.parse(localStorage.getItem(Save.KEY)).version, 5);
+assert.equal(JSON.parse(localStorage.getItem(Save.KEY)).version, 6);
 const snapshot = JSON.stringify(Save.data);
 const corrupted = JSON.parse(pack(legacy(1))); corrupted.save.run.level = 4;
 assert.equal(Save.importText(JSON.stringify(corrupted)).msg, 'ARQUIVO CORROMPIDO');
@@ -54,7 +54,7 @@ assert(!Save.importText(pack([])).ok);
 assert(!Save.importText(pack('invalid')).ok);
 assert(!Save.importText(pack({ ...legacy(1), version: 2 })).ok);
 assert.equal(JSON.stringify(Save.data), snapshot);
-const future = JSON.stringify({ version: 6, run: { level: 4 } });
+const future = JSON.stringify({ version: Save.FORMAT + 1, run: { level: 4 } });
 localStorage.setItem(Save.KEY, future); Save.load();
 assert(!Save.persist()); assert.equal(localStorage.getItem(Save.KEY), future);
 assert(Save.importText(pack(legacy(1))).ok);
@@ -63,7 +63,7 @@ assert(Save.importText(pack(legacy(1))).ok);
 const dirty = JSON.parse(JSON.stringify(Save.data));
 dirty.campaign = { completedLevels: 5, abilities: ['unknown', 'steadyStep'], origin: 'wat',
   tutorials: ['doubleJump', 'unknown'], pendingUnlocks: ['doubleJump', 'steadyStep', 'unknown'] };
-assert(Save.importText(pack(dirty, 5)).ok);
+assert(Save.importText(pack(dirty, Save.FORMAT)).ok);
 assert.deepStrictEqual(Save.data.campaign, { completedLevels: 1, abilities: ['doubleJump'], stories: { doubleJump: 'legacy' }, tutorials: ['doubleJump'], pendingUnlocks: [] });
 
 // Novo jogo salva antes da abertura e reinicia somente o progresso da campanha.

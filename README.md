@@ -66,7 +66,9 @@ Nos conjuntos WASD, **W não aciona pulo**. Barrigada: **S + novo toque em pular
 
 No controle, os comandos continuam: direcional/analógico para andar, **A** para pular, **B/X** para correr/latas, **RB** para pum, **baixo + A** para barrigada/descida e **Start** para pausa. No celular: **A**, **B**, **C**, direcional e **START**. Passo firme é passivo em todos os dispositivos.
 
-**Celulares e tablets** são identificados pela capacidade de toque; o primeiro toque também ativa os controles em aparelhos híbridos. Em retrato, os botões ficam abaixo do jogo; em paisagem, nas laterais, respeitando as áreas seguras da tela. **A** pula/confirma, **B** corre/lança latas/volta e **START** pausa. **C** aparece quando o pum está disponível. É possível segurar direção + B + A ao mesmo tempo e deslizar o dedo entre as setas. Para o pulo duplo, solte A e toque novamente. Configurações e tela cheia continuam acessíveis; tela cheia depende do suporte do navegador. Usar um teclado não remove os botões de toque.
+**Celulares e tablets** são identificados pela capacidade de toque; o primeiro toque também ativa os controles em aparelhos híbridos. Em retrato, os botões ficam abaixo do jogo, em um conjunto centralizado; em paisagem, ficam junto das bordas do jogo, respeitando as áreas seguras da tela. As setas têm 52–62 px; A/B, 68–84 px; C, 64–76 px, conforme a tela. **A** pula/confirma, **B** corre/lança latas/volta e **START** pausa. **C** aparece quando o pum está disponível. É possível segurar direção + B + A ao mesmo tempo; a cruz inteira responde a arraste/diagonais, com um pequeno centro neutro. Os botões de ação toleram até 12 px de aproximação nas áreas livres do grupo. Para o pulo duplo, solte A e toque novamente, inclusive entre dois quadros. Captura de ponteiro indisponível não impede o comando; soltura/cancelamento também são tratados pela janela. Configurações e tela cheia continuam acessíveis; tela cheia depende do suporte do navegador. Usar um teclado não remove os botões de toque.
+
+O ladrão de moedas tem aparência de idoso, barba branca, chapéu branco de estilo italiano com faixa preta e camiseta vermelha com estrela branca. A animação mantém o tamanho, a colisão e o comportamento de roubo anteriores.
 
 ## Itens
 
@@ -76,13 +78,26 @@ No controle, os comandos continuam: direcional/analógico para andar, **A** para
 - **Café expresso**: +15% na aceleração e velocidade máxima por 8 segundos, sem aumentar a altura do pulo. Introduzido na reta inicial do centro.
 - **Mochila acolchoada**: absorve um golpe comum antes da Coca-Cola e dos corações. Não protege contra queda, líquido ou esmagamento fatal. Introduzida no ônibus.
 - **Ímã de troco**: atrai somente moedas até três blocos por 12 segundos, respeitando paredes. Aparece primeiro em um trecho opcional do bairro.
+- **Marmita caprichada**: recupera até dois corações, sem ultrapassar o máximo. Com vida cheia, concede 1000 pontos. Fica em desvios altos no escritório e nos servidores.
+- **Hora extra**: devolve até 30 unidades ao cronômetro, limitado ao tempo inicial da fase considerando dificuldade e assistência. Fica em rotas altas no centro, escritório e servidores. Não altera o tempo ativo dos desafios.
+- **Crachá de manutenção**: permite abrir uma sala bônus da fase, com **↑/W** no teclado ou cima no controle/toque. É consumido ao entrar e não é guardado no save. Se a sala ainda não foi usada, o crachá reaparece ao reiniciar ou retomar a fase.
 - **Garras**: ativa o **modo Kinhurine**. Uma cena ilustrada de **4 segundos** mostra a energia se acumulando, três garras metálicas surgindo de cada punho e o grito enfurecido. A música muda para uma trilha de tensão, com som metálico nas garras e um grito sintetizado na pose final; a trilha baixa durante o grito. Depois entra o tema acelerado do poder. O cabelo arrepia e o Kinhu ganha **10 segundos de invencibilidade**. Mundo e poder ficam congelados durante a cena; Z, Enter, A do controle ou toque permitem pular.
 - **Crachá 1UP**: vida extra rara, disponível apenas no Centro e no Escritório, um por fase.
 - **Relógio de ponto**: é o checkpoint ("bateu o ponto!"). Se morrer, você volta dali.
 
 Coca-Cola, mochila e café **ou** ímã podem coexistir. Café e ímã se substituem; repetir o mesmo item renova sua duração. Kinhurine suspende os efeitos e contadores dos utilitários, preservando a mochila. HUD indica tempo restante, `!` nos últimos dois segundos e **PAUSA** durante Kinhurine. **GUIA DO JOGO → ITENS / COMO USAR** explica as regras.
 
+Marmita e hora extra têm efeito imediato e preservam Coca-Cola, mochila, café/ímã e Kinhurine. A hora extra cancela a aceleração de urgência quando o cronômetro volta a mais de 100; o aviso retorna se chegar a 100 outra vez. Mesmo recolhidos com vida/tempo cheios, esses itens são consumidos. Não reaparecem ao morrer, reiniciar ou retomar a mesma fase; novo jogo e replay permitem nova coleta. A terceira página da ajuda explica os novos itens.
+
 Morte, mudança de fase, reinício e retomada removem café, ímã e mochila. Coletáveis fixos consumidos não reaparecem na mesma fase ao recarregar; novo jogo ou replay reinicia a coleta. No normal, o jogo começa com **3 tentativas e 3 corações**. Um combo de nove pisões seguidos concede uma única vida extra; os pisões seguintes do mesmo combo rendem pontos.
+
+## Salas bônus
+
+Há uma sala no **Escritório** (Arquivo de Manutenção) e outra nos **Servidores** (Passarela de Manutenção), ambas opcionais e antes da saída/arena. Procure o crachá em um desvio alto e pressione **↑/W**, cima do controle ou do direcional de toque junto da porta identificada como **BÔNUS**.
+
+Cada sala tem **45 segundos**, dez moedas e uma porta final que concede **1000 pontos**. As moedas recolhidas ficam guardadas mesmo ao desistir, cair ou esgotar o tempo. A porta inicial e **SAIR DA SALA BÔNUS** na pausa permitem sair antecipadamente. Queda, dano ou tempo esgotado retornam à porta da fase, sem gastar vida/coração ou registrar morte.
+
+A fase principal congela durante a visita, incluindo plataformas, inimigos, projéteis, cronômetro e durações de café/ímã/Kinhurine. **O tempo ativo dos desafios continua contando**. Pausa e aba oculta congelam também o relógio da sala. A visita é registrada no save ao entrar: uma tentativa por sala na partida da fase, preservada após morte/reinício/retomada; novo jogo ou replay renova o acesso. Retomar um save feito dentro da sala carrega a fase principal a partir do início/checkpoint, mantendo recompensas já salvas e a sala usada. A quarta página do guia explica as regras.
 
 ## Salvamento
 
@@ -90,10 +105,34 @@ Morte, mudança de fase, reinício e retomada removem café, ímã e mochila. Co
 - **Arquivo de save (.json)**: na pausa ou na tela inicial, entre em **ARQUIVOS DE SAVE → BAIXAR ARQUIVO DE SAVE**. É baixado um arquivo como `kinhus-adventure-save-20261007-0915.json`.
 - **Carregar em outro lugar**: em outro computador ou navegador, use **ARQUIVOS DE SAVE → CARREGAR ARQUIVO DE SAVE** e escolha o arquivo, ou simplesmente **arraste o arquivo para a página**. O jogo continua de onde você parou.
 - O arquivo tem uma soma de verificação: se for corrompido ou editado à mão, o jogo recusa e avisa.
-- O save usa o **formato 5** e migra automaticamente arquivos e dados do navegador nos formatos 1, 2, 3 e 4, preservando fase, checkpoint, Coca-Cola, corações, moedas e recordes. Saves v1–v3 usam dificuldade normal; v4 preserva a dificuldade. Modo, assistência, consumo de itens e dados dos desafios ficam salvos; mochila, café e ímã não são restaurados. Coleção e desafios ficam separados da campanha. Importar une lembranças e melhores recordes dos dois saves.
+- O save usa o **formato 6** e migra automaticamente arquivos e dados do navegador nos formatos 1–5, preservando fase, checkpoint, Coca-Cola, corações, moedas e recordes. Saves v1–v3 usam dificuldade normal; v4 preserva a dificuldade; v5 preserva coleção e desafios. Modo, assistência, consumo de itens/visitas e dados dos desafios ficam salvos; mochila, café e ímã não são restaurados. Coleção, desafios e vitórias nos minichefes ficam separados da campanha. Importar une lembranças, melhores recordes e vitórias dos dois saves; migrar versões antigas não inventa vitórias.
 - **ESCOLHER FASE** inicia uma partida de replay que preserva a campanha salva. O replay pode melhorar o recorde; baixar o save durante ele exporta a campanha preservada. **CONTINUAR** retoma essa campanha.
 
-As quatro habilidades estão ativas e persistem após dano, morte e retomada. Novo jogo reinicia os poderes. **Pulo duplo:** um impulso extra por pouso. **Pum:** três blocos horizontais, recarga de um segundo e um uso aéreo até pousar, sem dano ou invencibilidade. **Barrigada:** baixo + novo toque em pular no ar; quebra só caixas marcadas com ▼ e aciona botões de chão. Não quebra estruturas nem substitui a descida de plataformas. **Passo firme:** reduz recuo em 30% e deslizamento em cerca de 30%, sem proteger de água eletrificada. O início do ônibus, centro, escritório e servidores oferece prática segura para a habilidade correspondente. Etapas 1–5 concluídas; próxima entrega: expansão opcional, conforme o [plano de melhorias](PLANO-MELHORIAS.md).
+As quatro habilidades estão ativas e persistem após dano, morte e retomada. Novo jogo reinicia os poderes. **Pulo duplo:** um impulso extra por pouso. **Pum:** três blocos horizontais, recarga de um segundo e um uso aéreo até pousar, sem dano ou invencibilidade. **Barrigada:** baixo + novo toque em pular no ar; quebra só caixas marcadas com ▼ e aciona botões de chão. Não quebra estruturas nem substitui a descida de plataformas. **Passo firme:** reduz recuo em 30% e deslizamento em cerca de 30%, sem proteger de água eletrificada. O início do ônibus, centro, escritório e servidores oferece prática segura para a habilidade correspondente. **Etapas 1–6 concluídas**, conforme o [plano de melhorias](PLANO-MELHORIAS.md). Calibração humana e refinamentos complementares estão descritos no documento.
+
+## Minichefes opcionais
+
+As portas **DESAFIO** no ônibus e no escritório abrem confrontos com o **Fiscal da Linha** e a **Impressora do RH**, usando cima e sem crachá. O Fiscal avisa, investe e descansa; a impressora avisa, dispara três papéis e abre a bandeja. O símbolo **▼** indica a janela para pisar, acertar uma lata ou usar barrigada (dois pontos). Há um intervalo de **40 quadros** entre acertos; avisos visuais funcionam sem som. Ambos podem ser vencidos sem itens temporários.
+
+Cada confronto tem **90 segundos e três corações próprios**. Falhar, desistir pela porta inicial ou usar **SAIR DO DESAFIO** na pausa retorna à fase com vida, corações, checkpoint e bônus preservados. A fase congela; o tempo ativo dos desafios continua contando. Uma tentativa por confronto na partida da fase, registrada no save; novo jogo/replay renova o acesso. Vitória concede **3000 pontos** e um registro permanente no perfil. No modo **Kinhu**, as portas e os minichefes ficam ausentes.
+
+| Minichefe | Fácil | Normal | Difícil |
+|---|---:|---:|---:|
+| Fiscal da Linha | 4 de vida | 6 de vida | 8 de vida |
+| Impressora do RH | 6 de vida | 8 de vida | 10 de vida |
+
+## Visual do Kinhu
+
+Em **CONFIGURAÇÕES → VISUAL DO KINHU**, veja prévias, metas e escolha a roupa. A coleção, medalhas e vitórias do perfil liberam:
+
+| Recompensa | Meta |
+|---|---|
+| Camiseta azul | 3 lembranças |
+| Camiseta verde | Todas as 15 lembranças |
+| Camiseta roxa | 3 medalhas distintas por fase/meta; repetir a mesma meta em outro modo não duplica |
+| Crachá dourado | Vencer os dois minichefes |
+
+Cosméticos preservam tamanho, colisão, física e habilidades. Coca-Cola conserva a camiseta vermelha e Kinhurine conserva cabelo/garras/cores; o crachá dourado é um detalhe pequeno. Desbloqueios persistem após novo jogo e via save/importação; a escolha de roupa fica salva neste navegador. O visual original continua disponível. A quinta página da ajuda explica confrontos e cosméticos.
 
 ## Exploração, replay e conforto
 
@@ -165,8 +204,11 @@ js/audio.js         sintetizador chiptune com eco estilo SNES, músicas e efeito
 js/levels.js        mapas das 5 fases (texto: cada caractere é um bloco de 16×16)
 js/settings.js     quatro dificuldades, bônus temporários e consumo dos coletáveis
 js/exploration.js  coleção, desafios, replay, assistência e preferências de conforto
+js/cosmetics.js    metas, seleção e preferência do visual do personagem
 js/save.js          salvamento no navegador e arquivo de save .json
 js/game.js          física, Kinhu, inimigos, itens, chefe, chegada nas fases
+js/bonus.js         crachás, salas opcionais, recompensas e retorno à fase preservada
+js/minibosses.js    Fiscal da Linha e Impressora do RH, avisos, ataques e vitórias
 js/main.js          telas, menus, HUD, transições e laço principal (60 fps fixos)
 js/title.js         tela de título: logo em pixel art com relevo e cena animada
 js/cutscenes.js     abertura em cinco cenas: arte em camadas, animações, legendas e câmera
@@ -217,7 +259,9 @@ As quatro novas imagens foram produzidas com ImageGen integrado, com a abertura 
 
 `node tools/test-controls.js` verifica os três conjuntos, seleção no menu, persistência, dicas, movimento, pulo duplo, pum, barrigada, latas e compatibilidade de gamepad/toque, preservando o save. Acrescente `--bundle` para validar o HTML offline.
 
-`node tools/test-mobile.js` verifica detecção de celular/tablet/desktop, ativação pelo primeiro toque, múltiplos dedos, arraste no direcional, pulo duplo, toques rápidos, cancelamento e liberação ao perder foco, ocultar a aba ou girar a tela. Acrescente `--bundle` para validar o HTML offline.
+`node tools/test-mobile.js` verifica detecção de celular/tablet/desktop, ativação pelo primeiro toque, múltiplos dedos, arraste/diagonais/centro neutro, pulo duplo e retap entre quadros, toques rápidos, tolerância dos botões, captura indisponível, cancelamento e liberação ao perder foco, ocultar a aba ou girar a tela. Acrescente `--bundle` para validar o HTML offline.
+
+`node tools/test-mobile-layout.js` usa Playwright/Chromium para conferir dez tamanhos de celular/tablet, botões dentro da tela sem cobrir o jogo, centralização, multitoque nativo e retap. Gera `tools/out/mobile-*.png` e `tools/out/thief-elderly.png`. Requer Playwright nas ferramentas de desenvolvimento; `PLAYWRIGHT_PACKAGE` pode indicar o pacote instalado e `CHROMIUM_PATH` um Chrome/Edge local. Acrescente `--bundle` para validar o HTML offline. Não adiciona dependências ao jogo.
 
 
 `node tools/test-items-difficulty.js` testa duração, renovação/troca, coexistência, dano e perigos fatais, física do café, raio/parede do ímã, congelamento, consumo persistente e migração v3→v4. Verifica os quatro modos, parâmetros de inimigos/ataques/chefe, conclusão no Kinhu, menus, preferências, retomada e replay. Acrescente `--bundle` para o HTML offline. Gera prévias em `tools/out/`.
@@ -225,3 +269,9 @@ As quatro novas imagens foram produzidas com ImageGen integrado, com a abertura 
 `node tools/test-exploration.js` verifica acesso às 15 lembranças usando saltos reais, coleção permanente, recompensa única, retomada, replay preservando campanha, desafios independentes, categorias por modo/assistência, congelamento do tempo, migração v4→v5, união/validação de perfis, assistência no checkpoint, volumes e opções visuais. Gera prévias de menus e exploração. Acrescente `--bundle` para o HTML offline.
 
 `node tools/test-menus.js` verifica categorias, navegação e retorno com seleção preservada, cliques e áreas de toque, acesso aos saves, prévias sem texto cortado e pausa durante os submenus. Gera prévias `tools/out/gui-*.png`. Acrescente `--bundle` para o HTML offline.
+
+`node tools/test-expansion-items.js` verifica cura/pontos da marmita, limites da hora extra nos quatro modos com/sem assistência, urgência, tempo dos desafios, coexistência, coleta dos cinco itens com saltos reais, retorno ao chão, consumo persistente após morte/checkpoint/importação e replay sem sobrescrever a campanha. Confere a terceira página da ajuda e gera prévias `tools/out/expansion-*.png`. Acrescente `--bundle` para o HTML offline.
+
+`node tools/test-bonus.js` verifica crachás e portas nas fases 4/5, entrada por teclado/gamepad/toque, acesso às moedas e travessia contínua com a física real, congelamento da fase e bônus, tempo ativo dos desafios, saída antecipada, queda/dano/tempo sem perder vida, consumo persistente da sala, importação dentro dela, replay, pausa/ajuda e mudança de dificuldade. Prévias: `tools/out/bonus-*.png`. Acrescente `--bundle` para o HTML offline.
+
+`node tools/test-stage-six.js` verifica os dois minichefes nos três modos com inimigos, avisos antes do ataque, janela/intervalo entre acertos, latas e barrigada, vitórias com comandos/física reais sem itens, ausência no Kinhu, corações próprios e preservação da campanha. Cobre os quatro cosméticos, requisitos, persistência, prioridade visual dos poderes, save v5→v6/localStorage, união de vitórias sem IDs inválidos, novo jogo e replay. Prévias de portas, lutas, roupas e ajuda em `tools/out/`. Acrescente `--bundle` para o HTML offline.

@@ -381,6 +381,7 @@ const Sound = {
       case 'propulsion': this.tone(130, 45, 0.22, 0.09, { wave: 'sawtooth' }); this.hiss(0.2, 0.05, { f0: 360, f1: 90 }); break;
       case 'coffee': this.arp(['C6', 'E6', 'G6', 'C7'], 0.07, 0.09, 50); break;
       case 'magnet': this.tone(500, 1000, 0.22, 0.10, { wave: 'triangle' }); break;
+      case 'extraTime': this.arp(['G5', 'D6', 'G6'], 0.08, 0.09, 50); break;
       case 'shield': this.tone(600, 220, 0.20, 0.10, { duty: 50 }); this.hiss(0.08, 0.05, { f0: 1200, f1: 400 }); break;
       case 'coin': this.tone(1318, 1318, 0.06, 0.1, { duty: 50 }); this.tone(1976, 1976, 0.22, 0.1, { duty: 50, delay: 0.06 }); break;
       case 'stomp': this.tone(520, 120, 0.12, 0.16, { duty: 50 }); this.hiss(0.08, 0.15, { f0: 900 }); break;

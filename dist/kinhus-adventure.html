@@ -75,20 +75,23 @@ canvas {
 
 /* ---------- toque: espaço reservado, sem cobrir o jogo ---------- */
 #touch, #mobileHint { display: none; }
-body.touch { --controls-height: 226px; --side-controls: 174px; }
+body.touch { --controls-height: 252px; --pad-button: 60px; --pad-size: calc(var(--pad-button) * 3); --action-size: 80px; --pum-size: 72px; --actions-width: 164px; --side-controls: calc(var(--pad-size) + 28px); }
 body.touch #wrap {
   bottom: calc(var(--controls-height) + env(safe-area-inset-bottom, 0px));
   padding: calc(12px + env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-right, 0px)) 0 max(12px, env(safe-area-inset-left, 0px));
 }
 body.touch #bar { align-items: center; gap: 6px; }
-body.touch #bar button { min-height: 36px; font-size: 10px; padding: 5px 8px; }
+body.touch #bar button { min-height: 40px; font-size: 11px; padding: 5px 10px; }
 body.touch #mobileHint { display: block; color: var(--gold); font-size: 9px; letter-spacing: 0.08em; }
 body.touch #touch {
   display: flex;
   position: fixed;
-  left: 0; right: 0; bottom: 0;
+  left: calc(50% + (env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)) / 2); bottom: 0;
+  transform: translateX(-50%);
+  width: calc(100% - max(12px, env(safe-area-inset-left, 0px)) - max(12px, env(safe-area-inset-right, 0px)));
+  max-width: 408px;
   height: calc(var(--controls-height) + env(safe-area-inset-bottom, 0px));
-  padding: 0 max(12px, env(safe-area-inset-right, 0px)) calc(14px + env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
+  padding: 0 0 calc(16px + env(safe-area-inset-bottom, 0px));
   align-items: flex-end;
   justify-content: space-between;
   pointer-events: none;
@@ -107,42 +110,47 @@ body.touch #touch {
 }
 #touch button.on { background: var(--pad-on); border-color: var(--gold); }
 #touch button:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
-#touch small { display: block; font-size: 9px; letter-spacing: 0.02em; }
-.pad { position: relative; flex-shrink: 0; width: 156px; height: 156px; pointer-events: none; }
-.pad button { position: absolute; width: 52px; height: 52px; border-radius: 10px; font-size: 18px; }
-.pad .up { left: 52px; top: 0; }
-.pad .left { left: 0; top: 52px; }
-.pad .right { left: 104px; top: 52px; }
-.pad .down { left: 52px; top: 104px; }
-.ab { position: relative; flex-shrink: 0; width: 144px; height: 156px; pointer-events: none; }
-.ab button { position: absolute; width: 66px; height: 66px; border-radius: 50%; font-size: 22px; }
-.ab .a { right: 0; top: 36px; background: rgba(206, 29, 0, 0.45); }
-.ab .b { left: 0; top: 88px; background: rgba(255, 191, 48, 0.3); }
-.ab .c { left: 0; top: 12px; width: 56px; height: 56px; background: rgba(96, 224, 255, 0.3); }
+#touch small { display: block; font-size: 10px; letter-spacing: 0.02em; }
+.pad { position: relative; flex-shrink: 0; width: var(--pad-size); height: var(--pad-size); pointer-events: auto; touch-action: none; }
+.pad button { position: absolute; width: var(--pad-button); height: var(--pad-button); border-radius: 12px; font-size: 23px; }
+.pad .up { left: var(--pad-button); top: 0; }
+.pad .left { left: 0; top: var(--pad-button); }
+.pad .right { left: calc(var(--pad-button) * 2); top: var(--pad-button); }
+.pad .down { left: var(--pad-button); top: calc(var(--pad-button) * 2); }
+.ab { position: relative; flex-shrink: 0; width: var(--actions-width); height: var(--pad-size); pointer-events: auto; touch-action: none; }
+.ab button { position: absolute; width: var(--action-size); height: var(--action-size); border-radius: 50%; font-size: 26px; }
+.ab .a { right: 0; top: calc(var(--pad-size) * 0.24); background: rgba(206, 29, 0, 0.45); }
+.ab .b { left: 0; bottom: 0; background: rgba(255, 191, 48, 0.3); }
+.ab .c { left: 0; top: 0; width: var(--pum-size); height: var(--pum-size); background: rgba(96, 224, 255, 0.3); }
 #touch button[hidden] { display: none; }
-#touch .start { position: absolute; left: 50%; top: 8px; transform: translateX(-50%); width: 72px; min-height: 44px; border-radius: 16px; font-size: 12px; }
+#touch .start { position: absolute; left: 50%; top: 8px; transform: translateX(-50%); width: 88px; min-height: 48px; border-radius: 14px; font-size: 12px; }
 
-@media (max-width: 359px) {
-  .pad { width: 144px; height: 144px; }
-  .pad button { width: 48px; height: 48px; }
-  .pad .up { left: 48px; }
-  .pad .left { top: 48px; }
-  .pad .right { left: 96px; top: 48px; }
-  .pad .down { left: 48px; top: 96px; }
-  .ab { width: 132px; }
-  .ab button { width: 60px; height: 60px; }
+@media (max-width: 374px) {
+  body.touch { --controls-height: 240px; --pad-button: 56px; --action-size: 72px; --pum-size: 68px; --actions-width: 152px; }
+}
+@media (max-width: 339px) {
+  body.touch { --controls-height: 228px; --pad-button: 52px; --action-size: 68px; --pum-size: 64px; --actions-width: 132px; }
 }
 
 @media (orientation: landscape) {
+  body.touch { --pad-button: 62px; --action-size: 84px; --pum-size: 76px; --actions-width: var(--pad-size); }
   body.touch #wrap {
     left: calc(var(--side-controls) + env(safe-area-inset-left, 0px));
     right: calc(var(--side-controls) + env(safe-area-inset-right, 0px));
     bottom: env(safe-area-inset-bottom, 0px);
     padding: calc(8px + env(safe-area-inset-top, 0px)) 0 0;
   }
-  body.touch #touch { height: 100%; align-items: center; padding-top: env(safe-area-inset-top, 0px); }
+  body.touch #touch { height: 100%; align-items: center; max-width: calc(var(--game-width, 400px) + var(--pad-size) * 2 + 48px); padding: env(safe-area-inset-top, 0px) 12px env(safe-area-inset-bottom, 0px); }
   body.touch #mobileHint { display: none; }
-  #touch .start { left: calc(90px + env(safe-area-inset-left, 0px)); top: auto; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
+  #touch .start { left: calc(var(--pad-size) / 2 + 12px); top: auto; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
+}
+@media (orientation: landscape) and (max-width: 720px) {
+  body.touch { --pad-button: 54px; --action-size: 72px; --pum-size: 68px; --side-controls: calc(var(--pad-size) + 20px); }
+  body.touch #touch { padding-left: 0; padding-right: 0; }
+  #touch .start { left: calc(var(--pad-size) / 2); }
+}
+@media (orientation: landscape) and (max-height: 300px) {
+  #touch .start { top: 50%; bottom: auto; transform: translate(-50%, -50%); width: var(--pad-button); min-height: var(--pad-button); font-size: 9px; }
 }
 
 </style>
@@ -251,6 +259,8 @@ function fitScreen() {
   if (s >= 2) s = Math.floor(s);
   cv.style.width = Math.floor(W * s) + 'px';
   cv.style.height = Math.floor(H * s) + 'px';
+  // Aproxima os controles laterais da largura real do jogo, inclusive no tablet.
+  document.body.style.setProperty('--game-width', Math.floor(W * s) + 'px');
 }
 window.addEventListener('resize', fitScreen);
 
@@ -267,7 +277,7 @@ const Input = {
     space: { name: 'WASD + ESPAÇO SHIFT E', move: 'WASD', jump: 'ESPAÇO', run: 'SHIFT', propel: 'E', shortJump: 'ESPAÇO', shortRun: 'SHIFT',
       bindings: { jump: ['Space'], run: ['ShiftLeft', 'ShiftRight'], propel: ['KeyE'], confirm: ['Enter', 'Space'], back: ['Escape', 'Backspace'] } },
   },
-  keys: {}, hits: {}, touch: {}, cur: {}, prev: {},
+  keys: {}, hits: {}, touch: {}, touchReleased: {}, cur: {}, prev: {},
   map: {
     left: ['ArrowLeft', 'KeyA'],
     right: ['ArrowRight', 'KeyD'],
@@ -309,7 +319,7 @@ const Input = {
   },
   sceneHint() { return this.device === 'keyboard' ? this.label('confirm') + ': AVANÇAR  ESC: PULAR' : 'A: AVANÇAR  START/B: PULAR'; },
   releaseAll() {
-    this.keys = {}; this.hits = {}; this.cur = {}; this.prev = {}; this.touch = {}; this.anyKey = false;
+    this.keys = {}; this.hits = {}; this.cur = {}; this.prev = {}; this.touch = {}; this.touchReleased = {}; this.anyKey = false;
     if (this.resetTouch) this.resetTouch();
   },
   init() {
@@ -331,6 +341,8 @@ const Input = {
     for (const a in this.map) {
       cur[a] = this.map[a].some(k => this.keys[k]) || !!this.touch[a];
       cur[a + '!'] = this.map[a].some(k => this.hits[k]);
+      // Soltar e retocar entre dois quadros também é um novo comando de pulo.
+      if (this.touchReleased[a] && this.hits['touch-' + a]) this.prev = { ...this.prev, [a]: false };
     }
     // controles (gamepad)
     const pads = navigator.getGamepads ? navigator.getGamepads() : [];
@@ -352,11 +364,12 @@ const Input = {
     }
     this.cur = cur;
     this.hits = {};
+    this.touchReleased = {};
   },
   down(a) { return !!this.cur[a]; },
   pressed(a) { return (!!this.cur[a] && !this.prev[a]) || !!this.cur[a + '!']; },
   // esquece toques "apertados" pendentes, mas mantém o que está sendo segurado
-  clear() { this.hits = {}; this.prev = Object.assign({}, this.cur); for (const k in this.cur) if (k.endsWith('!')) this.cur[k] = false; },
+  clear() { this.hits = {}; this.touchReleased = {}; this.prev = Object.assign({}, this.cur); for (const k in this.cur) if (k.endsWith('!')) this.cur[k] = false; },
 };
 
 /* ---------- fonte bitmap 5x7 com acentos ---------- */
@@ -575,6 +588,8 @@ const TouchControls = {
   init() {
     this.root = document.getElementById('touch');
     this.buttons = [...this.root.querySelectorAll('[data-act]')];
+    this.pad = this.buttons.find(b => b.parentElement.classList.contains('pad')).parentElement;
+    this.actions = this.buttons.find(b => b.dataset.act === 'jump,confirm').parentElement;
     const coarse = window.matchMedia('(any-pointer: coarse)');
     const detect = () => {
       if (coarse.matches || (navigator.maxTouchPoints > 0 && Math.min(innerWidth, innerHeight) <= 1024)) this.enable();
@@ -587,32 +602,64 @@ const TouchControls = {
     if (window.visualViewport) window.visualViewport.addEventListener('resize', fitScreen);
     window.addEventListener('pointerdown', e => { if (e.pointerType === 'touch') this.enable(); }, { capture: true });
     this.root.addEventListener('contextmenu', e => e.preventDefault());
-    for (const button of this.buttons) {
-      button.setAttribute('aria-pressed', 'false');
-      button.addEventListener('pointerdown', e => {
-        if (e.button !== 0) return;
-        e.preventDefault();
-        this.enable();
-        button.setPointerCapture(e.pointerId);
-        this.pointers.set(e.pointerId, { button, directional: button.parentElement.classList.contains('pad') });
-        this.sync();
-      });
-      button.addEventListener('pointermove', e => {
-        const pointer = this.pointers.get(e.pointerId);
-        if (!pointer || !pointer.directional) return;
-        e.preventDefault();
-        const target = document.elementFromPoint(e.clientX, e.clientY);
-        pointer.button = this.buttons.includes(target) && target.parentElement.classList.contains('pad') ? target : null;
-        this.sync();
-      });
-      const release = e => {
-        if (!this.pointers.has(e.pointerId)) return;
-        e.preventDefault();
-        this.pointers.delete(e.pointerId);
-        this.sync();
-      };
-      for (const event of ['pointerup', 'pointercancel', 'lostpointercapture']) button.addEventListener(event, release);
+    const move = e => {
+      const pointer = this.pointers.get(e.pointerId);
+      if (!pointer || !pointer.directional) return;
+      e.preventDefault(); pointer.buttons = this.directionAt(e); this.sync();
+    };
+    const release = e => {
+      const pointer = this.pointers.get(e.pointerId); if (!pointer) return;
+      // Uma perda de captura antiga não solta um novo toque já capturado.
+      if (e.type === 'lostpointercapture' && (e.currentTarget !== pointer.owner || pointer.owner.hasPointerCapture && pointer.owner.hasPointerCapture(e.pointerId))) return;
+      e.preventDefault(); this.pointers.delete(e.pointerId); this.sync();
+    };
+    for (const surface of [...this.buttons, this.pad, this.actions]) {
+      surface.addEventListener('pointerdown', e => this.press(e, surface));
+      surface.addEventListener('pointermove', move);
+      for (const event of ['pointerup', 'pointercancel', 'lostpointercapture']) surface.addEventListener(event, release);
     }
+    for (const button of this.buttons) button.setAttribute('aria-pressed', 'false');
+    // Fallback também libera o dedo quando a captura não está disponível.
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', release);
+    window.addEventListener('pointercancel', release);
+  },
+  press(e, surface) {
+    if (e.button !== 0 || this.pointers.has(e.pointerId)) return;
+    e.preventDefault(); this.enable();
+    const directional = surface === this.pad || surface.parentElement === this.pad;
+    const buttons = directional ? this.directionAt(e, this.buttons.includes(surface) ? surface : null)
+      : this.buttons.includes(surface) ? [surface] : this.actionAt(e);
+    if (buttons.some(b => b.hidden)) return;
+    const owner = directional ? this.pad : buttons[0] || surface;
+    this.pointers.set(e.pointerId, { owner, directional, buttons });
+    this.sync();
+    try { if (owner.setPointerCapture) owner.setPointerCapture(e.pointerId); } catch (err) { /* fim do toque tratado pela janela */ }
+  },
+  directionAt(e, fallback = null) {
+    const r = this.pad.getBoundingClientRect();
+    if (!Number.isFinite(e.clientX) || !Number.isFinite(e.clientY) || !Number.isFinite(r.left)) {
+      const target = fallback || document.elementFromPoint(e.clientX, e.clientY);
+      return this.buttons.includes(target) && target.parentElement === this.pad ? [target] : [];
+    }
+    if (e.clientX < r.left - 12 || e.clientX > r.right + 12 || e.clientY < r.top - 12 || e.clientY > r.bottom + 12) return [];
+    const x = (e.clientX - r.left - r.width / 2) / (r.width / 3), y = (e.clientY - r.top - r.height / 2) / (r.height / 3);
+    if (Math.abs(x) < 0.22 && Math.abs(y) < 0.22) return [];
+    const actions = [];
+    if (Math.abs(x) >= Math.abs(y) * 0.65) actions.push(x < 0 ? 'left' : 'right');
+    if (Math.abs(y) >= Math.abs(x) * 0.65) actions.push(y < 0 ? 'up' : 'down');
+    return this.buttons.filter(b => b.parentElement === this.pad && actions.includes(b.dataset.act));
+  },
+  actionAt(e) {
+    let best = null, score = Infinity;
+    for (const button of this.buttons) {
+      if (button.parentElement !== this.actions || button.hidden) continue;
+      const r = button.getBoundingClientRect();
+      const distance = Math.hypot(Math.max(r.left - e.clientX, 0, e.clientX - r.right), Math.max(r.top - e.clientY, 0, e.clientY - r.bottom));
+      const rank = distance * 1000 + Math.hypot(e.clientX - r.left - r.width / 2, e.clientY - r.top - r.height / 2);
+      if (distance <= 12 && rank < score) { best = button; score = rank; }
+    }
+    return best ? [best] : [];
   },
   enable() {
     Input.device = 'touch';
@@ -624,17 +671,18 @@ const TouchControls = {
   },
   sync() {
     const next = {};
-    for (const [id, pointer] of this.pointers) if (pointer.button && pointer.button.hidden) this.pointers.delete(id);
-    for (const { button } of this.pointers.values()) {
-      if (button && !button.hidden) for (const action of button.dataset.act.split(',')) next[action] = true;
+    for (const [id, pointer] of this.pointers) if (pointer.buttons.some(b => b.hidden)) this.pointers.delete(id);
+    for (const { buttons } of this.pointers.values()) {
+      for (const button of buttons) for (const action of button.dataset.act.split(',')) next[action] = true;
     }
+    for (const action in Input.touch) if (Input.touch[action] && !next[action]) Input.touchReleased[action] = true;
     for (const action in next) if (!Input.touch[action]) {
       Input.hits['touch-' + action] = true;
       Input.anyKey = true;
     }
     Input.touch = next;
     for (const button of this.buttons) {
-      const pressed = !button.hidden && [...this.pointers.values()].some(pointer => pointer.button === button);
+      const pressed = !button.hidden && [...this.pointers.values()].some(pointer => pointer.buttons.includes(button));
       button.classList.toggle('on', pressed);
       button.setAttribute('aria-pressed', String(pressed));
     }
@@ -849,6 +897,11 @@ SPR.kinhuWild = [
   buildKinhu({ o: '#4ad8f0', O: '#b0f4ff', r: '#1a90b8', h: '#4a2a14' }, { wild: true, claws: true }),
 ];
 SPR.kinhu1up = buildKinhu({ o: '#48c048', O: '#98f088', r: '#208a30' });
+SPR.costumes = {
+  blue: buildKinhu({ o: '#328fcb', O: '#87d5ff', r: '#185483' }),
+  green: buildKinhu({ o: '#48a85b', O: '#a0df80', r: '#246333' }),
+  purple: buildKinhu({ o: '#9250ba', O: '#d3a0ed', r: '#583273' }),
+};
 
 // cabeça do Kinhu para o HUD (recorte)
 SPR.kinhuHead = (() => {
@@ -926,11 +979,21 @@ function personRows(o, legs, pose) {
   if (o.hair === 'curly') { r[0] = '....hhhhhh......'; r[1] = '...hhhhhhhhh....'; r[2] = '..hhhhhssss.....'; r[3] = '..hhhSsssess....'; r[4] = '..hhhSssssss....'; r[5] = '...hhSssssms....'; }
   if (o.hair === 'cap') { r[0] = '....cccccc......'; r[1] = '...cccccccCC....'; r[2] = '...hhhssssss....'; }
   if (o.hair === 'hood') { r[0] = '.....kkkk.......'; r[1] = '....kkkkkkk.....'; r[2] = '...kkkmmmmm.....'; r[3] = '...kkmwmmwm.....'; r[4] = '...kkSssssss....'; r[5] = '....kSsssms.....'; }
+  if (o.hair === 'fedora') {
+    r[0] = '.....wwwwww.....'; r[1] = '....wwwwwwww....';
+    r[2] = '....kkkkkkkk....'; r[3] = '..wwwwwwwwwwww..';
+    r[4] = '...hhssssess....'; r[5] = '...hhSswsws.....';
+    r[6] = '....Swwwwww.....'; r[7] = '....ttwwwwtt....';
+  }
   if (o.tie) { for (const y of [7, 8, 9, 10, 11]) { const a = r[y].split(''); a[7] = 'y'; r[y] = a.join(''); } }
   if (o.stripes) { for (const y of [8, 10, 12]) r[y] = r[y].replace(/t/g, 'T'); }
   if (o.angry) { r[3] = r[3].replace('sess', 'eeSs'); r[5] = r[5].replace('ms', 'mm'); }
   if (pose === 'up') { r[9] = '..ttTtttttt.s...'; r[10] = '..tTttttttts....'; }
   if (pose === 'fwd') { r[9] = '..ttTttttttss...'; r[10] = '..tTtttttt......'; }
+  if (o.star) {
+    const put = (x, y) => { const line = r[y].split(''); line[x] = 'w'; r[y] = line.join(''); };
+    for (const [x, y] of [[7, 9], [5, 10], [6, 10], [7, 10], [8, 10], [9, 10], [6, 11], [7, 11], [8, 11], [5, 12], [9, 12]]) put(x, y);
+  }
   if (o.dress) {
     r = r.concat(['...pppppppp.....', '..pppppppppp....']);
     legs = [['....ss..ss......', '...nnn..nnn.....'], ['...ss....ss.....', '..nnn.....nnn...'], ['.....ssss.......', '.....nnnnn......']][PERSON_LEGS.indexOf(legs)];
@@ -957,8 +1020,17 @@ function makePerson(o) {
 
 SPR.coworker = makePerson({ hair: 'spiky', tie: true, angry: true, actPose: 'up' });
 SPR.intern = makePerson({ hair: 'short', pal: { h: '#c88a3a', t: '#40a860', T: '#287040', p: '#3a4a7a' }, actPose: 'fwd' });
+SPR.fiscal = makePerson({ hair: 'cap', tie: true, angry: true, pal: { c: '#328fcb', C: '#185483', t: '#24436f', T: '#466c9e', y: '#ffe384' }, actPose: 'fwd', actExtra: g => g.rect(12, 10, 3, 5, '#fff4dc') });
+SPR.hrPrinter = [false, true].map(open => {
+  const g = new Grid(28, 24);
+  g.rect(5, 0, 18, 7, '#fff4dc'); g.rect(7, 2, 12, 1, '#64738d');
+  g.rect(2, 6, 24, 14, '#a8b5cb'); g.rect(3, 7, 22, 2, '#d9efff');
+  g.rect(5, 10, 18, 5, '#24397a'); g.rect(7, 11, 3, 2, '#ffbf30'); g.rect(18, 11, 3, 2, '#ffbf30');
+  g.rect(6, 16, 16, 4, '#20141c'); g.rect(8, 18, 12, open ? 6 : 2, open ? '#ffe384' : '#fff4dc');
+  g.rect(3, 21, 4, 2, '#64738d'); g.rect(21, 21, 4, 2, '#64738d'); g.outline(OUT); return mkSprite(g);
+});
 SPR.lady = makePerson({ hair: 'curly', dress: true, pal: { h: '#c8c8d8', t: '#9050b0', T: '#6a3088', p: '#9050b0' }, actPose: 'fwd' });
-SPR.thief = makePerson({ hair: 'hood', stripes: true, pal: { t: '#e8e8e8', T: '#303040', p: '#2a3050', m: '#101018' } });
+SPR.thief = makePerson({ hair: 'fedora', star: true, pal: { h: '#d9d9d0', t: '#d93232', T: '#a51f29', p: '#2a3050', k: '#161820', s: '#edc0a0', S: '#bd8f75' } });
 SPR.skater = makePerson({ hair: 'cap', pal: { t: '#f0c020', T: '#c08a10', p: '#4a6a9a', h: '#2a1a10' } });
 SPR.worker = makePerson({ hair: 'cap', pal: { c: '#f8c818', C: '#c09010', t: '#f87818', T: '#c05010', p: '#3a4a6a' } });
 
@@ -1056,6 +1128,30 @@ SPR.backpack = (() => {
   g.rect(2, 5, 2, 7, '#185c77'); g.rect(12, 5, 2, 7, '#185c77');
   g.rect(5, 8, 6, 5, '#f0c16b'); g.rect(5, 9, 6, 1, '#a65b35');
   g.rect(4, 5, 7, 1, '#94e5ef'); g.outline(OUT); return mkSprite(g);
+})();
+// Consumíveis imediatos: marmita aberta e relógio com símbolo de adição.
+SPR.lunch = (() => {
+  const g = new Grid(16, 16);
+  g.rect(2, 4, 12, 9, '#94b4c8'); g.rect(3, 5, 10, 6, '#fff4dc');
+  g.rect(3, 5, 5, 5, '#ffffff'); g.rect(9, 6, 3, 3, '#a65b35');
+  g.rect(8, 5, 2, 2, '#76b852'); g.rect(8, 9, 4, 1, '#76b852');
+  g.rect(2, 11, 12, 2, '#4f728e'); g.rect(0, 7, 2, 3, '#94b4c8');
+  g.rect(14, 7, 2, 3, '#94b4c8'); g.outline(OUT); return mkSprite(g);
+})();
+SPR.extraTime = (() => {
+  const g = new Grid(16, 16);
+  g.ellipse(7, 8, 6, 6, '#258b9b'); g.ellipse(7, 8, 4.5, 4.5, '#fff4dc');
+  g.rect(7, 5, 1, 4, OUT); g.rect(4, 8, 4, 1, OUT);
+  g.rect(5, 0, 4, 2, '#94e5ef'); g.rect(11, 1, 3, 5, '#ffe384');
+  g.rect(10, 2, 5, 3, '#ffe384'); g.rect(12, 2, 1, 3, '#a65b35');
+  g.rect(11, 3, 3, 1, '#a65b35'); g.outline(OUT); return mkSprite(g);
+})();
+SPR.maintenance = (() => {
+  const g = new Grid(16, 16);
+  g.rect(6, 0, 4, 4, '#94e5ef'); g.rect(3, 4, 10, 11, '#fff4dc');
+  g.rect(3, 4, 10, 3, '#ffbf30'); g.rect(6, 8, 2, 5, '#258b9b');
+  g.rect(5, 8, 4, 2, '#258b9b'); g.rect(6, 8, 2, 1, '#fff4dc');
+  g.rect(10, 10, 2, 1, '#a65b35'); g.outline(OUT); return mkSprite(g);
 })();
 // moeda girando
 SPR.memories = [0, 1, 2].map(slot => {
@@ -2452,6 +2548,7 @@ const Sound = {
       case 'propulsion': this.tone(130, 45, 0.22, 0.09, { wave: 'sawtooth' }); this.hiss(0.2, 0.05, { f0: 360, f1: 90 }); break;
       case 'coffee': this.arp(['C6', 'E6', 'G6', 'C7'], 0.07, 0.09, 50); break;
       case 'magnet': this.tone(500, 1000, 0.22, 0.10, { wave: 'triangle' }); break;
+      case 'extraTime': this.arp(['G5', 'D6', 'G6'], 0.08, 0.09, 50); break;
       case 'shield': this.tone(600, 220, 0.20, 0.10, { duty: 50 }); this.hiss(0.08, 0.05, { f0: 1200, f1: 400 }); break;
       case 'coin': this.tone(1318, 1318, 0.06, 0.1, { duty: 50 }); this.tone(1976, 1976, 0.22, 0.1, { duty: 50, delay: 0.06 }); break;
       case 'stomp': this.tone(520, 120, 0.12, 0.16, { duty: 50 }); this.hiss(0.08, 0.15, { f0: 900 }); break;
@@ -2524,6 +2621,7 @@ function segment32(parts, indoor = false) {
 }
 
 // items usa coordenadas de bloco: bônus flutuantes com coleta opcional.
+// Marmita/hora extra ficam em desvios altos; nunca são exigidos na rota principal.
 const LEVELS = [
   {
     id: 1, name: 'SAINDO DE CASA', clock: '07:42', theme: 'bairro', time: 900,
@@ -2596,6 +2694,7 @@ const LEVELS = [
   },
   {
     id: 2, name: 'VIAGEM DE ÔNIBUS', clock: '07:55', theme: 'onibus', time: 900, brakes: true, indoor: true, practiceEnd: 32,
+    duel: { door: [188, 10], type: 'fiscal', name: 'FISCAL DA LINHA' },
     items: [{ kind: 'backpack', x: 17, y: 10 }],
     goal: 'DESÇA NO CENTRO!',
     segs: [
@@ -2659,7 +2758,7 @@ const LEVELS = [
   },
   {
     id: 3, name: 'CENTRO DA CIDADE', clock: '08:20', theme: 'centro', time: 900, practiceEnd: 32, practiceAbility: 'propulsion',
-    items: [{ kind: 'coffee', x: 9, y: 11 }],
+    items: [{ kind: 'coffee', x: 9, y: 11 }, { kind: 'extraTime', x: 561, y: 8 }],
     goal: 'CHEGUE AO ESCRITÓRIO!',
     segs: [
       segment32([[11, 2, 'P'], [10, 8, 'ccc'], [10, 16, 'ccc'], [11, 25, 'T'], [7, 12, '?B?B?']]),
@@ -2726,7 +2825,9 @@ const LEVELS = [
   },
   {
     id: 4, name: 'O ESCRITÓRIO', clock: '09:00', theme: 'escritorio', time: 900, indoor: true, practiceEnd: 32, practiceAbility: 'bellySlam',
-    items: [{ kind: 'backpack', x: 4, y: 11 }, { kind: 'coffee', x: 16, y: 11 }, { kind: 'magnet', x: 23, y: 8 }],
+    bonus: { key: [281, 8], door: [285, 10], name: 'ARQUIVO DE MANUTENÇÃO' },
+    duel: { door: [447, 10], type: 'printer', name: 'IMPRESSORA DO RH' },
+    items: [{ kind: 'backpack', x: 4, y: 11 }, { kind: 'coffee', x: 16, y: 11 }, { kind: 'magnet', x: 23, y: 8 }, { kind: 'lunch', x: 236, y: 8 }, { kind: 'extraTime', x: 563, y: 8 }],
     switchGates: [{ switch: [20, 12], blocks: [[26, 9], [26, 10], [26, 11]] }],
     goal: 'DESÇA PARA OS SERVIDORES!',
     segs: [
@@ -2787,7 +2888,8 @@ const LEVELS = [
   },
   {
     id: 5, name: 'SALA DOS SERVIDORES', clock: '16:59', theme: 'servidores', time: 900, boss: true, indoor: true, practiceEnd: 32, practiceAbility: 'steadyStep',
-    items: [{ kind: 'backpack', x: 4, y: 11 }, { kind: 'coffee', x: 22, y: 11 }, { kind: 'magnet', x: 13, y: 9 }],
+    bonus: { key: [327, 8], door: [336, 10], name: 'PASSARELA DE MANUTENÇÃO' },
+    items: [{ kind: 'backpack', x: 4, y: 11 }, { kind: 'coffee', x: 22, y: 11 }, { kind: 'magnet', x: 13, y: 9 }, { kind: 'lunch', x: 366, y: 8 }, { kind: 'extraTime', x: 185, y: 8 }],
     goal: 'DERROTE O MEGA BUG!',
     segs: [
       segment32([[11, 2, 'P'], [7, 4, '?H?'], [12, 9, 'IIIIIIII'], [10, 10, 'cccccc']], true),
@@ -2862,6 +2964,25 @@ const Difficulty = {
 
 const ItemEffects = {
   coffeeFrames: 480, magnetFrames: 720, coffeeFactor: 1.15, magnetRadius: 3 * TS,
+  lunchHearts: 2, lunchFullScore: 1000, extraTimeUnits: 30,
+  consume(p, id) {
+    if (id === 'lunch') {
+      const gained = Math.min(this.lunchHearts, Game.maxHearts - Game.hearts);
+      Game.hearts += gained;
+      if (gained) popup(p.x - 12, p.y - 10, '+' + gained + '♥', '#ff8090');
+      else addScore(this.lunchFullScore, p.x, p.y - 10);
+      Sound.fx('eat');
+      World.banner = gained ? 'MARMITA: +' + gained + ' CORAÇÃO' + (gained > 1 ? 'S' : '') : 'MARMITA: VIDA CHEIA, +1000 PONTOS';
+    } else if (id === 'extraTime') {
+      const gained = Math.min(this.extraTimeUnits, Math.max(0, World.timeLimit - World.time));
+      World.time += gained;
+      if (World.hurry && World.time > 100) { World.hurry = false; Sound.tempo = 1; }
+      popup(p.x - 18, p.y - 10, gained ? '+' + gained + ' TEMPO' : 'TEMPO CHEIO', '#94e5ef');
+      Sound.fx('extraTime');
+      World.banner = gained ? 'HORA EXTRA: +' + gained + ' NO CRONÔMETRO' : 'HORA EXTRA: TEMPO NO LIMITE';
+    }
+    World.bannerT = 150;
+  },
   clear(p) { p.backpack = false; p.utility = null; p.utilityT = 0; },
   active(p, id) { return p.utility === id && p.utilityT > 0 && p.wild === 0; },
   acquire(p, id) {
@@ -2925,12 +3046,17 @@ const PickupLedger = {
       if ('?HL!BFR'.includes(c)) ids.add('block:' + level + ':' + x + ':' + y);
     }));
     for (const item of LEVELS[level].items || []) ids.add('item:' + level + ':' + item.x + ':' + item.y);
+    const room = LEVELS[level].bonus;
+    if (room) ids.add(this.keyForRoom(level, room.door));
+    const duel = LEVELS[level].duel;
+    if (duel) ids.add('duel:' + level + ':' + duel.door[0] + ':' + duel.door[1]);
     return ids;
   },
+  keyForRoom(level, door) { return 'room:' + level + ':' + door[0] + ':' + door[1]; },
   sanitize(ids, level) { const valid = this.validIds(level); return Array.isArray(ids) ? [...new Set(ids.filter(id => valid.has(id)))] : []; },
   restore() {
     for (const id of Game.collected) {
-      const [type, level, x, y] = id.split(':'); if (+level !== World.idx || type === 'item') continue;
+      const [type, level, x, y] = id.split(':'); if (+level !== World.idx || type === 'item' || type === 'room' || type === 'duel') continue;
       const t = tileAt(+x, +y);
       if (type === 'coin' && t === 'c') setTile(+x, +y, '.');
       if (type === 'block') {
@@ -2980,7 +3106,7 @@ const Exploration = {
   names: ['POSTAL', 'BILHETE', 'DISQUETE'],
   id(level, slot) { return 'memory:' + level + ':' + slot; },
   ids(level) { return this.spots[level].map((_, slot) => this.id(level, slot)); },
-  blank() { return { memories: [], records: {} }; },
+  blank() { return { memories: [], records: {}, minibosses: [] }; },
   validIds() { return this.spots.flatMap((_, level) => this.ids(level)); },
   blankStats(eligible = true) { return { frames: 0, deaths: 0, found: [], eligible }; },
   sanitizeStats(data, level, eligible = false) {
@@ -2994,6 +3120,7 @@ const Exploration = {
     const out = this.blank(); if (!data || typeof data !== 'object') return out;
     const valid = this.validIds();
     out.memories = Array.isArray(data.memories) ? [...new Set(data.memories.filter(id => valid.includes(id)))] : [];
+    out.minibosses = Array.isArray(data.minibosses) ? [...new Set(data.minibosses.filter(id => ['fiscal', 'printer'].includes(id)))] : [];
     for (let level = 0; level < LEVELS.length; level++) for (const difficulty of Object.keys(Difficulty.modes)) for (const assist of [false, true]) {
       const key = this.key(level, difficulty, assist), r = data.records && data.records[key];
       if (!r || typeof r !== 'object') continue;
@@ -3005,7 +3132,7 @@ const Exploration = {
   },
   merge(a, b) {
     a = this.sanitize(a); b = this.sanitize(b);
-    const out = { memories: [...new Set([...a.memories, ...b.memories])], records: {} };
+    const out = { memories: [...new Set([...a.memories, ...b.memories])], records: {}, minibosses: [...new Set([...a.minibosses, ...b.minibosses])] };
     for (const key of new Set([...Object.keys(a.records), ...Object.keys(b.records)])) {
       const x = a.records[key] || {}, y = b.records[key] || {};
       out.records[key] = { clear: !!(x.clear || y.clear), noDeaths: !!(x.noDeaths || y.noDeaths), secrets: !!(x.secrets || y.secrets), time: !!(x.time || y.time), bestFrames: Math.min(x.bestFrames || Infinity, y.bestFrames || Infinity) };
@@ -3045,6 +3172,41 @@ const Exploration = {
 </script>
 <script>
 'use strict';
+const Cosmetics = {
+  KEY: 'kinhus-adventure:cosmetic', selected: 'original',
+  styles: {
+    original: { name: 'ORIGINAL', tips: () => ['VISUAL CLÁSSICO DO KINHU.', 'SEM ALTERAR A FÍSICA.'], earned: () => true },
+    blue: { name: 'CAMISETA AZUL', tips: p => ['COLETE 3 LEMBRANÇAS NO PERFIL.', 'PROGRESSO: ' + p.memories.length + '/3'], earned: p => p.memories.length >= 3 },
+    green: { name: 'CAMISETA VERDE', tips: p => ['COMPLETE A COLEÇÃO DE 15 LEMBRANÇAS.', 'PROGRESSO: ' + p.memories.length + '/15'], earned: p => p.memories.length >= 15 },
+    purple: { name: 'CAMISETA ROXA', tips: p => ['CONQUISTE 3 MEDALHAS DIFERENTES.', 'PROGRESSO: ' + Cosmetics.medals(p) + '/3'], earned: p => Cosmetics.medals(p) >= 3 },
+    gold: { name: 'CRACHÁ DOURADO', tips: p => ['VENÇA OS DOIS MINICHEFES.', 'PROGRESSO: ' + p.minibosses.length + '/2'], earned: p => p.minibosses.length === 2 },
+  },
+  medals(p) {
+    const medals = new Set();
+    for (const [key, r] of Object.entries(p.records)) for (const id of ['noDeaths', 'secrets', 'time']) if (r[id]) medals.add(key.split(':')[0] + ':' + id);
+    return medals.size;
+  },
+  profile() { return Save.data ? Save.data.profile : Exploration.blank(); },
+  valid(id) { return Object.prototype.hasOwnProperty.call(this.styles, id); },
+  unlocked(id) { return this.valid(id) && this.styles[id].earned(this.profile()); },
+  current() { return this.unlocked(this.selected) ? this.selected : 'original'; },
+  load() { try { const id = localStorage.getItem(this.KEY); this.selected = this.valid(id) ? id : 'original'; } catch (e) { this.selected = 'original'; } },
+  select(id) {
+    if (!this.unlocked(id)) return false;
+    this.selected = id; try { localStorage.setItem(this.KEY, id); } catch (e) { /* sem armazenamento */ }
+    return true;
+  },
+  sprite(id = this.current()) { return SPR.costumes[id] || SPR.kinhu; },
+  badge(x, y, id = this.current()) {
+    if (id !== 'gold') return;
+    ctx.fillStyle = '#ffe384'; ctx.fillRect(Math.round(x + 5), Math.round(y + 11), 3, 4);
+    ctx.fillStyle = '#a65b35'; ctx.fillRect(Math.round(x + 6), Math.round(y + 12), 1, 1);
+  },
+};
+
+</script>
+<script>
+'use strict';
 /* =========================================================
    Salvamento: progresso automático no navegador (localStorage)
    e arquivo de estado (.json) para exportar/importar em
@@ -3053,7 +3215,7 @@ const Exploration = {
 
 const Save = {
   KEY: 'kinhus-adventure:save',
-  FORMAT: 5,
+  FORMAT: 6,
   writable: true,
   data: null,
   blank() { return { version: this.FORMAT, unlocked: 1, hiscore: 0, completed: false, run: null, plays: 0, campaign: Progression.blank(), profile: Exploration.blank() }; },
@@ -3072,7 +3234,7 @@ const Save = {
     out.hiscore = n(d.hiscore, 0, 9999999, 0);
     out.completed = !!d.completed;
     out.plays = n(d.plays, 0, 1e6, 0);
-    out.profile = sourceVersion >= 5 ? Exploration.sanitize(d.profile) : Exploration.blank();
+    out.profile = sourceVersion >= 5 ? Exploration.sanitize({ ...d.profile, minibosses: sourceVersion >= 6 && d.profile ? d.profile.minibosses : [] }) : Exploration.blank();
     const r = d.run;
     if (r && typeof r === 'object') {
       out.run = {
@@ -3270,16 +3432,18 @@ function oneUp(x, y) { Game.lives = Math.min(99, Game.lives + 1); Sound.fx('oneu
 
 /* ---------------- carregar fase ---------------- */
 function loadLevel(idx, fromCheckpoint) {
+  Bonus.abort();
   if (Game.statsLevel !== idx) { Game.stats = Exploration.blankStats(); Game.statsLevel = idx; }
   if (Game.collectedLevel !== idx) { Game.collected = []; Game.collectedLevel = idx; }
   const def = LEVELS[idx];
   const rows = buildLevelRows(def);
   const map = rows.map(r => r.split(''));
   const th = THEMES[def.theme];
+  const initialTime = Comfort.initialTime();
   World = {
     idx, def, th, theme: def.theme, T: Tiles.get(def.theme), w: rows[0].length, h: rows.length, map,
     ents: [], projs: [], parts: [], plats: [], decor: [], bumps: [], switches: [],
-    cam: { x: 0, shake: 0, lock: null }, time: Comfort.initialTime(), timeT: 0, hurry: false, t: 0, saveDirty: false,
+    cam: { x: 0, shake: 0, lock: null }, time: initialTime, timeLimit: initialTime, timeT: 0, hurry: false, t: 0, saveDirty: false,
     start: null, goal: null, cps: [], arena: null, boss: null, house: null,
     brake: def.brakes ? { t: 420, phase: 'idle', kind: null, k: 0 } : null, push: 0, busSpeed: 1,
     clear: null, banner: null, bannerT: 0,
@@ -3321,6 +3485,7 @@ function loadLevel(idx, fromCheckpoint) {
     const sourceId = PickupLedger.key('item', item.x, item.y);
     if (!Game.collected.includes(sourceId)) addEnt({ kind: 'item', item: item.kind, x: item.x * TS + 2, y: item.y * TS + 2, w: 12, h: 12, vx: 0, vy: 0, emerge: 0, dir: 1, sourceId });
   }
+  Bonus.spawn();
   buildDecor();
   let sx = Wd.start.x, sy = Wd.start.y;
   if (fromCheckpoint && Wd.cps.length) {
@@ -3378,7 +3543,7 @@ function buildDecor() {
 function makePlayer(x, y) {
   return { x, y, w: 12, h: 21, vx: 0, vy: 0, facing: 1, onGround: false, coyote: 0, jumpBuf: 0, inv: 0, wild: 0, ride: null, prevY: y,
     dead: false, deadT: 0, anim: 0, look: 0, combo: 0, hidden: false, control: true, skid: false, drop: 0, blink: 0, spikeT: 0, airJumpReady: false,
-    dashT: 0, dashCooldown: 0, dashDir: 1, airPropulsionUsed: false, slam: false, impactT: 0, backpack: false, utility: null, utilityT: 0 };
+    dashT: 0, dashCooldown: 0, dashDir: 1, airPropulsionUsed: false, slam: false, impactT: 0, backpack: false, utility: null, utilityT: 0, maintenanceKey: null };
 }
 
 function recoilFactor() { return Progression.usable(Game.progress, 'steadyStep') ? 1 - Progression.config.recoilReduction : 1; }
@@ -3472,6 +3637,7 @@ function updatePlayer(p) {
   collectTiles(p);
   ItemEffects.magnet(p);
   hazards(p);
+  if (p !== World.player) return;
   ItemEffects.update(p);
   if (p.inv > 0) p.inv--;
   if (p.wild > 0) {
@@ -3536,6 +3702,7 @@ function splash(x, y) { Sound.fx('splash'); for (let i = 0; i < 10; i++) part({ 
 function hurtPlayer() {
   const p = World.player;
   if (p.dead || p.inv > 0 || p.wild > 0 || World.clear) return false;
+  if (Bonus.active) { Bonus.hurt(); return true; }
   if (p.backpack) { p.backpack = false; p.inv = Difficulty.current().inv; Sound.fx('shield'); popup(p.x, p.y - 8, 'MOCHILA ROMPEU!', '#94e5ef'); }
   else if (Game.power === 1) { Game.power = 0; p.inv = Difficulty.current().inv; Sound.fx('hurt'); popup(p.x, p.y - 8, 'SEM COCA!', '#ffb0a0'); }
   else {
@@ -3549,6 +3716,7 @@ function hurtPlayer() {
 function killPlayer(how) {
   const p = World.player;
   if (p.dead || World.clear) return;
+  if (Bonus.active) { Bonus.finish('failure'); return; }
   Game.stats.deaths++;
   World.saveDirty = true;
   cancelMoves(p); ItemEffects.clear(p); p.dead = true; p.deadT = 0; p.how = how; p.vx = 0; p.vy = 0; Game.hearts = 0;
@@ -3771,6 +3939,8 @@ function updateEnt(e) {
       break;
     case 'item': updateItem(e, p); break;
     case 'memory': Exploration.collect(e); break;
+    case 'maintenanceKey': case 'bonusDoor': case 'duelDoor': case 'bonusCoin': case 'bonusExit': Bonus.update(e); break;
+    case 'miniboss': Minibosses.update(e); break;
     case 'spring':
       if (e.t > 0) e.t--;
       if (!p.dead && p.vy > 0 && p.x + p.w > e.x && p.x < e.x + e.w && p.prevY + p.h <= e.y + 6 && p.y + p.h >= e.y) {
@@ -3803,7 +3973,7 @@ function updateItem(e, p) {
       e.vx = e.dir * 0.9; e.vy = Math.min(e.vy + 0.35, 6); moveBody(e);
       if (e.hitWall) e.dir = -e.hitWall;
       break;
-    case 'coffee': case 'magnet': case 'backpack': e.vx = e.vy = 0; break;
+    case 'coffee': case 'magnet': case 'backpack': case 'lunch': case 'extraTime': e.vx = e.vy = 0; break;
     case 'coca': e.vy = Math.min(e.vy + 0.35, 6); e.vx = 0; moveBody(e); break;
     case 'claws':
       e.vx = e.dir * 1.1; e.vy = Math.min(e.vy + 0.3, 6); moveBody(e);
@@ -3822,6 +3992,7 @@ function updateItem(e, p) {
     const cx = e.x, cy = e.y - 6;
     switch (e.item) {
       case 'coffee': case 'magnet': case 'backpack': ItemEffects.acquire(p, e.item); break;
+      case 'lunch': case 'extraTime': ItemEffects.consume(p, e.item); break;
       case 'hotdog':
         if (Game.hearts < Game.maxHearts) { Game.hearts++; popup(cx - 6, cy, '+♥', '#ff8090'); } else addScore(1000, cx, cy);
         Sound.fx('eat'); break;
@@ -3939,6 +4110,7 @@ function updatePlats() {
 
 /* ---------------- projéteis ---------------- */
 function updateProjs() {
+  const projectileWorld = World;
   const p = World.player;
   for (const b of World.projs) {
     b.t++; b.life--;
@@ -3948,9 +4120,10 @@ function updateProjs() {
       if (b.onGround) b.vy = -3.3;
       if (b.hitWall || b.life <= 0) { b.dead = true; sparkle(b.x + 3, b.y + 3, 4, '#c88a50'); continue; }
       for (const e of World.ents) {
-        if ((e.enemy || e.kind === 'boss') && e.alive && !e.dying && U.overlap(b, e)) {
+        if ((e.enemy || e.kind === 'boss' || e.kind === 'miniboss') && e.alive && !e.dying && U.overlap(b, e)) {
           b.dead = true;
-          if (e.kind === 'boss') hitBoss(e, 1);
+          if (e.kind === 'miniboss') Minibosses.hit(e, 1);
+          else if (e.kind === 'boss') hitBoss(e, 1);
           else if (e.type === 'lady') { popup(e.x - 4, e.y - 6, 'HMPF!', '#ffc0e0'); Sound.fx('bump'); }
           else killEnemy(e, 'can');
           break;
@@ -3979,6 +4152,7 @@ function updateProjs() {
       if (b.type === 'paper' || b.type === 'plane') { if (p.vy > 0 && p.prevY + p.h <= b.y + 4) { b.dead = true; p.vy = -4; addScore(100, b.x, b.y); Sound.fx('stomp'); continue; } }
       if (b.type === 'poop') popup(p.x - 8, p.y - 10, 'ECA!', '#e8e8d0');
       b.dead = true; hurtPlayer();
+      if (World !== projectileWorld) return;
     }
   }
   World.projs = World.projs.filter(b => !b.dead);
@@ -4182,15 +4356,18 @@ function updateWorld() {
   updatePlats();
   if (Wd.clear) updateClear();
   else updatePlayer(p);
+  if (World !== Wd) return;
   for (const e of Wd.ents) {
     if (!e.alive) continue;
     const far = e.x > Wd.cam.x + W + 64 || e.x + (e.w || 16) < Wd.cam.x - 96;
     if (far && e.kind !== 'lane' && e.kind !== 'car' && e.kind !== 'boss' && !e.dying && e.kind !== 'popcoin') continue;
     updateEnt(e);
+    if (World !== Wd) return;
     if (App.state === 'transform') { PickupLedger.flush(); return; }
   }
   playerVsEnemies();
   updateProjs();
+  if (World !== Wd) return;
   Wd.ents = Wd.ents.filter(e => e.alive);
   Wd.plats = Wd.plats.filter(pl => pl.alive || pl.kind === 'fall');
   for (const q of Wd.parts) { q.t++; q.vy += q.g || 0; q.x += q.vx; q.y += q.vy; }
@@ -4215,13 +4392,15 @@ function updateWorld() {
     }
   }
   // tempo
-  if (!Wd.clear && !p.dead) {
+  if (Bonus.active) Bonus.tick();
+  else if (!Wd.clear && !p.dead) {
     if (++Wd.timeT >= 48) {
       Wd.timeT = 0; Wd.time--;
       if (Wd.time === 100 && !Wd.hurry) { Wd.hurry = true; Sound.fx('warn'); Sound.tempo = 1.25; Wd.banner = 'ANDA LOGO, KINHU!'; Wd.bannerT = 100; }
       if (Wd.time <= 0) { Wd.time = 0; killPlayer('time'); }
     }
   }
+  if (World !== Wd) return;
   // freadas do ônibus
   if (Wd.brake && !Wd.clear) updateBrakes(Wd);
   // câmera
@@ -4449,6 +4628,8 @@ function drawWorld() {
         ctx.globalAlpha = 1;
         Font.draw(e.owned ? 'O' : '★', e.x + 2, e.y - 10, '#ffe384', { outline: true });
         break;
+      case 'maintenanceKey': case 'bonusDoor': case 'duelDoor': case 'bonusCoin': case 'bonusExit': Bonus.draw(e); break;
+      case 'miniboss': Minibosses.draw(e); break;
       case 'coin': if (Comfort.reducedFlash || e.t < 340 || e.t % 6 < 3) ctx.drawImage(SPR.coin[Math.floor(e.t / 4) % 4].r, Math.round(e.x - 3), Math.round(e.y - 3)); break;
       case 'item': if (e.emerge <= 0) drawItem(e); break;
       case 'boss': drawBoss(e); break;
@@ -4492,8 +4673,8 @@ function drawWorld() {
 }
 
 function drawItem(e) {
-  const spr = { hotdog: SPR.hotdog, coca: SPR.coca, coffee: SPR.coffee, magnet: SPR.magnet, backpack: SPR.backpack, claws: SPR.claws, badge: SPR.badge, trophy: SPR.trophy }[e.item];
-  const bob = ['coca', 'coffee', 'magnet', 'backpack'].includes(e.item) && e.emerge <= 0 ? Math.round(Math.sin(e.t * 0.1)) : 0;
+  const spr = { hotdog: SPR.hotdog, coca: SPR.coca, coffee: SPR.coffee, magnet: SPR.magnet, backpack: SPR.backpack, lunch: SPR.lunch, extraTime: SPR.extraTime, claws: SPR.claws, badge: SPR.badge, trophy: SPR.trophy }[e.item];
+  const bob = ['coca', 'coffee', 'magnet', 'backpack', 'lunch', 'extraTime'].includes(e.item) && e.emerge <= 0 ? Math.round(Math.sin(e.t * 0.1)) : 0;
   ctx.drawImage(e.dir < 0 ? spr.l : spr.r, Math.round(e.x - 2), Math.round(e.y - 4 + bob));
 }
 
@@ -4514,7 +4695,7 @@ function drawBoss(b) {
 function drawPlayer(p) {
   if (p.hidden) return;
   if (!Comfort.reducedFlash && p.inv > 0 && !p.dead && Math.floor(p.inv / 3) % 2) return;
-  let set = Game.power === 1 ? SPR.kinhuCoca : SPR.kinhu;
+  let set = Game.power === 1 ? SPR.kinhuCoca : Cosmetics.sprite();
   if (p.wild > 0 && (Comfort.reducedFlash || p.wild > 120 || Math.floor(p.wild / 4) % 2)) set = SPR.kinhuWild[Comfort.reducedFlash ? 0 : Math.floor(World.t / 3) % 3];
   let s = set.idle;
   if (p.dead) s = set.hurt;
@@ -4526,10 +4707,171 @@ function drawPlayer(p) {
   else if (Math.abs(p.vx) > 0.2) s = set.run[Math.floor(p.anim) % 4];
   else if (p.blink < 8) s = set.blink;
   ctx.drawImage(p.facing < 0 ? s.l : s.r, Math.round(p.x - 4), Math.round(p.y - 3));
+  Cosmetics.badge(p.x, p.y);
   if (Comfort.reducedFlash && p.inv > 0 && !p.dead) Font.draw('O', p.x + 3, p.y - 12, '#a2c4ff', { outline: true });
   if (p.backpack) ctx.drawImage(SPR.backpack.r, Math.round(p.x + (p.facing < 0 ? 6 : -6)), Math.round(p.y + 5), 8, 8);
   if (p.slam) Font.draw('▼', Math.round(p.x + 3), Math.round(p.y - 12), '#ffe384', { outline: true });
 }
+
+</script>
+<script>
+'use strict';
+// A fase principal fica intacta em memória. Só moedas/pontos e tempo ativo
+// dos desafios avançam; entrar já registra o uso da sala no save da campanha.
+const Bonus = {
+  active: null, duration: 45 * 60, completionScore: 1000,
+  id(level = World.idx) { const room = LEVELS[level].bonus; return room && PickupLedger.keyForRoom(level, room.door); },
+  spawn() {
+    const room = World.def.bonus;
+    if (room) {
+      const id = this.id(), spent = Game.collected.includes(id);
+      addEnt({ kind: 'bonusDoor', id, spent, x: room.door[0] * TS, y: room.door[1] * TS, w: 20, h: 32 });
+      if (!spent) addEnt({ kind: 'maintenanceKey', id, x: room.key[0] * TS + 2, y: room.key[1] * TS + 2, w: 12, h: 12 });
+    }
+    const duel = World.def.duel;
+    if (duel && Difficulty.current().enemies) {
+      const id = 'duel:' + World.idx + ':' + duel.door[0] + ':' + duel.door[1];
+      addEnt({ kind: 'duelDoor', id, spent: Game.collected.includes(id), x: duel.door[0] * TS, y: duel.door[1] * TS, w: 20, h: 32 });
+    }
+  },
+  update(e) {
+    const p = World.player;
+    if (p.dead || World.clear) return;
+    if (e.kind === 'maintenanceKey' && U.overlap(e, p)) {
+      e.alive = false; p.maintenanceKey = e.id; Sound.fx('check');
+      World.banner = 'CRACHÁ: ▲ NA PORTA BÔNUS'; World.bannerT = 160;
+    } else if (e.kind === 'bonusCoin' && this.active && U.overlap(e, p)) {
+      e.alive = false; this.active.coins++; addCoin(e.x, e.y); World.saveDirty = true;
+    } else if (['bonusDoor', 'duelDoor', 'bonusExit'].includes(e.kind) && U.overlap(e, p) && Input.pressed('up')) {
+      if (e.kind === 'bonusExit') this.finish(e.complete ? 'complete' : 'leave');
+      else if (e.spent) { World.banner = 'SALA JÁ VISITADA NESTA PARTIDA'; World.bannerT = 100; }
+      else if (e.kind !== 'duelDoor' && p.maintenanceKey !== e.id) { World.banner = 'BUSQUE O CRACHÁ DE MANUTENÇÃO'; World.bannerT = 120; }
+      else this.enter(e);
+    }
+  },
+  enter(door) {
+    const fight = door.kind === 'duelDoor';
+    if (this.active || App.trans || World.clear || World.player.dead || door.spent || (fight ? !Difficulty.current().enemies : World.player.maintenanceKey !== door.id)) return false;
+    const parent = World, room = fight ? parent.def.duel : parent.def.bonus;
+    if (!fight) parent.player.maintenanceKey = null;
+    door.spent = true;
+    Game.collected.push(door.id); parent.saveDirty = true; PickupLedger.flush();
+    this.active = { parent, door, fight, health: 3, left: fight ? 90 * 60 : this.duration, coins: 0, tempo: Sound.tempo };
+    const width = fight ? 16 : 40;
+    const map = Array.from({ length: 14 }, (_, y) => Array(width).fill(y < 2 ? 'Z' : y >= 12 ? '#' : '.'));
+    const gaps = fight ? [] : parent.theme === 'escritorio' ? [[9, 11], [19, 21], [29, 31]] : [[8, 11], [20, 23], [31, 33]];
+    for (const [a, b] of gaps) {
+      for (let x = a; x <= b; x++) { map[12][x] = '.'; map[13][x] = '.'; }
+      for (let x = a - 1; x <= b + 1; x++) map[9][x] = '=';
+    }
+    if (fight) for (const x of [2, 3, 4, 12, 13, 14]) map[9][x] = '=';
+    World = { ...parent, def: { id: parent.def.id, name: room.name, indoor: true, bonusRoom: true }, map, w: width, h: 14,
+      ents: [], projs: [], parts: [], plats: [], decor: [], bumps: [], switches: [],
+      cam: { x: 0, shake: 0, lock: null }, time: fight ? 90 : 45, timeLimit: fight ? 90 : 45, timeT: 0, hurry: false, t: 0, saveDirty: false,
+      goal: null, start: null, cps: [], arena: null, boss: null, bossFight: false, house: null, brake: null, clear: null,
+      banner: fight ? room.name + ': DESAFIO OPCIONAL' : 'SALA BÔNUS: MOEDAS E SALTOS!', bannerT: 150, player: makePlayer(3 * TS, 12 * TS - 21) };
+    for (const [x, y] of fight ? [] : [[5, 10], [8, 8], [11, 8], [15, 10], [18, 8], [21, 8], [25, 10], [28, 8], [31, 8], [35, 10]]) {
+      addEnt({ kind: 'bonusCoin', x: x * TS + 3, y: y * TS + 3, w: 10, h: 10 });
+    }
+    addEnt({ kind: 'bonusExit', complete: false, x: 2 * TS, y: 10 * TS, w: 20, h: 32 });
+    if (fight) Minibosses.spawn(room.type);
+    else addEnt({ kind: 'bonusExit', complete: true, x: 37 * TS, y: 10 * TS, w: 20, h: 32 });
+    Sound.tempo = 1; Sound.fx('door'); Input.clear(); return true;
+  },
+  tick() {
+    if (!this.active || this.active.defeated) return;
+    World.time = Math.ceil(--this.active.left / 60);
+    if (this.active.left <= 0) this.finish('timeout');
+  },
+  abort() {
+    if (!this.active) return;
+    World = this.active.parent; Sound.tempo = this.active.tempo; this.active = null; Input.clear();
+  },
+  finish(reason) {
+    if (!this.active) return;
+    const session = this.active;
+    this.abort();
+    const p = World.player;
+    p.x = session.door.x + 24; p.y = session.door.y + 32 - p.h;
+    p.vx = p.vy = 0; p.ride = null; p.inv = Math.max(p.inv, 60); cancelMoves(p);
+    World.cam.x = U.clamp(p.x - 112, 0, World.w * TS - W);
+    if (reason === 'complete') { addScore(this.completionScore, p.x - 10, p.y - 12); Sound.fx('check'); }
+    World.banner = reason === 'victory' ? 'MINICHEFE VENCIDO! PERFIL SALVO' : reason === 'complete' ? 'BÔNUS CONCLUÍDO: +1000 PONTOS!' : 'DE VOLTA! SEM PERDER VIDA'; World.bannerT = 150;
+    World.saveDirty = true; PickupLedger.flush();
+  },
+  hurt() {
+    if (!this.active.fight) { this.finish('failure'); return; }
+    const p = World.player;
+    Sound.fx('hurt'); cancelMoves(p); p.inv = Difficulty.current().inv;
+    p.vx = -p.facing * 1.6; p.vy = -3; p.onGround = false; p.ride = null;
+    if (--this.active.health <= 0) this.finish('failure');
+  },
+  draw(e) {
+    if (e.kind === 'maintenanceKey') { ctx.drawImage(SPR.maintenance.r, e.x - 2, Math.round(e.y - 2 + Math.sin(World.t / 15))); return; }
+    if (e.kind === 'bonusCoin') { ctx.drawImage(SPR.coin[Math.floor(World.t / 7) % 4].r, e.x - 3, e.y - 3); return; }
+    const exit = e.kind === 'bonusExit', color = e.spent ? '#64738d' : exit ? '#80ff80' : '#ffbf30';
+    ctx.fillStyle = '#00153b'; ctx.fillRect(e.x - 2, e.y - 2, 24, 34);
+    ctx.fillStyle = color; ctx.fillRect(e.x, e.y, 20, 2); ctx.fillRect(e.x, e.y, 2, 32); ctx.fillRect(e.x + 18, e.y, 2, 32);
+    ctx.fillStyle = '#173357'; ctx.fillRect(e.x + 3, e.y + 3, 14, 28);
+    Font.draw(exit ? '▲' : e.spent ? 'O' : '+', e.x + 7, e.y + 6, color);
+    ctx.fillStyle = color; ctx.fillRect(e.x + 14, e.y + 22, 2, 2);
+    Font.draw(exit ? e.complete ? 'FIM' : 'SAIR' : e.kind === 'duelDoor' ? 'DESAFIO' : 'BÔNUS', e.x + 10, e.y - 13, color, { align: 'center', outline: true });
+    if (U.overlap({ ...e, x: e.x - 12, w: e.w + 24 }, World.player)) {
+      const text = exit ? '▲: SAIR' : e.spent ? 'JÁ VISITADA' : e.kind === 'duelDoor' || World.player.maintenanceKey === e.id ? '▲: ENTRAR' : 'PRECISA DE CRACHÁ';
+      Font.draw(text, e.x + 10, e.y - 24, color, { align: 'center', outline: true });
+    }
+  },
+};
+
+</script>
+<script>
+'use strict';
+const Minibosses = {
+  names: { fiscal: 'FISCAL DA LINHA', printer: 'IMPRESSORA DO RH' },
+  spawn(type) {
+    const hp = (type === 'fiscal' ? 6 : 8) + (Game.difficulty === 'easy' ? -2 : Game.difficulty === 'hard' ? 2 : 0);
+    addEnt({ kind: 'miniboss', type, x: 10 * TS, y: 12 * TS - (type === 'fiscal' ? 32 : 24), w: type === 'fiscal' ? 22 : 28, h: type === 'fiscal' ? 32 : 24,
+      hp, maxHp: hp, state: 'warn', t: 0, inv: 0, dir: -1 });
+  },
+  update(e) {
+    if (!Bonus.active || !Bonus.active.fight) return;
+    const p = World.player; e.t++; if (e.inv > 0) e.inv--;
+    if (e.state === 'dead') { if (e.t >= 60) Bonus.finish('victory'); return; }
+    if (e.state === 'warn' && e.t >= Difficulty.frames(42)) {
+      e.dir = U.sign(p.x - e.x) || -1; e.state = 'attack'; e.t = 0; Sound.fx(e.type === 'fiscal' ? 'warn' : 'shoot');
+    } else if (e.state === 'attack') {
+      if (e.type === 'fiscal') e.x = U.clamp(e.x + e.dir * 2.6 * Difficulty.current().speed, 5 * TS, 11 * TS - e.w);
+      else if (e.t === 1 || e.t === Difficulty.frames(12) || e.t === Difficulty.frames(24)) {
+        World.projs.push({ type: 'paper', x: e.x + e.w / 2, y: e.y + 10, w: 8, h: 5, vx: e.dir * 2.1 * Difficulty.current().speed, vy: 0, life: 100, hostile: true, t: 0, owner: 'miniboss' });
+        Sound.fx('shoot');
+      }
+      if (e.t >= Difficulty.frames(32)) { e.state = 'recover'; e.t = 0; }
+    } else if (e.state === 'recover' && e.t >= Difficulty.frames(90)) { e.state = 'warn'; e.t = 0; }
+    if (U.overlap(e, p)) {
+      const above = p.vy > 0 && p.prevY + p.h <= e.y + 10;
+      if (above || p.wild > 0) {
+        const damage = above && p.slam ? 2 : 1; cancelMoves(p); p.y = e.y - p.h; p.vy = -7.2;
+        this.hit(e, damage);
+      } else hurtPlayer();
+    }
+  },
+  hit(e, damage = 1) {
+    if (!Bonus.active || !Bonus.active.fight || e.state !== 'recover' || e.inv > 0 || !e.alive) return false;
+    e.hp = Math.max(0, e.hp - damage); e.inv = 40; Sound.fx('bosshit'); sparkle(e.x + e.w / 2, e.y, 6);
+    if (e.hp === 0) {
+      e.state = 'dead'; e.t = 0; Bonus.active.defeated = e.type;
+      if (!Save.data.profile.minibosses.includes(e.type)) Save.data.profile.minibosses.push(e.type);
+      addScore(3000, e.x, e.y - 10); World.projs = World.projs.filter(q => q.owner !== 'miniboss');
+      World.saveDirty = true; PickupLedger.flush();
+    }
+    return true;
+  },
+  draw(e) {
+    const spr = e.type === 'fiscal' ? e.state === 'warn' || e.state === 'attack' ? SPR.fiscal.act : SPR.fiscal.walk[Math.floor(World.t / 8) % 4] : SPR.hrPrinter[e.state === 'recover' ? 1 : 0];
+    ctx.drawImage(e.dir < 0 ? spr.l : spr.r, Math.round(e.x - 1), Math.round(e.y - 1), e.w + 2, e.h + 2);
+    Font.draw(e.state === 'warn' ? '!' : e.state === 'recover' ? '▼' : e.state === 'dead' ? 'O' : '', e.x + e.w / 2 - 3, e.y - 12, '#ffe384', { outline: true });
+  },
+};
 
 </script>
 <script>
@@ -5389,6 +5731,7 @@ const App = {
     Difficulty.load();
     Comfort.load();
     Save.load();
+    Cosmetics.load();
     Game.hiscore = Save.data.hiscore;
     Game.unlocked = Save.data.unlocked;
     this.setupDom();
@@ -5488,6 +5831,7 @@ const App = {
     return persisted;
   },
   continueRun() {
+    Bonus.abort();
     const r = Save.data.run;
     if (!r) return;
     Game.mode = 'campaign'; Game.completed = false; Game.clearedLevel = null;
@@ -5503,6 +5847,7 @@ const App = {
     this.go('play');
   },
   newGame() {
+    Bonus.finish('leave');
     Game.reset();
     if (Game.cheatLives) Game.lives = 9;
     Save.data.plays++;
@@ -5511,6 +5856,7 @@ const App = {
     this.go('story');
   },
   startLevel(idx) {
+    Bonus.finish('leave');
     Game.mode = 'replay';
     Game.difficulty = Difficulty.selected; Game.collected = []; Game.collectedLevel = idx;
     Game.assist = Comfort.assist; Game.stats = Exploration.blankStats(); Game.statsLevel = idx;
@@ -5523,6 +5869,7 @@ const App = {
 
   /* ---------- transições ---------- */
   go(state, fn, instant) {
+    Bonus.finish('leave');
     if (this.state === 'transform' && state !== 'transform') Kinhurine.active = false;
     const apply = () => { this.state = state; this.t = 0; this.menu = null; this.sub = null; if (fn) fn(); this.enter(state); this.syncAbilityControls(); };
     if (instant) { apply(); return; }
@@ -5583,6 +5930,7 @@ const App = {
       { label: 'JOGABILIDADE', desc: ['DIFICULDADE E ASSISTÊNCIA.', 'AJUSTES PARA O RITMO DA PARTIDA.'], fn: () => this.openGameplay() },
       { label: 'ÁUDIO', desc: ['MÚSICA, EFEITOS E SOM GERAL.', 'VOLUMES AJUSTADOS SEPARADAMENTE.'], fn: () => this.openAudio() },
       { label: 'ACESSIBILIDADE', desc: ['REDUÇÃO DE TREMOR E FLASHES.', 'MAIS CONFORTO VISUAL.'], fn: () => this.openAccessibility() },
+      { label: 'VISUAL DO KINHU', desc: ['CAMISETAS E CRACHÁ DESBLOQUEÁVEIS.', 'RECOMPENSAS DA COLEÇÃO E DESAFIOS.'], fn: () => this.openCosmetics() },
       { label: 'VOLTAR', desc: ['RETORNE AO MENU ANTERIOR.'], fn: back },
     ], { title: 'CONFIGURAÇÕES', panel: 'navigation', back }); Input.clear();
   },
@@ -5596,6 +5944,22 @@ const App = {
       } },
       { label: 'VOLTAR', desc: ['RETORNE ÀS CONFIGURAÇÕES.'], fn: back },
     ], { title: 'JOGABILIDADE', panel: 'navigation', back }); Input.clear();
+  },
+  openCosmetics() {
+    const back = this.menuReturn(), ids = Object.keys(Cosmetics.styles); this.sub = 'cosmetics';
+    this.menu = this.makeMenu(ids.map(id => ({
+      label: () => (Cosmetics.current() === id ? '★ ' : '  ') + Cosmetics.styles[id].name + (Cosmetics.unlocked(id) ? '' : ' (TRANCADO)'),
+      desc: () => Cosmetics.styles[id].tips(Cosmetics.profile()), style: id,
+      fn: () => { if (Cosmetics.select(id)) Sound.fx('check'); else this.toast('COMPLETE A META PARA LIBERAR'); },
+    })).concat([{ label: 'VOLTAR', desc: () => ['RETORNE ÀS CONFIGURAÇÕES.'], fn: back }]), { title: 'VISUAL DO KINHU', back }); Input.clear();
+  },
+  drawCosmetics() {
+    ctx.fillStyle = '#00153b'; ctx.fillRect(8, 22, 240, 194);
+    this.drawMenu(this.menu, 128, 30);
+    const item = this.menu.items[this.menu.i], id = item.style || Cosmetics.current();
+    ctx.drawImage(Cosmetics.sprite(id).idle.r, 117, 139); Cosmetics.badge(121, 142, id);
+    item.desc().forEach((line, i) => Font.draw(line, 128, 174 + i * 11, '#a2c4ff', { align: 'center' }));
+    Font.draw(Input.device === 'keyboard' ? 'ENTER: VESTIR  ESC: VOLTAR' : 'A: VESTIR  B: VOLTAR', 128, 204, '#ffe384', { align: 'center' });
   },
   openAudio() {
     const back = this.menuReturn(); this.sub = 'audio';
@@ -5684,14 +6048,17 @@ const App = {
       { label: 'CONFIGURAÇÕES', desc: ['CONTROLES, JOGABILIDADE,', 'ÁUDIO E ACESSIBILIDADE.'], fn: () => this.openSettings() },
       { label: 'GUIA DO JOGO', desc: ['COMANDOS, PODERES E ITENS.', 'COLEÇÃO E DESAFIOS DA PARTIDA.'], fn: () => this.openGuide() },
       { label: 'ARQUIVOS DE SAVE', desc: ['BAIXE OU IMPORTE SEU PROGRESSO.'], fn: () => this.openSaves() },
-      { label: 'REINICIAR FASE', desc: ['RECOMEÇA DA FASE OU DO PONTO.', 'ITENS TEMPORÁRIOS SÃO PERDIDOS.'], fn: () => { Game.hearts = Game.maxHearts; this.go('play'); } },
+      Bonus.active ? { label: Bonus.active.fight ? 'SAIR DO DESAFIO' : 'SAIR DA SALA BÔNUS', desc: ['RETORNE À PORTA DA FASE.', 'RECOMPENSAS RECOLHIDAS CONTINUAM.'], fn: () => { Bonus.finish('leave'); this.closePause(); } } : { label: 'REINICIAR FASE', desc: ['RECOMEÇA DA FASE OU DO PONTO.', 'ITENS TEMPORÁRIOS SÃO PERDIDOS.'], fn: () => { Game.hearts = Game.maxHearts; this.go('play'); } },
       { label: 'SAIR PARA O MENU', desc: ['SALVA A CAMPANHA ANTES DE SAIR.'], fn: () => { this.saveProgress(false, true); this.go('title'); } },
     ], { title: 'PAUSA', panel: 'navigation', back: () => this.closePause() });
   },
   // C aparece apenas quando a arrancada está disponível.
   syncAbilityControls() {
     const button = document.querySelector ? document.querySelector('[data-act="propel"]') : null;
-    if (button) button.hidden = !Progression.usable(Game.progress, 'propulsion') || this.state !== 'play';
+    if (button) {
+      button.hidden = !Progression.usable(Game.progress, 'propulsion') || this.state !== 'play';
+      if (TouchControls.active) TouchControls.sync();
+    }
     if (TouchControls.buttons) TouchControls.sync();
   },
   acknowledgeUnlock(id, skipped = false) {
@@ -5866,7 +6233,7 @@ const App = {
       case 'origin': Origin.draw(); break;
       case 'transform': Kinhurine.draw(); break;
       case 'intro': this.drawIntro(); break;
-      case 'play': case 'pause': drawWorld(); this.drawHUD(); if (this.state === 'pause') { ctx.fillStyle = 'rgba(0,10,30,0.55)'; ctx.fillRect(0, 0, W, H); if (this.sub === 'abilities') this.drawAbilities(); else if (this.sub === 'controls') this.drawControls(); else if (this.sub === 'difficulty') this.drawDifficulty(); else if (this.sub === 'explore') this.drawExplore(); else if (this.sub === 'help') this.drawHelp(); else if (this.menu.panel) this.drawNavigation(); else this.drawMenu(this.menu, W / 2, 36); } break;
+      case 'play': case 'pause': drawWorld(); this.drawHUD(); if (this.state === 'pause') { ctx.fillStyle = 'rgba(0,10,30,0.55)'; ctx.fillRect(0, 0, W, H); if (this.sub === 'abilities') this.drawAbilities(); else if (this.sub === 'controls') this.drawControls(); else if (this.sub === 'difficulty') this.drawDifficulty(); else if (this.sub === 'cosmetics') this.drawCosmetics(); else if (this.sub === 'explore') this.drawExplore(); else if (this.sub === 'help') this.drawHelp(); else if (this.menu.panel) this.drawNavigation(); else this.drawMenu(this.menu, W / 2, 36); } break;
       case 'gameover': this.drawGameOver(); break;
       case 'ending': this.drawEnding(); break;
     }
@@ -5897,6 +6264,7 @@ const App = {
     if (this.sub === 'controls') { this.drawControls(); return; }
     if (this.sub === 'select') { this.drawSelect(); return; }
     if (this.sub === 'abilities') { this.drawAbilities(); return; }
+    if (this.sub === 'cosmetics') { this.drawCosmetics(); return; }
     if (this.menu && this.menu.panel) { this.drawNavigation(); return; }
     if (this.sub === 'difficulty') { this.drawDifficulty(); return; }
     if (!this.menu) {
@@ -5958,11 +6326,37 @@ const App = {
     Font.draw('ENTER: SELECIONAR  ESC: VOLTAR', 128, 201, '#ffe384', { align: 'center' });
   },
   updateHelp() {
-    if (Input.pressed('left') || Input.pressed('right')) this.helpPage = this.helpPage ? 0 : 1;
+    if (Input.pressed('left') || Input.pressed('right')) this.helpPage = ((this.helpPage || 0) + (Input.pressed('right') ? 1 : 4)) % 5;
   },
   drawHelp() {
     ctx.fillStyle = 'rgba(0,21,59,0.94)'; ctx.fillRect(5, 20, W - 10, H - 28);
-    const L = this.helpPage ? [
+    const L = this.helpPage === 4 ? [
+      ['MINICHEFES E COSMÉTICOS', '#ffbf30'], ['', ''],
+      ['PORTAS DESAFIO: ÔNIBUS/ESCRITÓRIO.', '#ffe384'], ['▲ PARA ENTRAR; SEM CRACHÁ.', '#e9effb'],
+      ['90S E 3 CORAÇÕES DO DESAFIO.', '#e9effb'], ['SAÍDA/FALHA PRESERVA A CAMPANHA.', '#e9effb'],
+      ['FISCAL: AVISA, INVESTE E DESCANSA.', '#94e5ef'], ['RH: AVISA, SOLTA PAPEL E ABRE.', '#94e5ef'],
+      ['▼: PISE OU USE COCA/BARRIGADA.', '#e9effb'], ['INTERVALO ENTRE ACERTOS: 40 QUADROS.', '#e9effb'],
+      ['VITÓRIA: +3000 E REGISTRO NO PERFIL.', '#e9effb'], ['MODO KINHU: SEM MINICHEFES.', '#a2c4ff'], ['', ''],
+      ['CONFIGURAÇÕES > VISUAL DO KINHU.', '#a2c4ff'], ['ROUPAS: COLEÇÃO, MEDALHAS E VITÓRIAS.', '#a2c4ff'], ['COCA/KINHURINE MANTÊM SEU VISUAL.', '#a2c4ff'],
+    ] : this.helpPage === 3 ? [
+      ['SALAS BÔNUS / MANUTENÇÃO', '#ffbf30'], ['', ''],
+      ['CRACHÁ: ESCRITÓRIO E SERVIDORES.', '#ffe384'],
+      ['▲ NA PORTA: ENTRAR COM CRACHÁ.', '#e9effb'], ['O CRACHÁ É CONSUMIDO AO ENTRAR.', '#e9effb'],
+      ['1 TENTATIVA POR SALA NA PARTIDA.', '#e9effb'], ['', ''],
+      ['45S, SALTOS E ATÉ 10 MOEDAS.', '#94e5ef'], ['▲ NA PORTA FINAL: +1000 PONTOS.', '#e9effb'],
+      ['MOEDAS RECOLHIDAS SÃO MANTIDAS.', '#e9effb'], ['QUEDA / TEMPO: VOLTA SEM MORRER.', '#e9effb'], ['', ''],
+      ['A FASE E OS BÔNUS FICAM PAUSADOS.', '#a2c4ff'], ['TEMPO ATIVO DOS DESAFIOS CONTA.', '#a2c4ff'],
+      ['NA PAUSA: SAIR DA SALA BÔNUS.', '#a2c4ff'], ['CRACHÁ NÃO É RESTAURADO NO SAVE.', '#a2c4ff'],
+    ] : this.helpPage === 2 ? [
+      ['MARMITA E HORA EXTRA', '#ffbf30'], ['', ''],
+      ['MARMITA CAPRICHADA', '#ffe384'], ['RECUPERA ATÉ 2 CORAÇÕES.', '#e9effb'],
+      ['VIDA CHEIA: +1000 PONTOS.', '#e9effb'], ['', ''],
+      ['HORA EXTRA', '#94e5ef'], ['DEVOLVE ATÉ 30 NO CRONÔMETRO.', '#e9effb'],
+      ['LIMITE: TEMPO INICIAL DA FASE.', '#e9effb'], ['CONSIDERA MODO E ASSISTÊNCIA.', '#e9effb'], ['', ''],
+      ['EFEITO IMEDIATO AO RECOLHER.', '#e9effb'], ['NÃO TROCA CAFÉ, ÍMÃ OU MOCHILA.', '#e9effb'],
+      ['DESVIOS ALTOS NAS FASES 3 / 4 / 5.', '#a2c4ff'],
+      ['MORTE / RETOMADA: NÃO REAPARECEM.', '#a2c4ff'], ['VOLTAM EM NOVO JOGO / REPLAY.', '#a2c4ff'],
+    ] : this.helpPage ? [
       ['ITENS TEMPORÁRIOS', '#ffbf30'], ['', ''],
       ['CAFÉ: +15% DE VELOCIDADE, 8S.', '#ffe384'], ['NÃO AUMENTA A ALTURA DO PULO.', '#e9effb'],
       ['ÍMÃ: MOEDAS ATÉ 3 BLOCOS, 12S.', '#ffe384'], ['RESPEITA PAREDES; SÓ MOEDAS.', '#e9effb'],
@@ -5978,7 +6372,7 @@ const App = {
       ['O JOGO SALVA SOZINHO NO NAVEGADOR.', '#a2c4ff'], ['NA PAUSA DÁ PARA BAIXAR O SAVE', '#a2c4ff'], ['E CARREGAR EM OUTRO LUGAR.', '#a2c4ff'],
     ];
     L.forEach(([t, c], i) => { if (t) Font.draw(t.replace('↑', '▲'), W / 2, 28 + i * 10, c, { align: 'center' }); });
-    Font.draw('◄ ►  ' + (this.helpPage ? '2' : '1') + '/2   ENTER / ESC: VOLTAR', 128, 204, '#ffe384', { align: 'center' });
+    Font.draw('◄ ►  ' + ((this.helpPage || 0) + 1) + '/5   ENTER / ESC: VOLTAR', 128, 204, '#ffe384', { align: 'center' });
   },
   drawStory() {
     Cutscenes.draw();
@@ -6071,16 +6465,17 @@ const App = {
     ctx.fillStyle = 'rgba(0,10,30,0.35)'; ctx.fillRect(0, 0, W, 15);
     ctx.drawImage(SPR.kinhuHead, 0, 0, 20, 12, 1, 1, 20, 12);
     Font.draw('×' + Game.lives, 20, 5);
-    for (let i = 0; i < Game.maxHearts; i++) ctx.drawImage((i < Game.hearts ? SPR.heart : SPR.heartEmpty).r, 38 + i * 10, 3);
+    const hearts = Bonus.active && Bonus.active.fight ? Bonus.active.health : Game.hearts;
+    for (let i = 0; i < Game.maxHearts; i++) ctx.drawImage((i < hearts ? SPR.heart : SPR.heartEmpty).r, 38 + i * 10, 3);
     if (Game.power === 1) ctx.drawImage(SPR.coca.r, 69, -2);
     ctx.drawImage(SPR.coinSmall, 90, 5);
     Font.draw('×' + String(Game.coins).padStart(3, '0'), 97, 5);
     Font.draw(String(Game.score).padStart(7, '0'), 128, 5);
     ctx.drawImage(SPR.clock, 180, 2);
     Font.draw(String(Math.max(0, Wd.time)).padStart(3, '0'), 191, 5, Wd.hurry && (Comfort.reducedFlash || Wd.t % 20 < 10) ? '#ff6040' : '#ffffff');
-    Font.draw('F' + Wd.def.id, 233, 5, '#ffe384');
+    Font.draw(Bonus.active ? 'B+' : 'F' + Wd.def.id, 233, 5, '#ffe384');
     if (p.wild > 0) { const w = Math.round((p.wild / 600) * 60); ctx.fillStyle = '#20141c'; ctx.fillRect(3, 27, 62, 4); ctx.fillStyle = ['#ffe040', '#ff80c0', '#60e0ff'][Comfort.reducedFlash ? 0 : Math.floor(Wd.t / 4) % 3]; ctx.fillRect(4, 28, w, 2); }
-    Font.draw('★' + Exploration.count(Game.levelIdx) + '/3', 91, 27, '#ffe384', { outline: true });
+    if (!Bonus.active) Font.draw('★' + Exploration.count(Game.levelIdx) + '/3', 91, 27, '#ffe384', { outline: true });
     if (Wd.bannerT > 0 && (Comfort.reducedFlash || Wd.bannerT > 20 || Wd.bannerT % 4 < 2)) Font.draw(Wd.banner, W / 2, 38, '#ffe384', { align: 'center', outline: true });
     if (Wd.bossFight && Wd.boss && Wd.boss.alive && Wd.boss.state !== 'dead') {
       const b = Wd.boss;
@@ -6093,12 +6488,24 @@ const App = {
       Font.draw(Input.label('propel') + (p.dashCooldown ? ': ' + (p.dashCooldown / 60).toFixed(1) + 'S' : ': OK') + (p.airPropulsionUsed && !p.onGround ? ' AR' : ''), 4, 18, '#e9effb', { outline: true });
     }
     if (p.backpack) ctx.drawImage(SPR.backpack.r, 94, 15, 12, 12);
+    if (p.maintenanceKey) ctx.drawImage(SPR.maintenance.r, 78, 15, 12, 12);
     if (p.utility) {
       ctx.drawImage(SPR[p.utility].r, 110, 15, 12, 12);
       Font.draw(p.wild > 0 ? 'PAUSA' : Math.ceil(p.utilityT / 60) + 'S' + (p.utilityT <= 120 ? '!' : ''), 126, 18, p.utilityT <= 120 ? '#ffbf30' : '#e9effb', { outline: true });
     }
     Font.draw((Game.assist ? 'A ' : '') + Difficulty.current().name, 222, 18, '#a2c4ff', { align: 'right', outline: true });
     if (this.saveIcon > 0 && (Comfort.reducedFlash || this.saveIcon % 10 < 7)) Font.draw('SALVO', W - 4, 18, '#80ff80', { align: 'right' });
+    if (Bonus.active && Bonus.active.fight) {
+      const mini = Wd.ents.find(e => e.kind === 'miniboss');
+      ctx.fillStyle = 'rgba(0,21,59,0.9)'; ctx.fillRect(4, 188, 248, 33);
+      Font.draw(Minibosses.names[mini.type], 128, 190, '#ffe384', { align: 'center' });
+      ctx.fillStyle = '#24397a'; ctx.fillRect(72, 201, 112, 5); ctx.fillStyle = '#80ff80'; ctx.fillRect(72, 201, Math.round(112 * mini.hp / mini.maxHp), 5);
+      Font.draw(mini.state === 'recover' ? '▼: ABERTA! ATAQUE POR CIMA OU LATAS.' : mini.state === 'warn' ? '!: PREPARE-SE PARA DESVIAR.' : mini.state === 'dead' ? 'MINICHEFE VENCIDO!' : 'DESVIE E ESPERE O SINAL ▼.', 128, 211, '#e9effb', { align: 'center' });
+    } else if (Bonus.active) {
+      ctx.fillStyle = 'rgba(0,21,59,0.9)'; ctx.fillRect(4, 198, 248, 20);
+      Font.draw('SALA BÔNUS: ' + Bonus.active.coins + '/10 MOEDAS', 128, 200, '#ffe384', { align: 'center' });
+      Font.draw('▲ NAS PORTAS. QUEDA NÃO GASTA VIDA.', 128, 209, '#e9effb', { align: 'center' });
+    }
     // dica de controles no começo do jogo
     if (Wd.def.id === 1 && !Game.checkpoint && Wd.t < 480 && !Wd.clear) {
       const tip = Input.label('move') + ': ANDAR  ' + Input.label('jump', Input.device, true) + ': PULO  ' + Input.label('run', Input.device, true) + ': CORRER';

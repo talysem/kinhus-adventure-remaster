@@ -7,7 +7,7 @@
 
 const Save = {
   KEY: 'kinhus-adventure:save',
-  FORMAT: 5,
+  FORMAT: 6,
   writable: true,
   data: null,
   blank() { return { version: this.FORMAT, unlocked: 1, hiscore: 0, completed: false, run: null, plays: 0, campaign: Progression.blank(), profile: Exploration.blank() }; },
@@ -26,7 +26,7 @@ const Save = {
     out.hiscore = n(d.hiscore, 0, 9999999, 0);
     out.completed = !!d.completed;
     out.plays = n(d.plays, 0, 1e6, 0);
-    out.profile = sourceVersion >= 5 ? Exploration.sanitize(d.profile) : Exploration.blank();
+    out.profile = sourceVersion >= 5 ? Exploration.sanitize({ ...d.profile, minibosses: sourceVersion >= 6 && d.profile ? d.profile.minibosses : [] }) : Exploration.blank();
     const r = d.run;
     if (r && typeof r === 'object') {
       out.run = {

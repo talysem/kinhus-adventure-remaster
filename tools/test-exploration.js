@@ -86,7 +86,7 @@ async function run() {
   assert.equal(Save.data.run.stats.eligible, false); assert.deepStrictEqual(Save.data.run.stats.found, ['memory:0:0']);
   const old = JSON.parse(saved); old.format = old.save.version = 4; delete old.save.profile;
   old.check = Save.hash(JSON.stringify(old.save)); Save.data = Save.blank(); assert(Save.importText(JSON.stringify(old)).ok);
-  assert.equal(Save.data.version, 5); assert.deepStrictEqual(Save.data.profile, Exploration.blank()); assert(!Save.data.run.stats.eligible);
+  assert.equal(Save.data.version, 6); assert.deepStrictEqual(Save.data.profile, Exploration.blank()); assert(!Save.data.run.stats.eligible);
   App.trans = null; App.continueRun(); App.trans = null; App.go('play', null, true); Game.stats.frames = 200;
   startClear(); assert.equal(Save.data.profile.records[Exploration.key()].noDeaths, false);
   assert.equal(Save.data.profile.records[Exploration.key()].bestFrames, null);

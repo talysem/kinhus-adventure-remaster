@@ -74,6 +74,8 @@ function fitScreen() {
   if (s >= 2) s = Math.floor(s);
   cv.style.width = Math.floor(W * s) + 'px';
   cv.style.height = Math.floor(H * s) + 'px';
+  // Aproxima os controles laterais da largura real do jogo, inclusive no tablet.
+  document.body.style.setProperty('--game-width', Math.floor(W * s) + 'px');
 }
 window.addEventListener('resize', fitScreen);
 
@@ -90,7 +92,7 @@ const Input = {
     space: { name: 'WASD + ESPAÇO SHIFT E', move: 'WASD', jump: 'ESPAÇO', run: 'SHIFT', propel: 'E', shortJump: 'ESPAÇO', shortRun: 'SHIFT',
       bindings: { jump: ['Space'], run: ['ShiftLeft', 'ShiftRight'], propel: ['KeyE'], confirm: ['Enter', 'Space'], back: ['Escape', 'Backspace'] } },
   },
-  keys: {}, hits: {}, touch: {}, cur: {}, prev: {},
+  keys: {}, hits: {}, touch: {}, touchReleased: {}, cur: {}, prev: {},
   map: {
     left: ['ArrowLeft', 'KeyA'],
     right: ['ArrowRight', 'KeyD'],
@@ -132,7 +134,7 @@ const Input = {
   },
   sceneHint() { return this.device === 'keyboard' ? this.label('confirm') + ': AVANÇAR  ESC: PULAR' : 'A: AVANÇAR  START/B: PULAR'; },
   releaseAll() {
-    this.keys = {}; this.hits = {}; this.cur = {}; this.prev = {}; this.touch = {}; this.anyKey = false;
+    this.keys = {}; this.hits = {}; this.cur = {}; this.prev = {}; this.touch = {}; this.touchReleased = {}; this.anyKey = false;
     if (this.resetTouch) this.resetTouch();
   },
   init() {
@@ -154,6 +156,8 @@ const Input = {
     for (const a in this.map) {
       cur[a] = this.map[a].some(k => this.keys[k]) || !!this.touch[a];
       cur[a + '!'] = this.map[a].some(k => this.hits[k]);
+      // Soltar e retocar entre dois quadros também é um novo comando de pulo.
+      if (this.touchReleased[a] && this.hits['touch-' + a]) this.prev = { ...this.prev, [a]: false };
     }
     // controles (gamepad)
     const pads = navigator.getGamepads ? navigator.getGamepads() : [];
@@ -175,11 +179,12 @@ const Input = {
     }
     this.cur = cur;
     this.hits = {};
+    this.touchReleased = {};
   },
   down(a) { return !!this.cur[a]; },
   pressed(a) { return (!!this.cur[a] && !this.prev[a]) || !!this.cur[a + '!']; },
   // esquece toques "apertados" pendentes, mas mantém o que está sendo segurado
-  clear() { this.hits = {}; this.prev = Object.assign({}, this.cur); for (const k in this.cur) if (k.endsWith('!')) this.cur[k] = false; },
+  clear() { this.hits = {}; this.touchReleased = {}; this.prev = Object.assign({}, this.cur); for (const k in this.cur) if (k.endsWith('!')) this.cur[k] = false; },
 };
 
 /* ---------- fonte bitmap 5x7 com acentos ---------- */

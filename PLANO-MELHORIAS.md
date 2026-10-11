@@ -2,8 +2,8 @@
 
 Data: 09/10/2026. Atualizado em 11/10/2026.
 
-**Status: etapas 1–5 implementadas. Etapa 6 — expansão opcional — pendente.**
-O save versão 5 preserva campanha, dificuldade, consumo de itens, coleção permanente e desafios, migrando os formatos 1/2/3/4. A abertura original permanece sem menção aos poderes, com origens individuais apenas nas aquisições. Mochila, café e ímã estão ativos. Há quatro dificuldades, três lembranças por fase, desafios de replay e opções de conforto/volume/assistência. A próxima entrega é a etapa 6; metas de tempo, equilíbrio e conforto seguem sujeitos a partidas reais.
+**Status: etapas 1–6 implementadas. Etapa 6 concluída: marmita, hora extra, salas com crachá, minichefes e cosméticos.**
+O save versão 6 preserva campanha, dificuldade, consumo de itens/visitas, coleção permanente, desafios e vitórias em minichefes, migrando os formatos 1–5. A abertura original permanece sem menção aos poderes, com origens individuais apenas nas aquisições. Mochila, café, ímã, marmita e hora extra estão ativos. Há quatro dificuldades, três lembranças por fase, desafios de replay, duas salas bônus, dois minichefes opcionais, quatro recompensas cosméticas e opções de conforto/volume/assistência. Não há entrega numerada pendente. Metas de tempo, equilíbrio e conforto seguem sujeitos a partidas reais; propostas complementares estão na seção 10.
 
 ## 1. Objetivo e situação atual
 
@@ -17,7 +17,7 @@ Base observada no projeto:
 - Quatro cenas de origem de aproximadamente 13 segundos, apenas na aquisição de cada habilidade. A abertura original segue diretamente ao bairro; a pausa oferece comandos e demonstrações das habilidades conquistadas.
 - Coca-Cola permite arremessar latas e é perdida ao receber dano; Kinhurine oferece 10 segundos de invencibilidade, com transformação ilustrada.
 - Moedas, comida, vida extra, checkpoints, plataformas móveis, perigos próprios de cada cenário e MEGA BUG com duas etapas de combate.
-- Salvamento no navegador e importação/exportação de arquivo JSON no formato 5, com migração dos formatos 1, 2, 3 e 4.
+- Salvamento no navegador e importação/exportação de arquivo JSON no formato 6, com migração dos formatos 1–5.
 - O código de `js/levels.js` e o README definem 900 no cronômetro; as quatro primeiras fases têm 680 blocos de largura e a última tem 424.
 
 ## 2. Progressão de habilidades permanentes
@@ -86,6 +86,10 @@ Preservar a identidade da Coca-Cola e do Kinhurine. Começar com poucos itens de
 | **Hora extra** | Acrescenta 30 unidades ao cronômetro, limitado ao tempo inicial da fase. | Rotas opcionais longas. | Expansão |
 | **Crachá de manutenção** | Abre uma sala bônus identificada da fase e é consumido ao abrir a porta. Nunca bloqueia a saída principal. | Escritório ou servidores. | Expansão |
 
+**Implementado no início da etapa 6:** duas marmitas (escritório/servidores) e três horas extras (centro/escritório/servidores), em desvios altos existentes. Marmita recupera até dois corações; vida cheia concede 1000 pontos. Hora extra recupera até 30 unidades, limitada ao tempo inicial da dificuldade/assistência; não reduz o tempo ativo dos desafios. Ao subir acima de 100, desativa a urgência, que pode retornar em nova contagem regressiva. Efeitos imediatos preservam os poderes e utilitários. Consumo registrado nos IDs existentes do save v5, sem mudança de formato; não reaparecem após morte, reinício ou retomada da fase. Novo jogo/replay renova a coleta. Ícones próprios, mensagem de coleta e terceira página da ajuda disponíveis.
+
+**Salas com crachá implementadas na etapa 6:** Arquivo de Manutenção (escritório) e Passarela de Manutenção (servidores). Crachá em desvio alto, porta sinalizada, cima para entrar/sair e acesso sempre opcional. Uma tentativa por sala na partida da fase, registrada ao entrar no save v5. Crachá consumido na entrada e não salvo; reaparece ao retomar se a sala ainda não foi usada. Cada sala tem 45 segundos, dez moedas e +1000 pontos pela porta final. Moedas recolhidas permanecem mesmo após saída antecipada, queda/dano ou tempo esgotado; falhar não reduz vidas/corações nem registra morte. Fase principal e contadores de poderes ficam congelados; tempo ativo dos desafios continua contando. Pausa/aba oculta congelam a sala. Retorno à porta preserva mapa, inimigos, projéteis, checkpoint, poderes e inventário. Retomar um save dentro dela restaura a fase principal, preserva recompensas e registra a visita como usada. Novo jogo/replay renova o acesso. Quarta página da ajuda e saída dedicada na pausa.
+
 ### Coexistência, duração e morte
 
 **Primeiro conjunto implementado na etapa 4:** ímã opcional no bairro, mochila no ônibus, café na reta inicial do centro e pequenas combinações no escritório/servidores. Ícones próprios no cenário e HUD, mochila visível no personagem e contador com `!` nos dois segundos finais. Ajuda dos itens na segunda página e na pausa. Coletáveis fixos consumidos ficam registrados até mudar de fase ou começar novo jogo/replay; recarregar não renova recompensas nem restaura mochila/utilitários. Esmagamento contra o chão é fatal, mesmo com mochila ou Kinhurine.
@@ -126,15 +130,17 @@ Desafios independentes: concluir sem morrer, recolher as três lembranças na me
 
 - **Lembranças do expediente:** três coletáveis únicos por fase, com localização fixa, registro permanente e contador na seleção de fases. Recoletar não duplica a recompensa permanente.
 - **Desafios opcionais:** concluir sem morrer, encontrar todos os segredos ou bater um tempo de referência. Calibrar metas com partidas reais; não exigir todos ao mesmo tempo.
-- **Recompensas cosméticas:** camisetas e detalhes visuais por coleção ou desafios, mantendo silhueta legível e indicação dos poderes ativos.
-- **Salas bônus curtas:** um desafio de movimento com moedas ou cosmético, sem perda de progresso principal ao falhar.
+- **Recompensas cosméticas — implementadas:** camisetas azul (3 lembranças), verde (15 lembranças), roxa (3 medalhas distintas por fase/meta) e crachá dourado (vitória nos dois minichefes). Prévia/metas em CONFIGURAÇÕES → VISUAL DO KINHU; escolha local persistente. Silhueta, colisão, física e habilidades preservadas. Coca-Cola/Kinhurine mantêm os próprios visuais. Desbloqueios derivam do perfil e persistem em novo jogo/importação.
+- **Salas bônus curtas — implementadas:** duas salas de movimento com moedas, sem perda de progresso principal ao falhar. Cosméticos adicionais também implementados.
 
 ### Inimigos e chefe
 
 - Introduzir variações por comportamento: skatista que freia antes de investir, impressora com aviso antes da rajada e bug com proteção frontal vulnerável por cima.
 - Reaproveitar personagens existentes antes de criar muitos tipos novos; ensinar cada comportamento isoladamente.
 - Rever MEGA BUG para oferecer janelas de ataque claras e oportunidades de usar pum propulsor para esquivar e barrigada para atacar. Qualquer nova forma de dano precisa ter intervalo próprio para impedir múltiplos acertos por quadro.
-- Manter duas etapas de combate na primeira revisão. Minichefes como Fiscal da Linha e Impressora do RH ficam para uma expansão, após validar a campanha principal.
+- Manter duas etapas do MEGA BUG. **Fiscal da Linha e Impressora do RH implementados na etapa 6:** portas DESAFIO no ônibus/escritório, cima para entrar, sem crachá e sem bloqueio da rota principal. Aviso visual, ataque e recuperação vulnerável indicada por ▼. Fiscal investe; RH dispara três papéis. Pisão/lata causa um ponto; barrigada causa dois, respeitando 40 quadros entre acertos. Vida fácil/normal/difícil: Fiscal 4/6/8, RH 6/8/10. Os dois são vencíveis sem itens temporários.
+
+Confrontos opcionais de 90 segundos, três corações próprios e uma tentativa por partida da fase. Falha/saída preserva vida, corações, checkpoint e poderes da campanha; o tempo ativo dos desafios conta o confronto. Modo Kinhu não apresenta portas/inimigos. Vitória: +3000 pontos e registro permanente no perfil, usado para o crachá dourado. Save v6 migra v1–v5, preserva coleção/desafios e une vitórias válidas ao importar; saves antigos não ganham vitórias por migração. Replay permite conquistar o registro sem sobrescrever campanha. Quinta página da ajuda e saída dedicada na pausa.
 
 ### Clareza, conforto e acessibilidade
 
@@ -175,14 +181,14 @@ Diretrizes:
 
 ## 7. Ordem sugerida de entrega
 
-As etapas 1–5 estão concluídas. A etapa 6 está **pendente**; dificuldades e conforto já estão disponíveis.
+As etapas 1–6 estão concluídas. Implementação encerrada; calibração em partidas reais e refinamentos complementares seguem na seção 10.
 
 1. **Fundação da progressão — concluída em 11/10/2026:** estados, controles e migração de saves implementados; roteiro e contratos da cena, tutoriais e feedback preparados em `js/progression.js` e `assets/cutscenes/ORIGEM-PODERES.md`. A seleção de fases preserva a campanha. Verificação automatizada: saves antigos continuam sem perda de progresso ou concessão de habilidades futuras.
 2. **Primeira fatia jogável — concluída em 11/10/2026:** pulo duplo ativo ao concluir o bairro, agora com origem individual persistente, demonstração na pausa e prática segura no ônibus. Verificação automatizada com entrada de teclado, gamepad e toque: pulo/avanço da cena, desbloqueio, interrupção do aviso, morte, retomada e coleta dos bagageiros. A ilustração, o bundle offline e a documentação estão atualizados.
 3. **Mobilidade completa — concluída em 11/10/2026:** pum propulsor causado pelo Mumu, barrigada e passo firme, com adaptações das fases e revisão da arena. Pum de 3 blocos/12 quadros, recarga de 60 quadros e um uso aéreo; barrigada em caixas F e botões R; passo firme com redução de 30%. Trechos seguros nos inícios das fases 3/4/5 e avisos de ataques do chefe. Geometria dos cinco cenários validada sem itens temporários; equilíbrio em partidas humanas permanece em avaliação.
 4. **Primeiro conjunto de itens — concluída em 11/10/2026:** mochila, café de 8 segundos/+15% sem aumento de pulo e ímã de 12 segundos/3 blocos respeitando paredes. HUD, ajuda, coexistência, suspensão durante Kinhurine, limpeza ao morrer/retomar e consumo persistente no save v4. Quatro modos de dificuldade acrescentados ao menu e à pausa.
 5. **Exploração e conforto — concluída em 11/10/2026:** 15 lembranças fixas com coleção permanente, seleção de fases com contadores/poderes/desafios, medalhas independentes e melhor tempo por modo, volumes separados, tremor/flashes reduzidos e assistência de tempo/retomada. Save v5 mantém campanha separada do perfil; replay e importação preservam coleção. Metas aguardam calibração em partidas humanas.
-6. **Expansão opcional:** marmita, hora extra, salas com crachá, minichefes e cosméticos adicionais. Critério: acrescentar variedade após estabilizar a experiência principal.
+6. **Expansão opcional — concluída em 11/10/2026:** marmita, hora extra, duas salas com crachá, Fiscal da Linha e Impressora do RH opcionais, três camisetas e crachá dourado por coleção/medalhas/vitórias. Save v6 preserva campanha e perfil; confrontos isolados usam corações próprios. Critério técnico atendido: variedade opcional, campanha preservada, vitórias sem itens e testes no fonte/offline. Equilíbrio humano permanece em avaliação.
 
 ## 8. Validação
 
@@ -195,6 +201,8 @@ As etapas 1–5 estão concluídas. A etapa 6 está **pendente**; dificuldades e
 **Configuração de controles:** `tools/test-controls.js` verifica seleção pelo menu, persistência/fallback, ausência de ações residuais após troca, comandos dos três conjuntos na física real, dicas e ajuda, pausa sem avançar o mundo, gamepad/toque e campanha preservada. Prévias do menu inspecionadas. Código fonte e HTML offline validados.
 
 **Organização da GUI:** menus inicial e de pausa com até seis entradas; configurações agrupadas em controles, jogabilidade, áudio e acessibilidade. Saves e guia têm submenus próprios. Destaque, descrição, mouse/toque e retorno com seleção preservada. `tools/test-menus.js` verifica navegação, áreas de clique, acesso aos arquivos e pausa nos submenus; prévias visuais inspecionadas.
+
+**Ajuste dos controles mobile:** setas de 52–62 px e ações de 64–84 px, grupos centralizados em retrato e aproximados da largura real do jogo em paisagem. A cruz completa reconhece diagonais e tem centro neutro; ações toleram 12 px nas áreas livres. Multitoque, retap entre quadros, captura indisponível e soltura/cancelamento tratados. `tools/test-mobile.js` cobre as entradas; `tools/test-mobile-layout.js` verifica layout e eventos nativos em Chromium em dez resoluções, do celular compacto ao tablet, sem cobrir o canvas. Fonte e offline validados; conforto físico continua sujeito a partidas reais. Visual do ladrão atualizado para idoso com barba/chapéu brancos, faixa preta e camiseta vermelha com estrela branca, sem mudar a colisão/comportamento.
 
 **Validações futuras da campanha completa:**
 
@@ -212,7 +220,7 @@ As etapas 1–5 estão concluídas. A etapa 6 está **pendente**; dificuldades e
 
 Não incluir nesta primeira evolução: multiplayer, ranking online, loja com moeda real, árvore extensa de atributos, geração procedural ou aumento geral do número de fases. Concentrar o trabalho em progressão perceptível, variedade e qualidade das cinco fases existentes.
 
-Antes de cada futura entrega, revisar os valores sugeridos e o estado real do código. Este plano registra as três primeiras etapas concluídas e as propostas das próximas entregas. Somente os itens marcados como concluídos estão prontos.
+Antes de cada futura entrega, revisar os valores sugeridos e o estado real do código. Este plano registra as etapas 1–6 concluídas. Somente os itens marcados como implementados ou concluídos estão prontos; sugestões complementares não fazem parte dessa conclusão.
 
 
 **Executada na etapa 4 e dificuldade:** `tools/test-items-difficulty.js` verifica duração exata, renovação/troca, coexistência, ordem de dano e proteção breve, perigos fatais, aceleração/velocidade e altura do salto, raio/parede/moedas soltas do ímã, congelamento durante pausa/aba oculta/origem/transformação, consumo sem reaparecimento, save v4 e migração v3. Verifica os quatro modos, preferências, retomada mantendo o modo salvo, troca na pausa, replay preservando campanha e conclusão sem chefe no Kinhu. Prévias de ajuda, HUD e dificuldade inspecionadas; regressões no fonte e HTML offline e cinco fases concluídas pelo bot sem itens temporários.
@@ -229,3 +237,19 @@ Antes de cada futura entrega, revisar os valores sugeridos e o estado real do c�
 Todos mantêm três corações. Proteção breve após golpe: 3 segundos no Kinhu/fácil, 2 no normal e 1,5 no difícil. Kinhu mantém perigos ambientais como buracos, líquido, espinhos, pesos e trânsito. A escolha no menu inicial vale para novo jogo e replay; **CONTINUAR** usa o modo da campanha salva. Trocar na pausa recarrega a fase/ponto com os valores do novo modo, removendo os itens temporários e mantendo habilidades e consumo dos coletáveis. O menu comunica isso antes da escolha.
 
 **Executada na etapa 5:** `tools/test-exploration.js` alcança as 15 lembranças com movimento, salto e colisões reais; verifica morte/retomada, pontos apenas na primeira coleta, coleção mantida após novo jogo/replay, campanha preservada, conquistas independentes e categorias, tempo ativo congelado em pausa/cenas/aba oculta, save v5, migração v4, checksum antes da migração, união de coleções/recordes, validação de IDs e históricos, assistência sem habilidades futuras e preservada no save, volume independente e invulnerabilidade com flashes reduzidos. Prévias de seleção, conforto, assistência, pausa e exploração inspecionadas. Regressões executadas no fonte e no bundle offline. Geometria dos cinco cenários validada pelo bot sem itens temporários.
+
+**Executada no início da etapa 6:** `tools/test-expansion-items.js` verifica cura limitada/pontos da marmita, hora extra nos quatro modos com/sem assistência, teto e fração do cronômetro, retorno do aviso de urgência, tempo ativo dos desafios preservado, coexistência com poderes, bloqueio após morte, acesso aos cinco itens por saltos reais e retorno ao chão. Consumo preservado após checkpoint/morte/importação, sem duplicar recompensa; replay preserva a campanha. Terceira página da ajuda e sprites inspecionados. Código fonte e bundle offline validados.
+
+**Executada para salas bônus:** `tools/test-bonus.js` verifica acesso aos crachás/portas, entrada por teclado/gamepad/toque, acesso às vinte moedas e travessia completa dos dois layouts usando entrada e colisões reais. Cobre congelamento da fase/inventário, contagem de tempo dos desafios, pausa/aba oculta, saída antecipada, queda/dano/tempo sem perda de vida/coração/mortes, recompensas, consumo da sala salvo antes da entrada, retomada/importação, crachá não salvo, replay preservando campanha, ajuda e troca de dificuldade. Prévias das portas, salas, pausa e ajuda inspecionadas. Regressões no fonte e bundle offline.
+
+**Executada ao finalizar a etapa 6:** `tools/test-stage-six.js` verifica HP, avisos, ataques, recuperação e intervalo de 40 quadros nos três modos com inimigos; ausência no Kinhu; latas/barrigada; vitórias dos dois minichefes por comandos e física reais, sem itens/invencibilidade. Preserva campanha/inventário/checkpoint, conta o tempo ativo e congela em pausa/aba oculta. Testa quatro cosméticos, metas sem duplicar medalhas entre modos, escolha persistente, física/colisão preservadas e prioridade visual de Coca/Kinhurine. Migração v5→v6 de arquivo e localStorage, união/sanitização de vitórias, novo jogo e replay. Portas/lutas/roupas/ajuda inspecionadas. Regressões e bundle offline validados.
+
+## 10. Depois das seis etapas
+
+Não há etapa numerada pendente. Permanecem **validações humanas e sugestões complementares**, que não foram marcadas como implementadas:
+
+- Jogar a campanha e os confrontos com teclado, gamepad físico e celular; avaliar alcance das ações, legibilidade e conforto de dois dedos.
+- Calibrar tempos de medalhas, dificuldades, comida, recargas e distribuição de checkpoints. Considerar segundo checkpoint somente se partidas reais indicarem necessidade.
+- Revisar ritmo, descanso e variedade das cinco fases usando observações dessas partidas.
+- Refinamentos de inimigos ainda propostos: skatista com freada antes de investir e bug com proteção frontal/vulnerabilidade por cima. Os avisos atuais de emissores e minichefes já existem; novas variações seriam uma entrega adicional.
+- Ajustes adicionais do MEGA BUG podem seguir após avaliar suas duas etapas e janelas atuais. Não representam uma sétima etapa já planejada.

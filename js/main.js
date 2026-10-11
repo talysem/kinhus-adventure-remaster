@@ -23,6 +23,7 @@ const App = {
     Difficulty.load();
     Comfort.load();
     Save.load();
+    Cosmetics.load();
     Game.hiscore = Save.data.hiscore;
     Game.unlocked = Save.data.unlocked;
     this.setupDom();
@@ -122,6 +123,7 @@ const App = {
     return persisted;
   },
   continueRun() {
+    Bonus.abort();
     const r = Save.data.run;
     if (!r) return;
     Game.mode = 'campaign'; Game.completed = false; Game.clearedLevel = null;
@@ -137,6 +139,7 @@ const App = {
     this.go('play');
   },
   newGame() {
+    Bonus.finish('leave');
     Game.reset();
     if (Game.cheatLives) Game.lives = 9;
     Save.data.plays++;
@@ -145,6 +148,7 @@ const App = {
     this.go('story');
   },
   startLevel(idx) {
+    Bonus.finish('leave');
     Game.mode = 'replay';
     Game.difficulty = Difficulty.selected; Game.collected = []; Game.collectedLevel = idx;
     Game.assist = Comfort.assist; Game.stats = Exploration.blankStats(); Game.statsLevel = idx;
@@ -157,6 +161,7 @@ const App = {
 
   /* ---------- transições ---------- */
   go(state, fn, instant) {
+    Bonus.finish('leave');
     if (this.state === 'transform' && state !== 'transform') Kinhurine.active = false;
     const apply = () => { this.state = state; this.t = 0; this.menu = null; this.sub = null; if (fn) fn(); this.enter(state); this.syncAbilityControls(); };
     if (instant) { apply(); return; }
@@ -217,6 +222,7 @@ const App = {
       { label: 'JOGABILIDADE', desc: ['DIFICULDADE E ASSISTÊNCIA.', 'AJUSTES PARA O RITMO DA PARTIDA.'], fn: () => this.openGameplay() },
       { label: 'ÁUDIO', desc: ['MÚSICA, EFEITOS E SOM GERAL.', 'VOLUMES AJUSTADOS SEPARADAMENTE.'], fn: () => this.openAudio() },
       { label: 'ACESSIBILIDADE', desc: ['REDUÇÃO DE TREMOR E FLASHES.', 'MAIS CONFORTO VISUAL.'], fn: () => this.openAccessibility() },
+      { label: 'VISUAL DO KINHU', desc: ['CAMISETAS E CRACHÁ DESBLOQUEÁVEIS.', 'RECOMPENSAS DA COLEÇÃO E DESAFIOS.'], fn: () => this.openCosmetics() },
       { label: 'VOLTAR', desc: ['RETORNE AO MENU ANTERIOR.'], fn: back },
     ], { title: 'CONFIGURAÇÕES', panel: 'navigation', back }); Input.clear();
   },
@@ -230,6 +236,22 @@ const App = {
       } },
       { label: 'VOLTAR', desc: ['RETORNE ÀS CONFIGURAÇÕES.'], fn: back },
     ], { title: 'JOGABILIDADE', panel: 'navigation', back }); Input.clear();
+  },
+  openCosmetics() {
+    const back = this.menuReturn(), ids = Object.keys(Cosmetics.styles); this.sub = 'cosmetics';
+    this.menu = this.makeMenu(ids.map(id => ({
+      label: () => (Cosmetics.current() === id ? '★ ' : '  ') + Cosmetics.styles[id].name + (Cosmetics.unlocked(id) ? '' : ' (TRANCADO)'),
+      desc: () => Cosmetics.styles[id].tips(Cosmetics.profile()), style: id,
+      fn: () => { if (Cosmetics.select(id)) Sound.fx('check'); else this.toast('COMPLETE A META PARA LIBERAR'); },
+    })).concat([{ label: 'VOLTAR', desc: () => ['RETORNE ÀS CONFIGURAÇÕES.'], fn: back }]), { title: 'VISUAL DO KINHU', back }); Input.clear();
+  },
+  drawCosmetics() {
+    ctx.fillStyle = '#00153b'; ctx.fillRect(8, 22, 240, 194);
+    this.drawMenu(this.menu, 128, 30);
+    const item = this.menu.items[this.menu.i], id = item.style || Cosmetics.current();
+    ctx.drawImage(Cosmetics.sprite(id).idle.r, 117, 139); Cosmetics.badge(121, 142, id);
+    item.desc().forEach((line, i) => Font.draw(line, 128, 174 + i * 11, '#a2c4ff', { align: 'center' }));
+    Font.draw(Input.device === 'keyboard' ? 'ENTER: VESTIR  ESC: VOLTAR' : 'A: VESTIR  B: VOLTAR', 128, 204, '#ffe384', { align: 'center' });
   },
   openAudio() {
     const back = this.menuReturn(); this.sub = 'audio';
@@ -318,14 +340,17 @@ const App = {
       { label: 'CONFIGURAÇÕES', desc: ['CONTROLES, JOGABILIDADE,', 'ÁUDIO E ACESSIBILIDADE.'], fn: () => this.openSettings() },
       { label: 'GUIA DO JOGO', desc: ['COMANDOS, PODERES E ITENS.', 'COLEÇÃO E DESAFIOS DA PARTIDA.'], fn: () => this.openGuide() },
       { label: 'ARQUIVOS DE SAVE', desc: ['BAIXE OU IMPORTE SEU PROGRESSO.'], fn: () => this.openSaves() },
-      { label: 'REINICIAR FASE', desc: ['RECOMEÇA DA FASE OU DO PONTO.', 'ITENS TEMPORÁRIOS SÃO PERDIDOS.'], fn: () => { Game.hearts = Game.maxHearts; this.go('play'); } },
+      Bonus.active ? { label: Bonus.active.fight ? 'SAIR DO DESAFIO' : 'SAIR DA SALA BÔNUS', desc: ['RETORNE À PORTA DA FASE.', 'RECOMPENSAS RECOLHIDAS CONTINUAM.'], fn: () => { Bonus.finish('leave'); this.closePause(); } } : { label: 'REINICIAR FASE', desc: ['RECOMEÇA DA FASE OU DO PONTO.', 'ITENS TEMPORÁRIOS SÃO PERDIDOS.'], fn: () => { Game.hearts = Game.maxHearts; this.go('play'); } },
       { label: 'SAIR PARA O MENU', desc: ['SALVA A CAMPANHA ANTES DE SAIR.'], fn: () => { this.saveProgress(false, true); this.go('title'); } },
     ], { title: 'PAUSA', panel: 'navigation', back: () => this.closePause() });
   },
   // C aparece apenas quando a arrancada está disponível.
   syncAbilityControls() {
     const button = document.querySelector ? document.querySelector('[data-act="propel"]') : null;
-    if (button) button.hidden = !Progression.usable(Game.progress, 'propulsion') || this.state !== 'play';
+    if (button) {
+      button.hidden = !Progression.usable(Game.progress, 'propulsion') || this.state !== 'play';
+      if (TouchControls.active) TouchControls.sync();
+    }
     if (TouchControls.buttons) TouchControls.sync();
   },
   acknowledgeUnlock(id, skipped = false) {
@@ -500,7 +525,7 @@ const App = {
       case 'origin': Origin.draw(); break;
       case 'transform': Kinhurine.draw(); break;
       case 'intro': this.drawIntro(); break;
-      case 'play': case 'pause': drawWorld(); this.drawHUD(); if (this.state === 'pause') { ctx.fillStyle = 'rgba(0,10,30,0.55)'; ctx.fillRect(0, 0, W, H); if (this.sub === 'abilities') this.drawAbilities(); else if (this.sub === 'controls') this.drawControls(); else if (this.sub === 'difficulty') this.drawDifficulty(); else if (this.sub === 'explore') this.drawExplore(); else if (this.sub === 'help') this.drawHelp(); else if (this.menu.panel) this.drawNavigation(); else this.drawMenu(this.menu, W / 2, 36); } break;
+      case 'play': case 'pause': drawWorld(); this.drawHUD(); if (this.state === 'pause') { ctx.fillStyle = 'rgba(0,10,30,0.55)'; ctx.fillRect(0, 0, W, H); if (this.sub === 'abilities') this.drawAbilities(); else if (this.sub === 'controls') this.drawControls(); else if (this.sub === 'difficulty') this.drawDifficulty(); else if (this.sub === 'cosmetics') this.drawCosmetics(); else if (this.sub === 'explore') this.drawExplore(); else if (this.sub === 'help') this.drawHelp(); else if (this.menu.panel) this.drawNavigation(); else this.drawMenu(this.menu, W / 2, 36); } break;
       case 'gameover': this.drawGameOver(); break;
       case 'ending': this.drawEnding(); break;
     }
@@ -531,6 +556,7 @@ const App = {
     if (this.sub === 'controls') { this.drawControls(); return; }
     if (this.sub === 'select') { this.drawSelect(); return; }
     if (this.sub === 'abilities') { this.drawAbilities(); return; }
+    if (this.sub === 'cosmetics') { this.drawCosmetics(); return; }
     if (this.menu && this.menu.panel) { this.drawNavigation(); return; }
     if (this.sub === 'difficulty') { this.drawDifficulty(); return; }
     if (!this.menu) {
@@ -592,11 +618,37 @@ const App = {
     Font.draw('ENTER: SELECIONAR  ESC: VOLTAR', 128, 201, '#ffe384', { align: 'center' });
   },
   updateHelp() {
-    if (Input.pressed('left') || Input.pressed('right')) this.helpPage = this.helpPage ? 0 : 1;
+    if (Input.pressed('left') || Input.pressed('right')) this.helpPage = ((this.helpPage || 0) + (Input.pressed('right') ? 1 : 4)) % 5;
   },
   drawHelp() {
     ctx.fillStyle = 'rgba(0,21,59,0.94)'; ctx.fillRect(5, 20, W - 10, H - 28);
-    const L = this.helpPage ? [
+    const L = this.helpPage === 4 ? [
+      ['MINICHEFES E COSMÉTICOS', '#ffbf30'], ['', ''],
+      ['PORTAS DESAFIO: ÔNIBUS/ESCRITÓRIO.', '#ffe384'], ['▲ PARA ENTRAR; SEM CRACHÁ.', '#e9effb'],
+      ['90S E 3 CORAÇÕES DO DESAFIO.', '#e9effb'], ['SAÍDA/FALHA PRESERVA A CAMPANHA.', '#e9effb'],
+      ['FISCAL: AVISA, INVESTE E DESCANSA.', '#94e5ef'], ['RH: AVISA, SOLTA PAPEL E ABRE.', '#94e5ef'],
+      ['▼: PISE OU USE COCA/BARRIGADA.', '#e9effb'], ['INTERVALO ENTRE ACERTOS: 40 QUADROS.', '#e9effb'],
+      ['VITÓRIA: +3000 E REGISTRO NO PERFIL.', '#e9effb'], ['MODO KINHU: SEM MINICHEFES.', '#a2c4ff'], ['', ''],
+      ['CONFIGURAÇÕES > VISUAL DO KINHU.', '#a2c4ff'], ['ROUPAS: COLEÇÃO, MEDALHAS E VITÓRIAS.', '#a2c4ff'], ['COCA/KINHURINE MANTÊM SEU VISUAL.', '#a2c4ff'],
+    ] : this.helpPage === 3 ? [
+      ['SALAS BÔNUS / MANUTENÇÃO', '#ffbf30'], ['', ''],
+      ['CRACHÁ: ESCRITÓRIO E SERVIDORES.', '#ffe384'],
+      ['▲ NA PORTA: ENTRAR COM CRACHÁ.', '#e9effb'], ['O CRACHÁ É CONSUMIDO AO ENTRAR.', '#e9effb'],
+      ['1 TENTATIVA POR SALA NA PARTIDA.', '#e9effb'], ['', ''],
+      ['45S, SALTOS E ATÉ 10 MOEDAS.', '#94e5ef'], ['▲ NA PORTA FINAL: +1000 PONTOS.', '#e9effb'],
+      ['MOEDAS RECOLHIDAS SÃO MANTIDAS.', '#e9effb'], ['QUEDA / TEMPO: VOLTA SEM MORRER.', '#e9effb'], ['', ''],
+      ['A FASE E OS BÔNUS FICAM PAUSADOS.', '#a2c4ff'], ['TEMPO ATIVO DOS DESAFIOS CONTA.', '#a2c4ff'],
+      ['NA PAUSA: SAIR DA SALA BÔNUS.', '#a2c4ff'], ['CRACHÁ NÃO É RESTAURADO NO SAVE.', '#a2c4ff'],
+    ] : this.helpPage === 2 ? [
+      ['MARMITA E HORA EXTRA', '#ffbf30'], ['', ''],
+      ['MARMITA CAPRICHADA', '#ffe384'], ['RECUPERA ATÉ 2 CORAÇÕES.', '#e9effb'],
+      ['VIDA CHEIA: +1000 PONTOS.', '#e9effb'], ['', ''],
+      ['HORA EXTRA', '#94e5ef'], ['DEVOLVE ATÉ 30 NO CRONÔMETRO.', '#e9effb'],
+      ['LIMITE: TEMPO INICIAL DA FASE.', '#e9effb'], ['CONSIDERA MODO E ASSISTÊNCIA.', '#e9effb'], ['', ''],
+      ['EFEITO IMEDIATO AO RECOLHER.', '#e9effb'], ['NÃO TROCA CAFÉ, ÍMÃ OU MOCHILA.', '#e9effb'],
+      ['DESVIOS ALTOS NAS FASES 3 / 4 / 5.', '#a2c4ff'],
+      ['MORTE / RETOMADA: NÃO REAPARECEM.', '#a2c4ff'], ['VOLTAM EM NOVO JOGO / REPLAY.', '#a2c4ff'],
+    ] : this.helpPage ? [
       ['ITENS TEMPORÁRIOS', '#ffbf30'], ['', ''],
       ['CAFÉ: +15% DE VELOCIDADE, 8S.', '#ffe384'], ['NÃO AUMENTA A ALTURA DO PULO.', '#e9effb'],
       ['ÍMÃ: MOEDAS ATÉ 3 BLOCOS, 12S.', '#ffe384'], ['RESPEITA PAREDES; SÓ MOEDAS.', '#e9effb'],
@@ -612,7 +664,7 @@ const App = {
       ['O JOGO SALVA SOZINHO NO NAVEGADOR.', '#a2c4ff'], ['NA PAUSA DÁ PARA BAIXAR O SAVE', '#a2c4ff'], ['E CARREGAR EM OUTRO LUGAR.', '#a2c4ff'],
     ];
     L.forEach(([t, c], i) => { if (t) Font.draw(t.replace('↑', '▲'), W / 2, 28 + i * 10, c, { align: 'center' }); });
-    Font.draw('◄ ►  ' + (this.helpPage ? '2' : '1') + '/2   ENTER / ESC: VOLTAR', 128, 204, '#ffe384', { align: 'center' });
+    Font.draw('◄ ►  ' + ((this.helpPage || 0) + 1) + '/5   ENTER / ESC: VOLTAR', 128, 204, '#ffe384', { align: 'center' });
   },
   drawStory() {
     Cutscenes.draw();
@@ -705,16 +757,17 @@ const App = {
     ctx.fillStyle = 'rgba(0,10,30,0.35)'; ctx.fillRect(0, 0, W, 15);
     ctx.drawImage(SPR.kinhuHead, 0, 0, 20, 12, 1, 1, 20, 12);
     Font.draw('×' + Game.lives, 20, 5);
-    for (let i = 0; i < Game.maxHearts; i++) ctx.drawImage((i < Game.hearts ? SPR.heart : SPR.heartEmpty).r, 38 + i * 10, 3);
+    const hearts = Bonus.active && Bonus.active.fight ? Bonus.active.health : Game.hearts;
+    for (let i = 0; i < Game.maxHearts; i++) ctx.drawImage((i < hearts ? SPR.heart : SPR.heartEmpty).r, 38 + i * 10, 3);
     if (Game.power === 1) ctx.drawImage(SPR.coca.r, 69, -2);
     ctx.drawImage(SPR.coinSmall, 90, 5);
     Font.draw('×' + String(Game.coins).padStart(3, '0'), 97, 5);
     Font.draw(String(Game.score).padStart(7, '0'), 128, 5);
     ctx.drawImage(SPR.clock, 180, 2);
     Font.draw(String(Math.max(0, Wd.time)).padStart(3, '0'), 191, 5, Wd.hurry && (Comfort.reducedFlash || Wd.t % 20 < 10) ? '#ff6040' : '#ffffff');
-    Font.draw('F' + Wd.def.id, 233, 5, '#ffe384');
+    Font.draw(Bonus.active ? 'B+' : 'F' + Wd.def.id, 233, 5, '#ffe384');
     if (p.wild > 0) { const w = Math.round((p.wild / 600) * 60); ctx.fillStyle = '#20141c'; ctx.fillRect(3, 27, 62, 4); ctx.fillStyle = ['#ffe040', '#ff80c0', '#60e0ff'][Comfort.reducedFlash ? 0 : Math.floor(Wd.t / 4) % 3]; ctx.fillRect(4, 28, w, 2); }
-    Font.draw('★' + Exploration.count(Game.levelIdx) + '/3', 91, 27, '#ffe384', { outline: true });
+    if (!Bonus.active) Font.draw('★' + Exploration.count(Game.levelIdx) + '/3', 91, 27, '#ffe384', { outline: true });
     if (Wd.bannerT > 0 && (Comfort.reducedFlash || Wd.bannerT > 20 || Wd.bannerT % 4 < 2)) Font.draw(Wd.banner, W / 2, 38, '#ffe384', { align: 'center', outline: true });
     if (Wd.bossFight && Wd.boss && Wd.boss.alive && Wd.boss.state !== 'dead') {
       const b = Wd.boss;
@@ -727,12 +780,24 @@ const App = {
       Font.draw(Input.label('propel') + (p.dashCooldown ? ': ' + (p.dashCooldown / 60).toFixed(1) + 'S' : ': OK') + (p.airPropulsionUsed && !p.onGround ? ' AR' : ''), 4, 18, '#e9effb', { outline: true });
     }
     if (p.backpack) ctx.drawImage(SPR.backpack.r, 94, 15, 12, 12);
+    if (p.maintenanceKey) ctx.drawImage(SPR.maintenance.r, 78, 15, 12, 12);
     if (p.utility) {
       ctx.drawImage(SPR[p.utility].r, 110, 15, 12, 12);
       Font.draw(p.wild > 0 ? 'PAUSA' : Math.ceil(p.utilityT / 60) + 'S' + (p.utilityT <= 120 ? '!' : ''), 126, 18, p.utilityT <= 120 ? '#ffbf30' : '#e9effb', { outline: true });
     }
     Font.draw((Game.assist ? 'A ' : '') + Difficulty.current().name, 222, 18, '#a2c4ff', { align: 'right', outline: true });
     if (this.saveIcon > 0 && (Comfort.reducedFlash || this.saveIcon % 10 < 7)) Font.draw('SALVO', W - 4, 18, '#80ff80', { align: 'right' });
+    if (Bonus.active && Bonus.active.fight) {
+      const mini = Wd.ents.find(e => e.kind === 'miniboss');
+      ctx.fillStyle = 'rgba(0,21,59,0.9)'; ctx.fillRect(4, 188, 248, 33);
+      Font.draw(Minibosses.names[mini.type], 128, 190, '#ffe384', { align: 'center' });
+      ctx.fillStyle = '#24397a'; ctx.fillRect(72, 201, 112, 5); ctx.fillStyle = '#80ff80'; ctx.fillRect(72, 201, Math.round(112 * mini.hp / mini.maxHp), 5);
+      Font.draw(mini.state === 'recover' ? '▼: ABERTA! ATAQUE POR CIMA OU LATAS.' : mini.state === 'warn' ? '!: PREPARE-SE PARA DESVIAR.' : mini.state === 'dead' ? 'MINICHEFE VENCIDO!' : 'DESVIE E ESPERE O SINAL ▼.', 128, 211, '#e9effb', { align: 'center' });
+    } else if (Bonus.active) {
+      ctx.fillStyle = 'rgba(0,21,59,0.9)'; ctx.fillRect(4, 198, 248, 20);
+      Font.draw('SALA BÔNUS: ' + Bonus.active.coins + '/10 MOEDAS', 128, 200, '#ffe384', { align: 'center' });
+      Font.draw('▲ NAS PORTAS. QUEDA NÃO GASTA VIDA.', 128, 209, '#e9effb', { align: 'center' });
+    }
     // dica de controles no começo do jogo
     if (Wd.def.id === 1 && !Game.checkpoint && Wd.t < 480 && !Wd.clear) {
       const tip = Input.label('move') + ': ANDAR  ' + Input.label('jump', Input.device, true) + ': PULO  ' + Input.label('run', Input.device, true) + ': CORRER';

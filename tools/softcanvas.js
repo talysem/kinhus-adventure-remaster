@@ -158,7 +158,7 @@ function boot(root, files) {
   global.document = {
     getElementById: id => elements[id] || (elements[id] = Object.assign(new SoftCanvas(1, 1), { classList: { add() {}, remove() {}, contains() { return false; }, toggle() {} }, hidden: true })),
     createElement: t => (t === 'canvas' ? new SoftCanvas() : { style: {}, click() {}, addEventListener() {}, setAttribute() {}, classList: { add() {}, remove() {} } }),
-    addEventListener() {}, body: { classList: { add() {}, remove() {}, contains() { return false; }, toggle() {} }, appendChild() {} },
+    addEventListener() {}, body: { style: { setProperty() {} }, classList: { add() {}, remove() {}, contains() { return false; }, toggle() {} }, appendChild() {} },
     visibilityState: 'visible', hidden: false,
   };
   global.window.addEventListener = () => {};

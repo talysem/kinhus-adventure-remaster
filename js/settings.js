@@ -16,6 +16,25 @@ const Difficulty = {
 
 const ItemEffects = {
   coffeeFrames: 480, magnetFrames: 720, coffeeFactor: 1.15, magnetRadius: 3 * TS,
+  lunchHearts: 2, lunchFullScore: 1000, extraTimeUnits: 30,
+  consume(p, id) {
+    if (id === 'lunch') {
+      const gained = Math.min(this.lunchHearts, Game.maxHearts - Game.hearts);
+      Game.hearts += gained;
+      if (gained) popup(p.x - 12, p.y - 10, '+' + gained + '♥', '#ff8090');
+      else addScore(this.lunchFullScore, p.x, p.y - 10);
+      Sound.fx('eat');
+      World.banner = gained ? 'MARMITA: +' + gained + ' CORAÇÃO' + (gained > 1 ? 'S' : '') : 'MARMITA: VIDA CHEIA, +1000 PONTOS';
+    } else if (id === 'extraTime') {
+      const gained = Math.min(this.extraTimeUnits, Math.max(0, World.timeLimit - World.time));
+      World.time += gained;
+      if (World.hurry && World.time > 100) { World.hurry = false; Sound.tempo = 1; }
+      popup(p.x - 18, p.y - 10, gained ? '+' + gained + ' TEMPO' : 'TEMPO CHEIO', '#94e5ef');
+      Sound.fx('extraTime');
+      World.banner = gained ? 'HORA EXTRA: +' + gained + ' NO CRONÔMETRO' : 'HORA EXTRA: TEMPO NO LIMITE';
+    }
+    World.bannerT = 150;
+  },
   clear(p) { p.backpack = false; p.utility = null; p.utilityT = 0; },
   active(p, id) { return p.utility === id && p.utilityT > 0 && p.wild === 0; },
   acquire(p, id) {
@@ -79,12 +98,17 @@ const PickupLedger = {
       if ('?HL!BFR'.includes(c)) ids.add('block:' + level + ':' + x + ':' + y);
     }));
     for (const item of LEVELS[level].items || []) ids.add('item:' + level + ':' + item.x + ':' + item.y);
+    const room = LEVELS[level].bonus;
+    if (room) ids.add(this.keyForRoom(level, room.door));
+    const duel = LEVELS[level].duel;
+    if (duel) ids.add('duel:' + level + ':' + duel.door[0] + ':' + duel.door[1]);
     return ids;
   },
+  keyForRoom(level, door) { return 'room:' + level + ':' + door[0] + ':' + door[1]; },
   sanitize(ids, level) { const valid = this.validIds(level); return Array.isArray(ids) ? [...new Set(ids.filter(id => valid.has(id)))] : []; },
   restore() {
     for (const id of Game.collected) {
-      const [type, level, x, y] = id.split(':'); if (+level !== World.idx || type === 'item') continue;
+      const [type, level, x, y] = id.split(':'); if (+level !== World.idx || type === 'item' || type === 'room' || type === 'duel') continue;
       const t = tileAt(+x, +y);
       if (type === 'coin' && t === 'c') setTile(+x, +y, '.');
       if (type === 'block') {

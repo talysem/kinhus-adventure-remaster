@@ -88,7 +88,7 @@ async function run() {
   for (let i = 0; i < LEVELS.length; i++) {
     setup('normal', i, false);
     const items = World.ents.filter(e => e.kind === 'item' && e.sourceId);
-    assert.equal(items.length, LEVELS[i].items.length); assert(items.length <= 3);
+    assert.equal(items.length, LEVELS[i].items.length); assert(items.filter(e => ['coffee', 'magnet', 'backpack'].includes(e.item)).length <= 3);
     for (const e of items) {
       assert(!isSolid(tileAt(Math.floor(e.x / TS), Math.floor(e.y / TS))), 'item fora das estruturas');
       World.player.x = e.x; World.player.y = e.y; updateItem(e, World.player); assert(!e.alive); assert(Game.collected.includes(e.sourceId));
@@ -127,7 +127,7 @@ async function run() {
   fake.save.run.difficulty = '__proto__'; fake.save.run.backpack = true; fake.check = Save.hash(JSON.stringify(fake.save));
   assert(Save.importText(JSON.stringify(fake)).ok); assert.deepStrictEqual(Save.data.run.collected, ids); assert.equal(Save.data.run.difficulty, 'normal');
   const v3 = { ...Save.data, version: 3 }; const legacy = JSON.stringify({ game: "Kinhu's Adventure", format: 3, save: v3, check: Save.hash(JSON.stringify(v3)) });
-  assert(Save.importText(legacy).ok); assert.equal(Save.data.version, 5); assert.deepStrictEqual(Save.data.run.collected, []);
+  assert(Save.importText(legacy).ok); assert.equal(Save.data.version, 6); assert.deepStrictEqual(Save.data.run.collected, []);
   // Dificuldades: parâmetros aplicados, preferências, save e menu sem alterar campanha.
   const speeds = {}, cooldowns = {};
   for (const mode of ['kinhu', 'easy', 'normal', 'hard']) {

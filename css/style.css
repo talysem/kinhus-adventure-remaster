@@ -63,20 +63,23 @@ canvas {
 
 /* ---------- toque: espaço reservado, sem cobrir o jogo ---------- */
 #touch, #mobileHint { display: none; }
-body.touch { --controls-height: 226px; --side-controls: 174px; }
+body.touch { --controls-height: 252px; --pad-button: 60px; --pad-size: calc(var(--pad-button) * 3); --action-size: 80px; --pum-size: 72px; --actions-width: 164px; --side-controls: calc(var(--pad-size) + 28px); }
 body.touch #wrap {
   bottom: calc(var(--controls-height) + env(safe-area-inset-bottom, 0px));
   padding: calc(12px + env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-right, 0px)) 0 max(12px, env(safe-area-inset-left, 0px));
 }
 body.touch #bar { align-items: center; gap: 6px; }
-body.touch #bar button { min-height: 36px; font-size: 10px; padding: 5px 8px; }
+body.touch #bar button { min-height: 40px; font-size: 11px; padding: 5px 10px; }
 body.touch #mobileHint { display: block; color: var(--gold); font-size: 9px; letter-spacing: 0.08em; }
 body.touch #touch {
   display: flex;
   position: fixed;
-  left: 0; right: 0; bottom: 0;
+  left: calc(50% + (env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)) / 2); bottom: 0;
+  transform: translateX(-50%);
+  width: calc(100% - max(12px, env(safe-area-inset-left, 0px)) - max(12px, env(safe-area-inset-right, 0px)));
+  max-width: 408px;
   height: calc(var(--controls-height) + env(safe-area-inset-bottom, 0px));
-  padding: 0 max(12px, env(safe-area-inset-right, 0px)) calc(14px + env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
+  padding: 0 0 calc(16px + env(safe-area-inset-bottom, 0px));
   align-items: flex-end;
   justify-content: space-between;
   pointer-events: none;
@@ -95,40 +98,45 @@ body.touch #touch {
 }
 #touch button.on { background: var(--pad-on); border-color: var(--gold); }
 #touch button:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
-#touch small { display: block; font-size: 9px; letter-spacing: 0.02em; }
-.pad { position: relative; flex-shrink: 0; width: 156px; height: 156px; pointer-events: none; }
-.pad button { position: absolute; width: 52px; height: 52px; border-radius: 10px; font-size: 18px; }
-.pad .up { left: 52px; top: 0; }
-.pad .left { left: 0; top: 52px; }
-.pad .right { left: 104px; top: 52px; }
-.pad .down { left: 52px; top: 104px; }
-.ab { position: relative; flex-shrink: 0; width: 144px; height: 156px; pointer-events: none; }
-.ab button { position: absolute; width: 66px; height: 66px; border-radius: 50%; font-size: 22px; }
-.ab .a { right: 0; top: 36px; background: rgba(206, 29, 0, 0.45); }
-.ab .b { left: 0; top: 88px; background: rgba(255, 191, 48, 0.3); }
-.ab .c { left: 0; top: 12px; width: 56px; height: 56px; background: rgba(96, 224, 255, 0.3); }
+#touch small { display: block; font-size: 10px; letter-spacing: 0.02em; }
+.pad { position: relative; flex-shrink: 0; width: var(--pad-size); height: var(--pad-size); pointer-events: auto; touch-action: none; }
+.pad button { position: absolute; width: var(--pad-button); height: var(--pad-button); border-radius: 12px; font-size: 23px; }
+.pad .up { left: var(--pad-button); top: 0; }
+.pad .left { left: 0; top: var(--pad-button); }
+.pad .right { left: calc(var(--pad-button) * 2); top: var(--pad-button); }
+.pad .down { left: var(--pad-button); top: calc(var(--pad-button) * 2); }
+.ab { position: relative; flex-shrink: 0; width: var(--actions-width); height: var(--pad-size); pointer-events: auto; touch-action: none; }
+.ab button { position: absolute; width: var(--action-size); height: var(--action-size); border-radius: 50%; font-size: 26px; }
+.ab .a { right: 0; top: calc(var(--pad-size) * 0.24); background: rgba(206, 29, 0, 0.45); }
+.ab .b { left: 0; bottom: 0; background: rgba(255, 191, 48, 0.3); }
+.ab .c { left: 0; top: 0; width: var(--pum-size); height: var(--pum-size); background: rgba(96, 224, 255, 0.3); }
 #touch button[hidden] { display: none; }
-#touch .start { position: absolute; left: 50%; top: 8px; transform: translateX(-50%); width: 72px; min-height: 44px; border-radius: 16px; font-size: 12px; }
+#touch .start { position: absolute; left: 50%; top: 8px; transform: translateX(-50%); width: 88px; min-height: 48px; border-radius: 14px; font-size: 12px; }
 
-@media (max-width: 359px) {
-  .pad { width: 144px; height: 144px; }
-  .pad button { width: 48px; height: 48px; }
-  .pad .up { left: 48px; }
-  .pad .left { top: 48px; }
-  .pad .right { left: 96px; top: 48px; }
-  .pad .down { left: 48px; top: 96px; }
-  .ab { width: 132px; }
-  .ab button { width: 60px; height: 60px; }
+@media (max-width: 374px) {
+  body.touch { --controls-height: 240px; --pad-button: 56px; --action-size: 72px; --pum-size: 68px; --actions-width: 152px; }
+}
+@media (max-width: 339px) {
+  body.touch { --controls-height: 228px; --pad-button: 52px; --action-size: 68px; --pum-size: 64px; --actions-width: 132px; }
 }
 
 @media (orientation: landscape) {
+  body.touch { --pad-button: 62px; --action-size: 84px; --pum-size: 76px; --actions-width: var(--pad-size); }
   body.touch #wrap {
     left: calc(var(--side-controls) + env(safe-area-inset-left, 0px));
     right: calc(var(--side-controls) + env(safe-area-inset-right, 0px));
     bottom: env(safe-area-inset-bottom, 0px);
     padding: calc(8px + env(safe-area-inset-top, 0px)) 0 0;
   }
-  body.touch #touch { height: 100%; align-items: center; padding-top: env(safe-area-inset-top, 0px); }
+  body.touch #touch { height: 100%; align-items: center; max-width: calc(var(--game-width, 400px) + var(--pad-size) * 2 + 48px); padding: env(safe-area-inset-top, 0px) 12px env(safe-area-inset-bottom, 0px); }
   body.touch #mobileHint { display: none; }
-  #touch .start { left: calc(90px + env(safe-area-inset-left, 0px)); top: auto; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
+  #touch .start { left: calc(var(--pad-size) / 2 + 12px); top: auto; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
+}
+@media (orientation: landscape) and (max-width: 720px) {
+  body.touch { --pad-button: 54px; --action-size: 72px; --pum-size: 68px; --side-controls: calc(var(--pad-size) + 20px); }
+  body.touch #touch { padding-left: 0; padding-right: 0; }
+  #touch .start { left: calc(var(--pad-size) / 2); }
+}
+@media (orientation: landscape) and (max-height: 300px) {
+  #touch .start { top: 50%; bottom: auto; transform: translate(-50%, -50%); width: var(--pad-button); min-height: var(--pad-button); font-size: 9px; }
 }

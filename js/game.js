@@ -106,16 +106,18 @@ function oneUp(x, y) { Game.lives = Math.min(99, Game.lives + 1); Sound.fx('oneu
 
 /* ---------------- carregar fase ---------------- */
 function loadLevel(idx, fromCheckpoint) {
+  Bonus.abort();
   if (Game.statsLevel !== idx) { Game.stats = Exploration.blankStats(); Game.statsLevel = idx; }
   if (Game.collectedLevel !== idx) { Game.collected = []; Game.collectedLevel = idx; }
   const def = LEVELS[idx];
   const rows = buildLevelRows(def);
   const map = rows.map(r => r.split(''));
   const th = THEMES[def.theme];
+  const initialTime = Comfort.initialTime();
   World = {
     idx, def, th, theme: def.theme, T: Tiles.get(def.theme), w: rows[0].length, h: rows.length, map,
     ents: [], projs: [], parts: [], plats: [], decor: [], bumps: [], switches: [],
-    cam: { x: 0, shake: 0, lock: null }, time: Comfort.initialTime(), timeT: 0, hurry: false, t: 0, saveDirty: false,
+    cam: { x: 0, shake: 0, lock: null }, time: initialTime, timeLimit: initialTime, timeT: 0, hurry: false, t: 0, saveDirty: false,
     start: null, goal: null, cps: [], arena: null, boss: null, house: null,
     brake: def.brakes ? { t: 420, phase: 'idle', kind: null, k: 0 } : null, push: 0, busSpeed: 1,
     clear: null, banner: null, bannerT: 0,
@@ -157,6 +159,7 @@ function loadLevel(idx, fromCheckpoint) {
     const sourceId = PickupLedger.key('item', item.x, item.y);
     if (!Game.collected.includes(sourceId)) addEnt({ kind: 'item', item: item.kind, x: item.x * TS + 2, y: item.y * TS + 2, w: 12, h: 12, vx: 0, vy: 0, emerge: 0, dir: 1, sourceId });
   }
+  Bonus.spawn();
   buildDecor();
   let sx = Wd.start.x, sy = Wd.start.y;
   if (fromCheckpoint && Wd.cps.length) {
@@ -214,7 +217,7 @@ function buildDecor() {
 function makePlayer(x, y) {
   return { x, y, w: 12, h: 21, vx: 0, vy: 0, facing: 1, onGround: false, coyote: 0, jumpBuf: 0, inv: 0, wild: 0, ride: null, prevY: y,
     dead: false, deadT: 0, anim: 0, look: 0, combo: 0, hidden: false, control: true, skid: false, drop: 0, blink: 0, spikeT: 0, airJumpReady: false,
-    dashT: 0, dashCooldown: 0, dashDir: 1, airPropulsionUsed: false, slam: false, impactT: 0, backpack: false, utility: null, utilityT: 0 };
+    dashT: 0, dashCooldown: 0, dashDir: 1, airPropulsionUsed: false, slam: false, impactT: 0, backpack: false, utility: null, utilityT: 0, maintenanceKey: null };
 }
 
 function recoilFactor() { return Progression.usable(Game.progress, 'steadyStep') ? 1 - Progression.config.recoilReduction : 1; }
@@ -308,6 +311,7 @@ function updatePlayer(p) {
   collectTiles(p);
   ItemEffects.magnet(p);
   hazards(p);
+  if (p !== World.player) return;
   ItemEffects.update(p);
   if (p.inv > 0) p.inv--;
   if (p.wild > 0) {
@@ -372,6 +376,7 @@ function splash(x, y) { Sound.fx('splash'); for (let i = 0; i < 10; i++) part({ 
 function hurtPlayer() {
   const p = World.player;
   if (p.dead || p.inv > 0 || p.wild > 0 || World.clear) return false;
+  if (Bonus.active) { Bonus.hurt(); return true; }
   if (p.backpack) { p.backpack = false; p.inv = Difficulty.current().inv; Sound.fx('shield'); popup(p.x, p.y - 8, 'MOCHILA ROMPEU!', '#94e5ef'); }
   else if (Game.power === 1) { Game.power = 0; p.inv = Difficulty.current().inv; Sound.fx('hurt'); popup(p.x, p.y - 8, 'SEM COCA!', '#ffb0a0'); }
   else {
@@ -385,6 +390,7 @@ function hurtPlayer() {
 function killPlayer(how) {
   const p = World.player;
   if (p.dead || World.clear) return;
+  if (Bonus.active) { Bonus.finish('failure'); return; }
   Game.stats.deaths++;
   World.saveDirty = true;
   cancelMoves(p); ItemEffects.clear(p); p.dead = true; p.deadT = 0; p.how = how; p.vx = 0; p.vy = 0; Game.hearts = 0;
@@ -607,6 +613,8 @@ function updateEnt(e) {
       break;
     case 'item': updateItem(e, p); break;
     case 'memory': Exploration.collect(e); break;
+    case 'maintenanceKey': case 'bonusDoor': case 'duelDoor': case 'bonusCoin': case 'bonusExit': Bonus.update(e); break;
+    case 'miniboss': Minibosses.update(e); break;
     case 'spring':
       if (e.t > 0) e.t--;
       if (!p.dead && p.vy > 0 && p.x + p.w > e.x && p.x < e.x + e.w && p.prevY + p.h <= e.y + 6 && p.y + p.h >= e.y) {
@@ -639,7 +647,7 @@ function updateItem(e, p) {
       e.vx = e.dir * 0.9; e.vy = Math.min(e.vy + 0.35, 6); moveBody(e);
       if (e.hitWall) e.dir = -e.hitWall;
       break;
-    case 'coffee': case 'magnet': case 'backpack': e.vx = e.vy = 0; break;
+    case 'coffee': case 'magnet': case 'backpack': case 'lunch': case 'extraTime': e.vx = e.vy = 0; break;
     case 'coca': e.vy = Math.min(e.vy + 0.35, 6); e.vx = 0; moveBody(e); break;
     case 'claws':
       e.vx = e.dir * 1.1; e.vy = Math.min(e.vy + 0.3, 6); moveBody(e);
@@ -658,6 +666,7 @@ function updateItem(e, p) {
     const cx = e.x, cy = e.y - 6;
     switch (e.item) {
       case 'coffee': case 'magnet': case 'backpack': ItemEffects.acquire(p, e.item); break;
+      case 'lunch': case 'extraTime': ItemEffects.consume(p, e.item); break;
       case 'hotdog':
         if (Game.hearts < Game.maxHearts) { Game.hearts++; popup(cx - 6, cy, '+♥', '#ff8090'); } else addScore(1000, cx, cy);
         Sound.fx('eat'); break;
@@ -775,6 +784,7 @@ function updatePlats() {
 
 /* ---------------- projéteis ---------------- */
 function updateProjs() {
+  const projectileWorld = World;
   const p = World.player;
   for (const b of World.projs) {
     b.t++; b.life--;
@@ -784,9 +794,10 @@ function updateProjs() {
       if (b.onGround) b.vy = -3.3;
       if (b.hitWall || b.life <= 0) { b.dead = true; sparkle(b.x + 3, b.y + 3, 4, '#c88a50'); continue; }
       for (const e of World.ents) {
-        if ((e.enemy || e.kind === 'boss') && e.alive && !e.dying && U.overlap(b, e)) {
+        if ((e.enemy || e.kind === 'boss' || e.kind === 'miniboss') && e.alive && !e.dying && U.overlap(b, e)) {
           b.dead = true;
-          if (e.kind === 'boss') hitBoss(e, 1);
+          if (e.kind === 'miniboss') Minibosses.hit(e, 1);
+          else if (e.kind === 'boss') hitBoss(e, 1);
           else if (e.type === 'lady') { popup(e.x - 4, e.y - 6, 'HMPF!', '#ffc0e0'); Sound.fx('bump'); }
           else killEnemy(e, 'can');
           break;
@@ -815,6 +826,7 @@ function updateProjs() {
       if (b.type === 'paper' || b.type === 'plane') { if (p.vy > 0 && p.prevY + p.h <= b.y + 4) { b.dead = true; p.vy = -4; addScore(100, b.x, b.y); Sound.fx('stomp'); continue; } }
       if (b.type === 'poop') popup(p.x - 8, p.y - 10, 'ECA!', '#e8e8d0');
       b.dead = true; hurtPlayer();
+      if (World !== projectileWorld) return;
     }
   }
   World.projs = World.projs.filter(b => !b.dead);
@@ -1018,15 +1030,18 @@ function updateWorld() {
   updatePlats();
   if (Wd.clear) updateClear();
   else updatePlayer(p);
+  if (World !== Wd) return;
   for (const e of Wd.ents) {
     if (!e.alive) continue;
     const far = e.x > Wd.cam.x + W + 64 || e.x + (e.w || 16) < Wd.cam.x - 96;
     if (far && e.kind !== 'lane' && e.kind !== 'car' && e.kind !== 'boss' && !e.dying && e.kind !== 'popcoin') continue;
     updateEnt(e);
+    if (World !== Wd) return;
     if (App.state === 'transform') { PickupLedger.flush(); return; }
   }
   playerVsEnemies();
   updateProjs();
+  if (World !== Wd) return;
   Wd.ents = Wd.ents.filter(e => e.alive);
   Wd.plats = Wd.plats.filter(pl => pl.alive || pl.kind === 'fall');
   for (const q of Wd.parts) { q.t++; q.vy += q.g || 0; q.x += q.vx; q.y += q.vy; }
@@ -1051,13 +1066,15 @@ function updateWorld() {
     }
   }
   // tempo
-  if (!Wd.clear && !p.dead) {
+  if (Bonus.active) Bonus.tick();
+  else if (!Wd.clear && !p.dead) {
     if (++Wd.timeT >= 48) {
       Wd.timeT = 0; Wd.time--;
       if (Wd.time === 100 && !Wd.hurry) { Wd.hurry = true; Sound.fx('warn'); Sound.tempo = 1.25; Wd.banner = 'ANDA LOGO, KINHU!'; Wd.bannerT = 100; }
       if (Wd.time <= 0) { Wd.time = 0; killPlayer('time'); }
     }
   }
+  if (World !== Wd) return;
   // freadas do ônibus
   if (Wd.brake && !Wd.clear) updateBrakes(Wd);
   // câmera
@@ -1285,6 +1302,8 @@ function drawWorld() {
         ctx.globalAlpha = 1;
         Font.draw(e.owned ? 'O' : '★', e.x + 2, e.y - 10, '#ffe384', { outline: true });
         break;
+      case 'maintenanceKey': case 'bonusDoor': case 'duelDoor': case 'bonusCoin': case 'bonusExit': Bonus.draw(e); break;
+      case 'miniboss': Minibosses.draw(e); break;
       case 'coin': if (Comfort.reducedFlash || e.t < 340 || e.t % 6 < 3) ctx.drawImage(SPR.coin[Math.floor(e.t / 4) % 4].r, Math.round(e.x - 3), Math.round(e.y - 3)); break;
       case 'item': if (e.emerge <= 0) drawItem(e); break;
       case 'boss': drawBoss(e); break;
@@ -1328,8 +1347,8 @@ function drawWorld() {
 }
 
 function drawItem(e) {
-  const spr = { hotdog: SPR.hotdog, coca: SPR.coca, coffee: SPR.coffee, magnet: SPR.magnet, backpack: SPR.backpack, claws: SPR.claws, badge: SPR.badge, trophy: SPR.trophy }[e.item];
-  const bob = ['coca', 'coffee', 'magnet', 'backpack'].includes(e.item) && e.emerge <= 0 ? Math.round(Math.sin(e.t * 0.1)) : 0;
+  const spr = { hotdog: SPR.hotdog, coca: SPR.coca, coffee: SPR.coffee, magnet: SPR.magnet, backpack: SPR.backpack, lunch: SPR.lunch, extraTime: SPR.extraTime, claws: SPR.claws, badge: SPR.badge, trophy: SPR.trophy }[e.item];
+  const bob = ['coca', 'coffee', 'magnet', 'backpack', 'lunch', 'extraTime'].includes(e.item) && e.emerge <= 0 ? Math.round(Math.sin(e.t * 0.1)) : 0;
   ctx.drawImage(e.dir < 0 ? spr.l : spr.r, Math.round(e.x - 2), Math.round(e.y - 4 + bob));
 }
 
@@ -1350,7 +1369,7 @@ function drawBoss(b) {
 function drawPlayer(p) {
   if (p.hidden) return;
   if (!Comfort.reducedFlash && p.inv > 0 && !p.dead && Math.floor(p.inv / 3) % 2) return;
-  let set = Game.power === 1 ? SPR.kinhuCoca : SPR.kinhu;
+  let set = Game.power === 1 ? SPR.kinhuCoca : Cosmetics.sprite();
   if (p.wild > 0 && (Comfort.reducedFlash || p.wild > 120 || Math.floor(p.wild / 4) % 2)) set = SPR.kinhuWild[Comfort.reducedFlash ? 0 : Math.floor(World.t / 3) % 3];
   let s = set.idle;
   if (p.dead) s = set.hurt;
@@ -1362,6 +1381,7 @@ function drawPlayer(p) {
   else if (Math.abs(p.vx) > 0.2) s = set.run[Math.floor(p.anim) % 4];
   else if (p.blink < 8) s = set.blink;
   ctx.drawImage(p.facing < 0 ? s.l : s.r, Math.round(p.x - 4), Math.round(p.y - 3));
+  Cosmetics.badge(p.x, p.y);
   if (Comfort.reducedFlash && p.inv > 0 && !p.dead) Font.draw('O', p.x + 3, p.y - 12, '#a2c4ff', { outline: true });
   if (p.backpack) ctx.drawImage(SPR.backpack.r, Math.round(p.x + (p.facing < 0 ? 6 : -6)), Math.round(p.y + 5), 8, 8);
   if (p.slam) Font.draw('▼', Math.round(p.x + 3), Math.round(p.y - 12), '#ffe384', { outline: true });

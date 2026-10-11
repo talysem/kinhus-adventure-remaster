@@ -33,7 +33,7 @@ const Exploration = {
   names: ['POSTAL', 'BILHETE', 'DISQUETE'],
   id(level, slot) { return 'memory:' + level + ':' + slot; },
   ids(level) { return this.spots[level].map((_, slot) => this.id(level, slot)); },
-  blank() { return { memories: [], records: {} }; },
+  blank() { return { memories: [], records: {}, minibosses: [] }; },
   validIds() { return this.spots.flatMap((_, level) => this.ids(level)); },
   blankStats(eligible = true) { return { frames: 0, deaths: 0, found: [], eligible }; },
   sanitizeStats(data, level, eligible = false) {
@@ -47,6 +47,7 @@ const Exploration = {
     const out = this.blank(); if (!data || typeof data !== 'object') return out;
     const valid = this.validIds();
     out.memories = Array.isArray(data.memories) ? [...new Set(data.memories.filter(id => valid.includes(id)))] : [];
+    out.minibosses = Array.isArray(data.minibosses) ? [...new Set(data.minibosses.filter(id => ['fiscal', 'printer'].includes(id)))] : [];
     for (let level = 0; level < LEVELS.length; level++) for (const difficulty of Object.keys(Difficulty.modes)) for (const assist of [false, true]) {
       const key = this.key(level, difficulty, assist), r = data.records && data.records[key];
       if (!r || typeof r !== 'object') continue;
@@ -58,7 +59,7 @@ const Exploration = {
   },
   merge(a, b) {
     a = this.sanitize(a); b = this.sanitize(b);
-    const out = { memories: [...new Set([...a.memories, ...b.memories])], records: {} };
+    const out = { memories: [...new Set([...a.memories, ...b.memories])], records: {}, minibosses: [...new Set([...a.minibosses, ...b.minibosses])] };
     for (const key of new Set([...Object.keys(a.records), ...Object.keys(b.records)])) {
       const x = a.records[key] || {}, y = b.records[key] || {};
       out.records[key] = { clear: !!(x.clear || y.clear), noDeaths: !!(x.noDeaths || y.noDeaths), secrets: !!(x.secrets || y.secrets), time: !!(x.time || y.time), bestFrames: Math.min(x.bestFrames || Infinity, y.bestFrames || Infinity) };
