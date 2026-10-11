@@ -57,6 +57,10 @@ for (let stomp = 2; stomp <= 6; stomp++) {
 }
 for (let frame = 0; frame < 140; frame++) updateBoss(boss, World.player);
 assert.equal(World.ents.filter(e => e.kind === 'item' && e.item === 'trophy').length, 1);
+const trophy = World.ents.find(e => e.item === 'trophy');
+World.player.x = trophy.x; World.player.y = 12 * TS - World.player.h;
+for (let frame = 0; frame < 150 && trophy.alive; frame++) updateItem(trophy, World.player);
+assert(!trophy.alive && World.clear && Game.completed, 'troféu atravessa a saída do teto e pode ser coletado no chão');
 console.log(`OK${bundled ? ' (offline)' : ''}: arena, 24 HP, invulnerabilidade, fúria e troféu.`);
 
 // Vidas extras exigem 200 moedas; o progresso de três dígitos sobrevive ao save.

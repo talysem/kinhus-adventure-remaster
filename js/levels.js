@@ -9,6 +9,7 @@
    ^  espinhos      ~  líquido       I  piso molhado  T  obstáculo
    X  atirador      c  moeda         P  início        G  chegada
    C  ponto (checkpoint)  O colchão (mola)  Q peso que cai
+   F  caixa frágil (barrigada)  R interruptor de chão (barrigada)
    m/M plataforma horizontal  v vertical  n plataforma que cai
    V  faixa de carros  A arena do chefe  W chefe  E casa do Kinhu
    inimigos: d cachorro  p pombo  x barata  k skatista  t trombadinha
@@ -31,9 +32,11 @@ function segment32(parts, indoor = false) {
   return rows;
 }
 
+// items usa coordenadas de bloco: bônus flutuantes com coleta opcional.
 const LEVELS = [
   {
     id: 1, name: 'SAINDO DE CASA', clock: '07:42', theme: 'bairro', time: 900,
+    items: [{ kind: 'magnet', x: 7, y: 9 }],
     goal: 'PEGUE O ÔNIBUS!',
     segs: [
       [E32, E32, E32, E32, E32, E32, E32,
@@ -101,18 +104,13 @@ const LEVELS = [
     ],
   },
   {
-    id: 2, name: 'VIAGEM DE ÔNIBUS', clock: '07:55', theme: 'onibus', time: 900, brakes: true, indoor: true,
+    id: 2, name: 'VIAGEM DE ÔNIBUS', clock: '07:55', theme: 'onibus', time: 900, brakes: true, indoor: true, practiceEnd: 32,
+    items: [{ kind: 'backpack', x: 17, y: 10 }],
     goal: 'DESÇA NO CENTRO!',
     segs: [
-      [Z2, Z2, E32, E32,
-        '................?...............',
-        E32,
-        '...........................cccc.',
-        '.............====..........====.',
-        E32, E32,
-        '.......y......y.....y...........',
-        '..P....YY.....YY..x.YY....l.....',
-        G32, G32],
+      // Bagageiros a 112 px do piso: pulo duplo, com rota baixa contínua e segura.
+      segment32([[11, 2, 'P'], [4, 12, 'ccccc'], [5, 11, '======='],
+        [4, 25, 'cccc'], [5, 24, '======'], [10, 7, 'y'], [11, 7, 'YY']], true),
       [Z2, Z2, E32, E32, E32, E32,
         '...................cccccc.......',
         '..................=======.......',
@@ -169,15 +167,11 @@ const LEVELS = [
     ],
   },
   {
-    id: 3, name: 'CENTRO DA CIDADE', clock: '08:20', theme: 'centro', time: 900,
+    id: 3, name: 'CENTRO DA CIDADE', clock: '08:20', theme: 'centro', time: 900, practiceEnd: 32, practiceAbility: 'propulsion',
+    items: [{ kind: 'coffee', x: 9, y: 11 }],
     goal: 'CHEGUE AO ESCRITÓRIO!',
     segs: [
-      [E32, E32, E32, E32, E32, E32, E32,
-        '............?B?B?...............',
-        E32, E32,
-        '......ccc.......................',
-        '..P...................k.........',
-        G32, G32],
+      segment32([[11, 2, 'P'], [10, 8, 'ccc'], [10, 16, 'ccc'], [11, 25, 'T'], [7, 12, '?B?B?']]),
       [E32, E32, E32, E32, E32, E32,
         '..............p.................',
         E32, E32,
@@ -240,15 +234,12 @@ const LEVELS = [
     ],
   },
   {
-    id: 4, name: 'O ESCRITÓRIO', clock: '09:00', theme: 'escritorio', time: 900, indoor: true,
+    id: 4, name: 'O ESCRITÓRIO', clock: '09:00', theme: 'escritorio', time: 900, indoor: true, practiceEnd: 32, practiceAbility: 'bellySlam',
+    items: [{ kind: 'backpack', x: 4, y: 11 }, { kind: 'coffee', x: 16, y: 11 }, { kind: 'magnet', x: 23, y: 8 }],
+    switchGates: [{ switch: [20, 12], blocks: [[26, 9], [26, 10], [26, 11]] }],
     goal: 'DESÇA PARA OS SERVIDORES!',
     segs: [
-      [Z2, Z2, E32, E32, E32, E32, E32,
-        '...........?H?..................',
-        E32, E32,
-        '........cccc............cccc....',
-        '..P.....DDDD......u.....DDDD....',
-        G32, G32],
+      segment32([[11, 2, 'P'], [11, 8, 'FFF'], [10, 8, 'ccc'], [7, 12, '?H?'], [12, 20, 'R'], [9, 26, 'F'], [10, 26, 'F'], [11, 26, 'F'], [11, 28, 'ccc']], true),
       [Z2, Z2, E32, E32, E32, E32, E32, E32,
         '.....................cc.........',
         '.....................SS.........',
@@ -304,16 +295,11 @@ const LEVELS = [
     ],
   },
   {
-    id: 5, name: 'SALA DOS SERVIDORES', clock: '16:59', theme: 'servidores', time: 900, boss: true, indoor: true,
+    id: 5, name: 'SALA DOS SERVIDORES', clock: '16:59', theme: 'servidores', time: 900, boss: true, indoor: true, practiceEnd: 32, practiceAbility: 'steadyStep',
+    items: [{ kind: 'backpack', x: 4, y: 11 }, { kind: 'coffee', x: 22, y: 11 }, { kind: 'magnet', x: 13, y: 9 }],
     goal: 'DERROTE O MEGA BUG!',
     segs: [
-      [Z2, Z2, E32, E32, E32, E32,
-        '........................f.......',
-        '..........?H?...................',
-        E32, E32, E32,
-        '..P.....u.......................',
-        '##################~~~~##########',
-        '##################~~~~##########'],
+      segment32([[11, 2, 'P'], [7, 4, '?H?'], [12, 9, 'IIIIIIII'], [10, 10, 'cccccc']], true),
       [Z2, Z2, E32, E32, E32,
         '...............cccc.............',
         '...............====.............',

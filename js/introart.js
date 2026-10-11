@@ -40,6 +40,7 @@ const IntroArt = {
   ease(t) { t = U.clamp(t, 0, 1); return t * t * (3 - 2 * t); },
   // Camera em coordenadas dos arquivos de 384×256, sempre com proporção 256:168.
   camera(key, view = [0, 2, 384], alpha = 1, shake = 0) {
+    if (Comfort.reducedShake) shake = 0;
     const im = this.images[key];
     if (!im) return;
     const [x, y, w] = view, h = w * 168 / 256;

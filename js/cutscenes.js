@@ -19,7 +19,7 @@ const Cutscenes = {
   finish() {
     if (this.done) return;
     this.done = true; Game.levelIdx = 0;
-    App.go('play');
+    App.afterStory();
   },
   next() {
     if (this.done) return;
@@ -314,7 +314,7 @@ const Cutscenes = {
     } else if (this.scene === 3) {
       ctx.drawImage(this.bed, 0, 16);
       // Relógio legível faz parte da cena, à frente da mesa de cabeceira.
-      const shake = t < 340 && t % 75 < 20 ? (t % 4 < 2 ? -1 : 1) : 0;
+      const shake = !Comfort.reducedShake && t < 340 && t % 75 < 20 ? (t % 4 < 2 ? -1 : 1) : 0;
       ctx.fillStyle = '#272c3e'; ctx.fillRect(2 + shake, 121, 48, 22);
       ctx.fillStyle = '#171e30'; ctx.fillRect(5 + shake, 124, 42, 15);
       this.text('07:42', 8 + shake, 128, t % 40 < 30 ? '#ffa27e' : '#a45d5d');
@@ -347,9 +347,7 @@ const Cutscenes = {
     const lines = this.captions[this.scene][this.t >= captionChange ? 1 : 0];
     lines.forEach((line, i) => this.text(line, 128, 190 + i * 11, i ? '#f3e4c9' : '#efbe85', { align: 'center' }));
     if (IntroArt.status === 'fallback') this.text('ARTE NÃO CARREGADA: MODO SIMPLES', 128, 174, '#fff0d6', { align: 'center', outline: true });
-    const touch = document.body.classList.contains('touch');
-    const pad = Input.cur.start || (navigator.getGamepads && Array.from(navigator.getGamepads()).some(Boolean));
-    this.text(touch ? 'TOQUE/A: AVANÇAR   START/B: PULAR' : pad ? 'A: AVANÇAR   START/B: PULAR' : 'ENTER/Z: AVANÇAR   ESC/X: PULAR', 128, 216, '#959caf', { align: 'center' });
+    this.text(Input.sceneHint(), 128, 216, '#959caf', { align: 'center' });
     ctx.fillStyle = '#e4ae72';
     ctx.fillRect(0, 181, Math.floor(256 * this.t / this.lengths[this.scene]), 1);
     const fade = this.t < 18 ? 1 - this.t / 18 : this.t > this.lengths[this.scene] - 18 ? (this.t - this.lengths[this.scene] + 18) / 18 : 0;

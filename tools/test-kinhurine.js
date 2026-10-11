@@ -60,7 +60,7 @@ async function run() {
   const savedExport = Save.exportFile; Save.exportFile = () => true;
   pickup(); step(1); App.exportSave(); assert.equal(Save.data.run.score, Game.score); Save.exportFile = savedExport;
   // Uma transição externa (por exemplo importar save) cancela a cena antiga.
-  Save.data.run.level = 1; App.continueRun(); assert.equal(Kinhurine.active, false);
+  Save.data.run.level = 1; Save.data.campaign.origin = 'seen'; App.continueRun(); assert.equal(Kinhurine.active, false);
   step(240); assert.equal(App.state, 'play'); assert.equal(Game.levelIdx, 1); assert.notStrictEqual(World, world);
   // Sem arquivos de arte, a cena ainda termina no prazo e preserva o poder.
   const art = Kinhurine.images; Kinhurine.images = {};

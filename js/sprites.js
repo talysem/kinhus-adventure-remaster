@@ -123,6 +123,8 @@ function buildKinhu(palOverride = {}, extra = {}) {
     hurt: mk('fall', { arms: K_ARMS_UP, hurt: true }),
     win: mk('idle', { arms: K_ARMS_UP }),
     skid: mk('run2', { arms: K_ARMS_UP }),
+    propel: mk('run2', { arms: K_ARMS_RUN, hurt: true }),
+    slam: mk('jump', { arms: { ...K_ARMS_UP, 15: '...ssssLLLLssssS....', 16: '....sssLLLLsssS.....', 17: '....SSssssssSS......' } }),
   };
 }
 
@@ -320,7 +322,43 @@ function buildBoss(variant) {
 SPR.boss = { idle: buildBoss('idle'), open: buildBoss('open'), jump: buildBoss('jump'), hurt: buildBoss('hurt') };
 
 /* ---------------- ITENS ---------------- */
+// Itens temporários: silhuetas distintas mesmo sem texto ou som.
+SPR.coffee = (() => {
+  const g = new Grid(16, 16);
+  g.rect(5, 1, 1, 2, '#d0e3f0'); g.rect(8, 2, 1, 2, '#d0e3f0');
+  g.rect(3, 5, 9, 8, '#fff4dc'); g.rect(4, 6, 7, 2, '#663726');
+  g.rect(12, 6, 3, 5, '#fff4dc'); g.rect(12, 7, 1, 3, OUT);
+  g.rect(4, 13, 10, 1, '#d6b08a'); g.outline(OUT); return mkSprite(g);
+})();
+SPR.magnet = (() => {
+  const g = new Grid(16, 16);
+  g.rect(2, 3, 4, 9, '#ef4652'); g.rect(10, 3, 4, 9, '#ef4652');
+  g.rect(4, 10, 8, 4, '#b92744'); g.rect(2, 2, 4, 4, '#d9efff');
+  g.rect(10, 2, 4, 4, '#d9efff'); g.rect(3, 6, 1, 5, '#ff9294');
+  g.outline(OUT); return mkSprite(g);
+})();
+SPR.backpack = (() => {
+  const g = new Grid(16, 16);
+  g.rect(6, 1, 4, 3, '#f0c16b'); g.rect(3, 4, 10, 10, '#258b9b');
+  g.rect(2, 5, 2, 7, '#185c77'); g.rect(12, 5, 2, 7, '#185c77');
+  g.rect(5, 8, 6, 5, '#f0c16b'); g.rect(5, 9, 6, 1, '#a65b35');
+  g.rect(4, 5, 7, 1, '#94e5ef'); g.outline(OUT); return mkSprite(g);
+})();
 // moeda girando
+SPR.memories = [0, 1, 2].map(slot => {
+  const g = new Grid(16, 16);
+  if (slot === 0) {
+    g.rect(2, 3, 12, 10, '#fff4dc'); g.rect(3, 4, 6, 7, '#66bbcb');
+    g.rect(4, 8, 4, 3, '#7ea44d'); g.rect(10, 4, 3, 3, '#ef4652'); g.rect(10, 9, 3, 1, '#a65b35');
+  } else if (slot === 1) {
+    g.rect(3, 2, 10, 12, '#ffe384'); g.rect(4, 4, 8, 2, '#a65b35');
+    g.rect(5, 8, 6, 1, '#a65b35'); g.rect(5, 10, 4, 1, '#a65b35'); g.rect(3, 6, 1, 2, OUT); g.rect(12, 6, 1, 2, OUT);
+  } else {
+    g.rect(2, 2, 12, 12, '#6976a8'); g.rect(5, 2, 7, 5, '#d9efff');
+    g.rect(9, 3, 2, 3, '#258b9b'); g.rect(4, 9, 8, 5, '#fff4dc'); g.rect(5, 10, 6, 1, '#a65b35');
+  }
+  g.outline(OUT); return mkSprite(g);
+});
 SPR.coin = [4, 3, 1.4, 3].map((rx, i) => {
   const g = new Grid(16, 16);
   g.ellipse(8, 8, rx, 5.6, (nx, ny, x, y) => {

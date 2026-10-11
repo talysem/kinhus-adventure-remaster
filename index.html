@@ -16,9 +16,7 @@
 <main id="wrap">
   <canvas id="screen" width="256" height="224" aria-label="Tela do jogo Kinhu's Adventure"></canvas>
   <nav id="bar" aria-label="Opções">
-    <button id="btnSave" type="button" title="Baixa um arquivo .json com o seu progresso">Baixar save</button>
-    <button id="btnLoad" type="button" title="Carrega um arquivo .json de progresso">Carregar save</button>
-    <button id="btnMute" type="button" title="Liga/desliga o som (tecla M)">Som</button>
+    <button id="btnOptions" type="button" title="Abre as configurações; durante a partida, pausa o jogo">Configurações</button>
     <button id="btnFull" type="button" title="Tela cheia (tecla F)">Tela cheia</button>
   </nav>
 </main>
@@ -32,6 +30,7 @@
   </div>
   <button class="start" data-act="start">START</button>
   <div class="ab">
+    <button class="c" data-act="propel" aria-label="Pum propulsor" hidden>C</button>
     <button class="b" data-act="run,back">B</button>
     <button class="a" data-act="jump,confirm">A</button>
   </div>
@@ -40,15 +39,19 @@
 <input type="file" id="loadFile" accept=".json,application/json" hidden>
 
 <script src="js/core.js"></script>
+<script src="js/progression.js"></script>
 <script src="js/sprites.js"></script>
 <script src="js/world.js"></script>
 <script src="js/audio.js"></script>
 <script src="js/levels.js"></script>
+<script src="js/settings.js"></script>
+<script src="js/exploration.js"></script>
 <script src="js/save.js"></script>
 <script src="js/game.js"></script>
 <script src="js/title.js"></script>
 <script src="js/introart.js"></script>
 <script src="js/cutscenes.js"></script>
+<script src="js/origin.js"></script>
 <script src="js/kinhurine.js"></script>
 <script src="js/main.js"></script>
 </body>

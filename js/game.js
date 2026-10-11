@@ -4,7 +4,7 @@
    chefe, cenas de chegada e desenho do mundo.
    ========================================================= */
 
-const SOLID = new Set(['#', '_', 'B', '?', 'H', '!', 'L', 'U', 'S', 'Z', 'Y', 'y', 'T', 'X', 'I', '^']);
+const SOLID = new Set(['#', '_', 'B', '?', 'H', '!', 'L', 'U', 'S', 'Z', 'Y', 'y', 'T', 'X', 'I', '^', 'F', 'R']);
 const ONEWAY = new Set(['=', 'D', '-']);
 const GROUNDISH = new Set(['#', '_', 'I', 'Z']);
 const ENEMY_CHARS = 'dpxktlwiufr';
@@ -12,7 +12,10 @@ const ENEMY_CHARS = 'dpxktlwiufr';
 const Game = {
   lives: 3, score: 0, coins: 0, hearts: 3, maxHearts: 3, power: 0,
   levelIdx: 0, checkpoint: false, hiscore: 0, unlocked: 1, completed: false,
-  reset() { this.lives = 3; this.score = 0; this.coins = 0; this.hearts = 3; this.power = 0; this.levelIdx = 0; this.checkpoint = false; },
+  mode: 'campaign', progress: Progression.blank(), clearedLevel: null,
+  difficulty: 'normal', collected: [], collectedLevel: 0,
+  assist: false, stats: Exploration.blankStats(), statsLevel: 0,
+  reset() { this.difficulty = Difficulty.selected; this.assist = Comfort.assist; this.stats = Exploration.blankStats(); this.statsLevel = 0; this.lives = Difficulty.current().lives; this.score = 0; this.coins = 0; this.hearts = 3; this.power = 0; this.levelIdx = 0; this.checkpoint = false; this.completed = false; this.mode = 'campaign'; this.progress = Progression.blank(); this.clearedLevel = null; this.collected = []; this.collectedLevel = 0; },
 };
 
 let World = null;
@@ -44,13 +47,16 @@ function moveBody(b, o = {}) {
   b.onGround = false; b.headHit = null;
   const x0 = Math.floor((b.x + 0.01) / TS), x1 = Math.floor((b.x + b.w - 0.01) / TS);
   if (b.vy > 0) {
-    const ty = Math.floor((b.y + b.h - 0.01) / TS);
-    let hit = false;
-    for (let tx = x0; tx <= x1; tx++) {
-      const t = tileAt(tx, ty);
-      if (isSolid(t) || (ONEWAY.has(t) && !o.drop && prevBottom <= ty * TS + 0.6)) { hit = true; break; }
+    const lastRow = Math.floor((b.y + b.h - 0.01) / TS);
+    for (let ty = Math.floor((prevBottom - 0.01) / TS); ty <= lastRow; ty++) {
+      let hit = false;
+      for (let tx = x0; tx <= x1; tx++) {
+        const t = tileAt(tx, ty);
+        if (b === World.player && b.slam && t === 'F' && prevBottom <= ty * TS + 0.6) { breakFragile(tx, ty); continue; }
+        if (prevBottom <= ty * TS + 0.6 && (isSolid(t) || (ONEWAY.has(t) && !o.drop))) { hit = true; }
+      }
+      if (hit) { b.y = ty * TS - b.h; b.vy = 0; b.onGround = true; break; }
     }
-    if (hit) { b.y = ty * TS - b.h; b.vy = 0; b.onGround = true; }
   } else if (b.vy < 0) {
     const ty = Math.floor(b.y / TS);
     const sL = isSolid(tileAt(x0, ty)), sR = isSolid(tileAt(x1, ty));
@@ -90,7 +96,7 @@ function dust(x, y, n = 4) { for (let i = 0; i < n; i++) part({ x: x + (Math.ran
 function sparkle(x, y, n = 6, color = '#fff8a0') { for (let i = 0; i < n; i++) { const a = (i / n) * Math.PI * 2; part({ x, y, vx: Math.cos(a) * 1.5, vy: Math.sin(a) * 1.5, life: 18, color, size: 2, kind: 'spark' }); } }
 function debris(x, y, color) { for (const [dx, dy, vx] of [[2, 2, -1.4], [10, 2, 1.4], [2, 10, -1], [10, 10, 1]]) part({ x: x + dx, y: y + dy, vx, vy: -5 + dy * 0.15, g: 0.3, life: 60, color, size: 5, kind: 'debris' }); }
 function popup(x, y, text, color = '#ffffff') { World.parts.push({ x, y, vx: 0, vy: -0.6, g: 0, life: 50, t: 0, text, color, kind: 'text' }); }
-function shake(n) { World.cam.shake = Math.max(World.cam.shake, n); }
+function shake(n) { if (!Comfort.reducedShake) World.cam.shake = Math.max(World.cam.shake, n); }
 function addScore(n, x, y) { Game.score += n; if (x !== undefined) popup(x, y, String(n)); }
 function addCoin(x, y) {
   Game.coins++; Game.score += 100; Sound.fx('coin');
@@ -100,14 +106,16 @@ function oneUp(x, y) { Game.lives = Math.min(99, Game.lives + 1); Sound.fx('oneu
 
 /* ---------------- carregar fase ---------------- */
 function loadLevel(idx, fromCheckpoint) {
+  if (Game.statsLevel !== idx) { Game.stats = Exploration.blankStats(); Game.statsLevel = idx; }
+  if (Game.collectedLevel !== idx) { Game.collected = []; Game.collectedLevel = idx; }
   const def = LEVELS[idx];
   const rows = buildLevelRows(def);
   const map = rows.map(r => r.split(''));
   const th = THEMES[def.theme];
   World = {
     idx, def, th, theme: def.theme, T: Tiles.get(def.theme), w: rows[0].length, h: rows.length, map,
-    ents: [], projs: [], parts: [], plats: [], decor: [], bumps: [],
-    cam: { x: 0, shake: 0, lock: null }, time: def.time, timeT: 0, hurry: false, t: 0,
+    ents: [], projs: [], parts: [], plats: [], decor: [], bumps: [], switches: [],
+    cam: { x: 0, shake: 0, lock: null }, time: Comfort.initialTime(), timeT: 0, hurry: false, t: 0, saveDirty: false,
     start: null, goal: null, cps: [], arena: null, boss: null, house: null,
     brake: def.brakes ? { t: 420, phase: 'idle', kind: null, k: 0 } : null, push: 0, busSpeed: 1,
     clear: null, banner: null, bannerT: 0,
@@ -134,13 +142,20 @@ function loadLevel(idx, fromCheckpoint) {
         break;
       }
       case 'A': Wd.arena = { tx: x, x: px, active: false }; break;
-      case 'W': Wd.boss = addEnt(makeBoss(px, py + TS)); break;
-      case 'X': addEnt({ kind: 'shooter', tx: x, ty: y, x: px, y: py, w: 16, h: 16, timer: 90 + ((x * 37) % 60) }); clearIt = false; break;
+      case 'W': if (Difficulty.current().enemies) Wd.boss = addEnt(makeBoss(px, py + TS)); break;
+      case 'R': Wd.switches.push({ tx: x, ty: y, pressed: false }); clearIt = false; break;
+      case 'X': if (Difficulty.current().enemies) addEnt({ kind: 'shooter', tx: x, ty: y, x: px, y: py, w: 16, h: 16, timer: Difficulty.frames(90 + ((x * 37) % 60)) }); clearIt = false; break;
       default:
-        if (ENEMY_CHARS.includes(ch)) addEnt(makeEnemy(ch, px, py + TS));
+        if (ENEMY_CHARS.includes(ch)) { if (Difficulty.current().enemies) addEnt(makeEnemy(ch, px, py + TS)); }
         else clearIt = false;
     }
     if (clearIt) map[y][x] = '.';
+  }
+  PickupLedger.restore();
+  Exploration.spawn();
+  for (const item of def.items || []) {
+    const sourceId = PickupLedger.key('item', item.x, item.y);
+    if (!Game.collected.includes(sourceId)) addEnt({ kind: 'item', item: item.kind, x: item.x * TS + 2, y: item.y * TS + 2, w: 12, h: 12, vx: 0, vy: 0, emerge: 0, dir: 1, sourceId });
   }
   buildDecor();
   let sx = Wd.start.x, sy = Wd.start.y;
@@ -198,11 +213,31 @@ function buildDecor() {
 /* ---------------- jogador ---------------- */
 function makePlayer(x, y) {
   return { x, y, w: 12, h: 21, vx: 0, vy: 0, facing: 1, onGround: false, coyote: 0, jumpBuf: 0, inv: 0, wild: 0, ride: null, prevY: y,
-    dead: false, deadT: 0, anim: 0, look: 0, combo: 0, hidden: false, control: true, skid: false, drop: 0, blink: 0, spikeT: 0 };
+    dead: false, deadT: 0, anim: 0, look: 0, combo: 0, hidden: false, control: true, skid: false, drop: 0, blink: 0, spikeT: 0, airJumpReady: false,
+    dashT: 0, dashCooldown: 0, dashDir: 1, airPropulsionUsed: false, slam: false, impactT: 0, backpack: false, utility: null, utilityT: 0 };
+}
+
+function recoilFactor() { return Progression.usable(Game.progress, 'steadyStep') ? 1 - Progression.config.recoilReduction : 1; }
+function cancelMoves(p) { p.dashT = 0; p.slam = false; p.jumpBuf = 0; }
+function breakFragile(tx, ty) {
+  if (tileAt(tx, ty) !== 'F') return;
+  setTile(tx, ty, '.'); debris(tx * TS, ty * TS, '#bf8549'); if (PickupLedger.claim('block', tx, ty)) addScore(50); Sound.fx('break');
+}
+function slamImpact(p) {
+  p.slam = false; p.impactT = 10; Sound.fx('thud'); shake(4); dust(p.x + p.w / 2, p.y + p.h, 7);
+  const ty = Math.floor((p.y + p.h + 1) / TS);
+  for (const s of World.switches) {
+    if (s.pressed || s.ty !== ty || p.x + p.w <= s.tx * TS || p.x >= (s.tx + 1) * TS) continue;
+    s.pressed = true; PickupLedger.claim('block', s.tx, s.ty); Sound.fx('checkpoint'); popup(s.tx * TS, s.ty * TS - 20, 'ABRIU!', '#ffe384');
+    const gate = (World.def.switchGates || []).find(g => g.switch[0] === s.tx && g.switch[1] === s.ty);
+    if (gate) for (const [x, y] of gate.blocks) breakFragile(x, y);
+  }
 }
 
 function updatePlayer(p) {
   if (p.dead) { updateDeath(p); return; }
+  if (p.dashCooldown > 0) p.dashCooldown--;
+  if (p.impactT > 0) p.impactT--;
   const ctl = p.control;
   const L = ctl && Input.down('left'), R = ctl && Input.down('right'), run = ctl && Input.down('run');
   if (p.ride) {
@@ -212,44 +247,68 @@ function updatePlayer(p) {
   }
   const gt = p.onGround ? groundTileUnder(p) : null;
   const ice = gt === 'I';
-  const maxS = run ? 2.9 : 1.9;
-  const acc = p.onGround ? (ice ? 0.035 : 0.13) : 0.09;
+  const coffee = ItemEffects.active(p, 'coffee') ? ItemEffects.coffeeFactor : 1;
+  const maxS = (run ? 2.9 : 1.9) * coffee;
+  const acc = (p.onGround ? (ice ? 0.035 / recoilFactor() : 0.13) : 0.09) * coffee;
   const prevSpeed = Math.abs(p.vx);
   if (L && !R) { p.vx -= p.vx > 0 && p.onGround && !ice ? acc * 2.4 : acc; p.facing = -1; }
   else if (R && !L) { p.vx += p.vx < 0 && p.onGround && !ice ? acc * 2.4 : acc; p.facing = 1; }
-  else if (!World.push) { p.vx *= p.onGround ? (ice ? 0.985 : 0.78) : 0.97; if (Math.abs(p.vx) < 0.04) p.vx = 0; }
+  else if (!World.push) { p.vx *= p.onGround ? (ice ? Math.pow(0.985, 1 / recoilFactor()) : 0.78) : 0.97; if (Math.abs(p.vx) < 0.04) p.vx = 0; }
   const lim = World.push ? 4 : maxS;
   if (Math.abs(p.vx) > lim) p.vx = U.sign(p.vx) * Math.max(lim, Math.min(Math.abs(p.vx), prevSpeed) - (World.push ? 0.4 : 0.08));
-  if (World.push && (p.onGround || p.ride)) p.vx += World.push;
+  if (World.push && (p.onGround || p.ride)) p.vx += World.push * recoilFactor();
   p.skid = p.onGround && ((L && p.vx > 1) || (R && p.vx < -1));
   if (p.skid && World.t % 4 === 0) dust(p.x + p.w / 2, p.y + p.h, 1);
   // pulo (com memória de botão e "tempo de coiote")
+  if (p.onGround || p.ride) { p.airJumpReady = true; p.airPropulsionUsed = false; }
   if (ctl && Input.pressed('jump')) p.jumpBuf = 7; else if (p.jumpBuf > 0) p.jumpBuf--;
   if (p.onGround || p.ride) p.coyote = 6; else if (p.coyote > 0) p.coyote--;
-  if (p.jumpBuf > 0 && p.coyote > 0) {
+  const wantSlam = ctl && Input.pressed('jump') && Input.down('down') && !p.onGround && !p.ride && p.drop <= 0 && Progression.usable(Game.progress, 'bellySlam');
+  if (wantSlam && !p.slam) {
+    p.slam = true; p.dashT = 0; p.vx = 0; p.vy = Progression.config.bellySpeed; p.jumpBuf = 0; p.coyote = 0; Sound.fx('jump');
+  } else if (!p.slam && !p.dashT && p.jumpBuf > 0 && p.coyote > 0) {
     if (ctl && Input.down('down') && onOneWay(p)) { p.drop = 12; p.y += 2; p.ride = null; }
     else {
       // Segurando o botão: ~89 px parado, suficiente para subir os blocos a 80 px.
-      p.vy = -(7.2 + Math.abs(p.vx) * 0.22);
+      p.vy = -(7.2 + Math.abs(p.vx) / coffee * 0.22);
       p.onGround = false; p.ride = null;
       Sound.fx('jump');
     }
     p.jumpBuf = 0; p.coyote = 0;
+  } else if (!p.slam && !p.dashT && ctl && Input.pressed('jump') && !Input.prev.jump && !p.onGround && !p.ride && p.coyote <= 0 && p.drop <= 0 && p.airJumpReady && Progression.usable(Game.progress, 'doubleJump')) {
+    p.vy = -Progression.config.doubleJumpImpulse;
+    p.airJumpReady = false; p.jumpBuf = 0;
+    Sound.fx('doublejump'); dust(p.x + p.w / 2, p.y + p.h, 5);
+  }
+  if (ctl && Input.pressed('propel') && !p.slam && p.dashT === 0 && p.dashCooldown === 0 && Progression.usable(Game.progress, 'propulsion') && ((p.onGround || p.ride) || !p.airPropulsionUsed)) {
+    p.dashT = Progression.config.propulsionFrames; p.dashCooldown = Progression.config.propulsionCooldown; p.dashDir = p.facing;
+    if (!p.onGround && !p.ride) p.airPropulsionUsed = true;
+    p.jumpBuf = 0; Sound.fx('propulsion');
   }
   const hold = ctl && Input.down('jump');
   p.vy += p.vy < 0 && hold ? 0.28 : 0.55;
   if (p.vy > 6.5) p.vy = 6.5;
+  if (p.slam) { p.vx = 0; p.vy = Progression.config.bellySpeed; }
+  if (p.dashT > 0) {
+    p.vx = p.dashDir * Progression.config.propulsionBlocks * TS / Progression.config.propulsionFrames;
+    if (!p.onGround && !p.ride) p.airPropulsionUsed = true;
+    if (World.t % 3 === 0) part({ x: p.x + (p.dashDir < 0 ? p.w + 4 : -4), y: p.y + 14, vx: -p.dashDir * 0.3, vy: -0.2, life: 20, color: '#c6d393', size: 5, kind: 'gas' });
+  }
   if (ctl && Input.pressed('run') && Game.power === 1) throwCan(p);
   p.prevY = p.y;
   const wasGround = p.onGround;
   moveBody(p, { corner: true, drop: p.drop > 0 });
   if (p.drop > 0) p.drop--;
   landOnPlats(p);
+  if (p.dashT > 0 && (--p.dashT === 0 || p.hitWall)) { p.dashT = 0; p.vx = 0; }
+  if (p.onGround || p.ride) { p.airJumpReady = true; p.airPropulsionUsed = false; if (p.slam) slamImpact(p); }
   if (p.onGround && !wasGround && p.vy === 0) dust(p.x + p.w / 2, p.y + p.h, 3);
   if (p.headHit) bumpBlock(p.headHit.tx, p.headHit.ty);
   if (p.onGround && !p.ride) p.combo = 0;
   collectTiles(p);
+  ItemEffects.magnet(p);
   hazards(p);
+  ItemEffects.update(p);
   if (p.inv > 0) p.inv--;
   if (p.wild > 0) {
     p.wild--;
@@ -289,7 +348,7 @@ function collectTiles(p) {
   for (let ty = y0; ty <= y1; ty++) for (let tx = x0; tx <= x1; tx++) {
     if (tileAt(tx, ty) === 'c') {
       setTile(tx, ty, '.');
-      addCoin(tx * TS + 8, ty * TS);
+      if (PickupLedger.claim('coin', tx, ty)) addCoin(tx * TS + 8, ty * TS);
       sparkle(tx * TS + 8, ty * TS + 8, 5);
     }
   }
@@ -302,7 +361,7 @@ function hazards(p) {
   let spike = false;
   if (p.onGround) for (let tx = x0; tx <= x1; tx++) if (tileAt(tx, under) === '^') spike = true;
   if (p.hitWall && p.wallTile === '^') spike = true;
-  if (spike) { hurtPlayer(); if (!p.dead) { p.vy = -5.5; p.onGround = false; } }
+  if (spike) { hurtPlayer(); if (!p.dead) { cancelMoves(p); p.vy = -5.5 * recoilFactor(); p.onGround = false; } }
   // líquido (esgoto / água eletrificada)
   const lt = tileAt(Math.floor((p.x + p.w / 2) / TS), Math.floor((p.y + p.h - 5) / TS));
   if (lt === '~') { splash(p.x + p.w / 2, p.y + p.h); killPlayer('liquid'); return; }
@@ -312,20 +371,23 @@ function splash(x, y) { Sound.fx('splash'); for (let i = 0; i < 10; i++) part({ 
 
 function hurtPlayer() {
   const p = World.player;
-  if (p.dead || p.inv > 0 || p.wild > 0 || World.clear) return;
-  if (Game.power === 1) { Game.power = 0; p.inv = 120; Sound.fx('hurt'); popup(p.x, p.y - 8, 'SEM COCA!', '#ffb0a0'); }
+  if (p.dead || p.inv > 0 || p.wild > 0 || World.clear) return false;
+  if (p.backpack) { p.backpack = false; p.inv = Difficulty.current().inv; Sound.fx('shield'); popup(p.x, p.y - 8, 'MOCHILA ROMPEU!', '#94e5ef'); }
+  else if (Game.power === 1) { Game.power = 0; p.inv = Difficulty.current().inv; Sound.fx('hurt'); popup(p.x, p.y - 8, 'SEM COCA!', '#ffb0a0'); }
   else {
     Game.hearts--;
     if (Game.hearts <= 0) { killPlayer('hit'); return; }
-    p.inv = 120; Sound.fx('hurt');
+    p.inv = Difficulty.current().inv; Sound.fx('hurt');
   }
-  p.vy = Math.min(p.vy, -3); p.vx = -p.facing * 1.6; p.onGround = false; p.ride = null;
-  shake(4);
+  cancelMoves(p); p.vy = Math.min(p.vy, -3 * recoilFactor()); p.vx = -p.facing * 1.6 * recoilFactor(); p.onGround = false; p.ride = null;
+  shake(4); return true;
 }
 function killPlayer(how) {
   const p = World.player;
   if (p.dead || World.clear) return;
-  p.dead = true; p.deadT = 0; p.how = how; p.vx = 0; p.vy = 0; Game.hearts = 0;
+  Game.stats.deaths++;
+  World.saveDirty = true;
+  cancelMoves(p); ItemEffects.clear(p); p.dead = true; p.deadT = 0; p.how = how; p.vx = 0; p.vy = 0; Game.hearts = 0;
   Sound.stop(); Sound.play('death');
 }
 function updateDeath(p) {
@@ -350,29 +412,29 @@ function bumpBlock(tx, ty) {
   if ('?HL!'.includes(t)) {
     setTile(tx, ty, 'U');
     World.bumps.push({ tx, ty, t: 0 });
-    if (t === '?') popCoin(bx, by);
+    if (t === '?') { if (PickupLedger.claim('block', tx, ty)) popCoin(bx, by); }
     else {
       const kind = t === 'L' ? 'badge' : t === '!' ? 'claws' : Game.hearts < Game.maxHearts ? 'hotdog' : 'coca';
-      spawnItem(kind, bx, by);
+      spawnItem(kind, bx, by, PickupLedger.key('block', tx, ty));
       Sound.fx('appear');
     }
     Sound.fx('bump');
   } else if (t === 'B') {
     setTile(tx, ty, '.');
     const col = { clay: '#c4522e', box: '#c8945a', archive: '#d8c49a', crate: '#5a6478' }[World.th.brick];
-    debris(bx, by, col); addScore(50); Sound.fx('break');
+    debris(bx, by, col); if (PickupLedger.claim('block', tx, ty)) addScore(50); Sound.fx('break');
   } else Sound.fx('bump');
   for (const e of World.ents) {
     if (e.enemy && e.alive && !e.dying && e.y + e.h >= by - 3 && e.y + e.h <= by + 4 && e.x + e.w > bx && e.x < bx + TS) killEnemy(e, 'bump');
   }
-  if (tileAt(tx, ty - 1) === 'c') { setTile(tx, ty - 1, '.'); popCoin(bx, by - TS); }
+  if (tileAt(tx, ty - 1) === 'c') { setTile(tx, ty - 1, '.'); if (PickupLedger.claim('coin', tx, ty - 1)) popCoin(bx, by - TS); }
 }
 function popCoin(bx, by) {
   addEnt({ kind: 'popcoin', x: bx, y: by - 16, vy: -5.5, t: 0 });
   addCoin(bx + 8, by);
 }
-function spawnItem(kind, bx, by) {
-  addEnt({ kind: 'item', item: kind, x: bx + 2, y: by + 2, w: 12, h: 12, vx: 0, vy: 0, emerge: 14, dir: World.player.x + 6 < bx + 8 ? -1 : 1 });
+function spawnItem(kind, bx, by, sourceId = null) {
+  addEnt({ kind: 'item', item: kind, x: bx + 2, y: by + 2, w: 12, h: 12, vx: 0, vy: 0, emerge: 14, dir: World.player.x + 6 < bx + 8 ? -1 : 1, sourceId });
 }
 
 /* ---------------- inimigos ---------------- */
@@ -381,12 +443,12 @@ function makeEnemy(ch, px, bottom) {
   const at = (w, h) => ({ x: px + (16 - w) / 2, y: bottom - h, w, h });
   switch (ch) {
     case 'd': return Object.assign(base, at(16, 13), { type: 'dog', state: 'walk', speed: 0.5, score: 200 });
-    case 'p': return Object.assign(base, at(14, 10), { type: 'pigeon', baseY: bottom - 16, drop: 60, fly: true });
+    case 'p': return Object.assign(base, at(14, 10), { type: 'pigeon', baseY: bottom - 16, drop: Difficulty.frames(60), fly: true });
     case 'x': return Object.assign(base, at(12, 6), { type: 'roach', speed: 1.1 });
     case 'k': return Object.assign(base, at(12, 20), { type: 'skater', speed: 2.1, score: 200 });
     case 't': return Object.assign(base, at(12, 20), { type: 'thief', state: 'walk', speed: 0.5, score: 300 });
-    case 'l': return Object.assign(base, at(12, 22), { type: 'lady', state: 'idle', speed: 0.25, stomp: 'bounce', swing: 0, cool: 60 });
-    case 'w': return Object.assign(base, at(12, 21), { type: 'coworker', cool: 90, act: 0, score: 200 });
+    case 'l': return Object.assign(base, at(12, 22), { type: 'lady', state: 'idle', speed: 0.25, stomp: 'bounce', swing: 0, cool: Difficulty.frames(60) });
+    case 'w': return Object.assign(base, at(12, 21), { type: 'coworker', cool: Difficulty.frames(90), act: 0, score: 200 });
     case 'i': return Object.assign(base, at(12, 20), { type: 'intern', speed: 1.5, score: 200 });
     case 'u': return Object.assign(base, at(12, 9), { type: 'bug', speed: 0.5 });
     case 'f': return Object.assign(base, at(12, 10), { type: 'flybug', baseY: bottom - 16, fly: true, score: 200 });
@@ -426,7 +488,7 @@ function updateEnemy(e) {
   }
   const pdx = p.x + p.w / 2 - (e.x + e.w / 2), pdy = p.y + p.h - (e.y + e.h);
   const walker = (stopAtEdges, speed) => {
-    e.vx = e.dir * speed + (World.push && e.onGround ? World.push * 5 : 0);
+    e.vx = e.dir * speed * Difficulty.current().speed + (World.push && e.onGround ? World.push * 5 : 0);
     e.vy = Math.min(e.vy + 0.4, 6);
     moveBody(e);
     if (e.hitWall) e.dir = -e.hitWall;
@@ -441,7 +503,7 @@ function updateEnemy(e) {
         if (e.t % 160 === 0) e.dir = -e.dir;
       } else if (e.state === 'bark') {
         e.vx = 0; e.vy = Math.min(e.vy + 0.4, 6); moveBody(e);
-        if (++e.st > 26) { e.state = 'run'; e.st = 0; }
+        if (++e.st > Difficulty.frames(26)) { e.state = 'run'; e.st = 0; }
       } else {
         walker(true, 2);
         if (++e.st > 110) { e.state = 'walk'; }
@@ -473,7 +535,7 @@ function updateEnemy(e) {
         walker(true, e.speed);
         if (Math.abs(pdx) < 110 && Math.abs(pdy) < 30 && !p.dead) { e.state = 'dash'; e.dir = U.sign(pdx) || -1; }
       } else if (e.state === 'dash') walker(true, 2.3);
-      else if (e.state === 'flee') { e.vx = e.dir * 3; e.vy = Math.min(e.vy + 0.4, 6); moveBody(e); if (e.hitWall) e.dir = -e.dir; if (Math.abs(e.x - World.cam.x - W / 2) > W) e.alive = false; }
+      else if (e.state === 'flee') { e.vx = e.dir * 3 * Difficulty.current().speed; e.vy = Math.min(e.vy + 0.4, 6); moveBody(e); if (e.hitWall) e.dir = -e.dir; if (Math.abs(e.x - World.cam.x - W / 2) > W) e.alive = false; }
       e.frame = Math.floor(e.t / (e.state === 'walk' ? 10 : 5)) % 4;
       break;
     case 'lady':
@@ -482,7 +544,7 @@ function updateEnemy(e) {
       else {
         e.dir = U.sign(pdx) || e.dir;
         e.vx = Math.abs(pdx) > 40 ? 0 : 0;
-        if (--e.cool <= 0 && Math.abs(pdx) < 44 && Math.abs(pdy) < 30) { e.swing = 26; e.cool = 70; }
+        if (--e.cool <= 0 && Math.abs(pdx) < 44 && Math.abs(pdy) < 30) { e.swing = 26; e.cool = Difficulty.frames(70); }
       }
       moveBody(e);
       e.frame = e.swing > 0 ? 'act' : Math.floor(e.t / 30) % 2 ? 0 : 2;
@@ -492,7 +554,7 @@ function updateEnemy(e) {
       e.dir = U.sign(pdx) || e.dir;
       if (e.act > 0) e.act--;
       if (--e.cool <= 0 && Math.abs(pdx) < 170 && Math.abs(pdy) < 80 && !p.dead) {
-        e.cool = 130; e.act = 24;
+        e.cool = Difficulty.frames(130); e.act = 24;
         World.projs.push({ type: 'plane', x: e.x + (e.dir > 0 ? e.w : -8), y: e.y + 4, w: 8, h: 4, vx: e.dir * 1.7, vy: 0, life: 200, hostile: true, t: 0, dir: e.dir });
         Sound.fx('throw');
       }
@@ -500,17 +562,17 @@ function updateEnemy(e) {
       break;
     case 'pigeon':
       if (!e.started) { e.started = true; e.dir = pdx < 0 ? -1 : 1; }
-      e.x += e.dir * 0.8;
+      e.x += e.dir * 0.8 * Difficulty.current().speed;
       e.y = e.baseY + Math.sin(e.t * 0.05) * 8;
       if (--e.drop <= 0 && Math.abs(pdx) < 10 && pdy > 0 && !p.dead) {
-        e.drop = 90;
+        e.drop = Difficulty.frames(90);
         World.projs.push({ type: 'poop', x: e.x + 5, y: e.y + 8, w: 3, h: 3, vx: 0, vy: 1, g: 0.15, life: 120, hostile: true, t: 0 });
       }
       if (Math.abs(e.x - World.cam.x - W / 2) > W * 1.5) e.alive = false;
       e.frame = Math.floor(e.t / 8) % 2;
       break;
     case 'flybug': {
-      const tx = U.clamp(pdx, -1, 1) * 0.5;
+      const tx = U.clamp(pdx, -1, 1) * 0.5 * Difficulty.current().speed;
       e.x += tx;
       e.baseY += U.clamp((p.y - 6) - e.baseY, -0.25, 0.25);
       e.y = e.baseY + Math.sin(e.t * 0.08) * 10;
@@ -530,6 +592,13 @@ function updateEnt(e) {
       if (e.t > 26) { e.alive = false; sparkle(e.x + 8, e.y + 8, 4); }
       break;
     case 'coin':
+      if (e.attracted) {
+        e.t++;
+        const dx = p.x + p.w / 2 - (e.x + 5), dy = p.y + p.h / 2 - (e.y + 5), d = Math.hypot(dx, dy);
+        if (d < 6 || e.t > 100) { e.alive = false; sparkle(e.x + 5, e.y + 5, 3); }
+        else if (ItemEffects.visible(e.x + 5, e.y + 5, e.x + 5 + dx / d * 3, e.y + 5 + dy / d * 3)) { e.x += dx / d * 3; e.y += dy / d * 3; }
+        break;
+      }
       e.t++; e.vy = Math.min(e.vy + 0.3, 5); moveBody(e);
       if (e.onGround) e.vy = -2;
       e.vx *= 0.98;
@@ -537,6 +606,7 @@ function updateEnt(e) {
       if (e.t > 400) e.alive = false;
       break;
     case 'item': updateItem(e, p); break;
+    case 'memory': Exploration.collect(e); break;
     case 'spring':
       if (e.t > 0) e.t--;
       if (!p.dead && p.vy > 0 && p.x + p.w > e.x && p.x < e.x + e.w && p.prevY + p.h <= e.y + 6 && p.y + p.h >= e.y) {
@@ -561,6 +631,7 @@ function updateEnt(e) {
 
 function updateItem(e, p) {
   if (!e.alive) return;
+  if (e.sourceId && Game.collected.includes(e.sourceId)) { e.alive = false; return; }
   e.t++;
   if (e.emerge > 0) { e.y -= 0.5; e.emerge -= 0.5; return; }
   switch (e.item) {
@@ -568,6 +639,7 @@ function updateItem(e, p) {
       e.vx = e.dir * 0.9; e.vy = Math.min(e.vy + 0.35, 6); moveBody(e);
       if (e.hitWall) e.dir = -e.hitWall;
       break;
+    case 'coffee': case 'magnet': case 'backpack': e.vx = e.vy = 0; break;
     case 'coca': e.vy = Math.min(e.vy + 0.35, 6); e.vx = 0; moveBody(e); break;
     case 'claws':
       e.vx = e.dir * 1.1; e.vy = Math.min(e.vy + 0.3, 6); moveBody(e);
@@ -582,15 +654,16 @@ function updateItem(e, p) {
   if (e.y > World.h * TS + 20) e.alive = false;
   if (!p.dead && U.overlap(e, p)) {
     e.alive = false;
+    if (e.sourceId) { Game.collected.push(e.sourceId); World.saveDirty = true; }
     const cx = e.x, cy = e.y - 6;
     switch (e.item) {
+      case 'coffee': case 'magnet': case 'backpack': ItemEffects.acquire(p, e.item); break;
       case 'hotdog':
         if (Game.hearts < Game.maxHearts) { Game.hearts++; popup(cx - 6, cy, '+♥', '#ff8090'); } else addScore(1000, cx, cy);
         Sound.fx('eat'); break;
       case 'coca': {
         Game.power = 1; Sound.fx('power'); popup(cx - 10, cy, 'COCA-COLA!', '#ffd0a0'); Game.score += 1000;
-        const touch = typeof document !== 'undefined' && document.body && document.body.classList.contains('touch');
-        World.banner = touch ? 'APERTE B PARA JOGAR LATAS!' : 'APERTE X PARA JOGAR LATAS!'; World.bannerT = 160;
+        World.banner = Input.label('run', Input.device, true) + ': JOGAR LATAS!'; World.bannerT = 160;
         break;
       }
       case 'claws':
@@ -629,10 +702,10 @@ function updateCrusher(e, p) {
       break;
   }
   e.dx = 0;
-  // dano: tocar na lateral ou embaixo
+  // O peso esmagando contra o chão é fatal, inclusive com mochila/Kinhurine.
   const hit = { x: e.x + 2, y: e.y + 6, w: e.w - 4, h: e.h - 6 };
+  if (!p.dead && p.ride !== e && e.state === 'fall' && U.overlap(hit, p) && p.onGround && p.y > e.y + 10) { killPlayer('crush'); return; }
   if (!p.dead && p.ride !== e && U.overlap(hit, p) && e.state !== 'wait' && e.state !== 'land') hurtPlayer();
-  if (!p.dead && e.state === 'fall' && U.overlap(hit, p) && p.onGround && p.y > e.y + 10) hurtPlayer();
 }
 
 function updateShooter(e, p) {
@@ -644,7 +717,7 @@ function updateShooter(e, p) {
     const type = style === 'printer' ? 'paper' : style === 'hydrant' ? 'water' : 'zap';
     World.projs.push({ type, x: e.x + (dir > 0 ? 16 : -8), y: e.y + (style === 'printer' ? 7 : 5), w: 8, h: 5, vx: dir * (type === 'water' ? 2.2 : 1.5), vy: type === 'water' ? -1.2 : 0, g: type === 'water' ? 0.05 : 0, life: 220, hostile: true, t: 0, dir });
     Sound.fx(type === 'zap' ? 'zap' : 'shoot');
-    e.timer = 150;
+    e.timer = Difficulty.frames(150);
   } else e.timer = 20;
 }
 
@@ -675,7 +748,7 @@ function updateCar(e, p) {
   const body = { x: e.x + 2, y: e.y + 9, w: 44, h: 15 };
   if (!p.dead && p.ride !== e.plat && U.overlap(body, p) && e.alpha > 0.5) {
     if (p.vy > 0 && p.prevY + p.h <= e.y + 6) { p.y = e.plat.y - p.h; p.vy = 0; p.onGround = true; p.ride = e.plat; }
-    else { hurtPlayer(); if (!p.dead) p.vx = -3; }
+    else if (hurtPlayer() && !p.dead) p.vx = -3 * recoilFactor();
   }
 }
 
@@ -760,13 +833,14 @@ function playerVsEnemies() {
     if (p.wild > 0) { killEnemy(e, 'wild'); continue; }
     const fromAbove = p.vy > 0 && p.prevY + p.h <= e.y + Math.max(7, e.vy + 5);
     if (fromAbove && e.stomp) {
+      const slam = p.slam; cancelMoves(p);
       p.y = e.y - p.h;
-      p.vy = Input.down('jump') ? -7 : -4.6;
+      p.vy = slam ? -3.5 : Input.down('jump') ? -7 : -4.6;
       if (e.stomp === 'bounce') { Sound.fx('bump'); popup(e.x - 4, e.y - 6, 'HMPF!', '#ffc0e0'); continue; }
       killEnemy(e, 'stomp');
       continue;
     }
-    if (e.type === 'lady' && box === e) { p.vx = U.sign(p.x - e.x) * 1.5; continue; }
+    if (e.type === 'lady' && box === e) { cancelMoves(p); p.vx = U.sign(p.x - e.x) * 1.5 * recoilFactor(); continue; }
     if (e.type === 'thief' && e.state !== 'flee' && Game.coins > 0) {
       const n = Math.min(10, Game.coins);
       Game.coins -= n; Sound.fx('steal'); popup(p.x - 4, p.y - 10, '-' + n + ' MOEDAS', '#ffb0b0');
@@ -780,11 +854,12 @@ function playerVsEnemies() {
 
 /* ---------------- chefe: MEGA BUG ---------------- */
 function makeBoss(px, bottom) {
-  return { kind: 'boss', x: px - 10, y: bottom - 30, w: 36, h: 30, vx: 0, vy: 0, hp: 24, maxHp: 24, state: 'sleep', t: 0, dir: -1, inv: 0, phase: 1, step: 0, onGround: true };
+  return { kind: 'boss', x: px - 10, y: bottom - 30, w: 36, h: 30, vx: 0, vy: 0, hp: Difficulty.current().bossHP, maxHp: Difficulty.current().bossHP, state: 'sleep', t: 0, dir: -1, inv: 0, slamInv: 0, phase: 1, step: 0, onGround: true };
 }
 function updateBoss(b, p) {
   b.t++;
   if (b.inv > 0) b.inv--;
+  if (b.slamInv > 0) b.slamInv--;
   const pdx = p.x + p.w / 2 - (b.x + b.w / 2);
   const grav = () => { b.vy = Math.min(b.vy + 0.32, 7); moveBody(b); };
   switch (b.state) {
@@ -792,16 +867,16 @@ function updateBoss(b, p) {
     case 'intro': grav(); if (b.t === 30) { shake(10); Sound.fx('bosshit'); } if (b.t > 100) { b.state = 'walk'; b.t = 0; } break;
     case 'walk':
       if (b.t % 40 === 1) b.dir = U.sign(pdx) || b.dir;
-      b.vx = b.dir * (b.phase === 2 ? 1.1 : 0.6); grav();
-      if (b.t > (b.phase === 2 ? 70 : 100)) {
+      b.vx = b.dir * (b.phase === 2 ? 1.1 : 0.6) * Difficulty.current().speed; grav();
+      if (b.t > Difficulty.frames(b.phase === 2 ? 70 : 100)) {
         const seq = b.phase === 2 ? ['jump', 'spit', 'summon', 'jump', 'spit'] : ['jump', 'spit', 'jump', 'spit'];
         b.state = seq[b.step++ % seq.length]; b.t = 0; b.vx = 0;
       }
       break;
     case 'jump':
-      if (b.t < 18) { b.vx = 0; grav(); break; }
-      if (b.t === 18) { b.vy = -7.6; b.vx = U.clamp(pdx / 48, -2.6, 2.6); b.onGround = false; }
-      { const was = b.onGround; grav(); if (b.onGround && b.t > 20 && !was) {
+      if (b.t < Difficulty.frames(18)) { b.vx = 0; grav(); break; }
+      if (b.t === Difficulty.frames(18)) { b.vy = -7.6; b.vx = U.clamp(pdx / 48, -2.6, 2.6); b.onGround = false; }
+      { const was = b.onGround; grav(); if (b.onGround && b.t > Difficulty.frames(18) + 2 && !was) {
         shake(12); Sound.fx('thud'); dust(b.x + 6, b.y + b.h, 5); dust(b.x + b.w - 6, b.y + b.h, 5);
         for (const d of [-1, 1]) World.projs.push({ type: 'wave', x: b.x + b.w / 2 - 5 + d * 14, y: b.y + b.h - 10, w: 10, h: 10, vx: d * (b.phase === 2 ? 2.6 : 2.1), vy: 0, life: 200, hostile: true, t: 0 });
         b.state = 'walk'; b.t = 0; b.vx = 0;
@@ -809,7 +884,7 @@ function updateBoss(b, p) {
       break;
     case 'spit':
       b.vx = 0; grav();
-      if (b.t === 30) {
+      if (b.t === Difficulty.frames(30)) {
         const n = b.phase === 2 ? 3 : 1;
         for (let i = 0; i < n; i++) {
           const ang = Math.atan2(p.y + 8 - (b.y + 18), pdx) + (i - (n - 1) / 2) * 0.35;
@@ -817,15 +892,15 @@ function updateBoss(b, p) {
         }
         Sound.fx('zap');
       }
-      if (b.t > 56) { b.state = 'walk'; b.t = 0; }
+      if (b.t > Difficulty.frames(56)) { b.state = 'walk'; b.t = 0; }
       break;
     case 'summon':
       b.vx = 0; grav();
-      if (b.t === 24 && World.ents.filter(e => e.type === 'bug' && e.alive && !e.dying).length < 3) {
+      if (b.t === Difficulty.frames(24) && World.ents.filter(e => e.type === 'bug' && e.alive && !e.dying).length < 3) {
         for (const d of [-1, 1]) { const e = addEnt(makeEnemy('u', b.x + b.w / 2 - 8, b.y + b.h)); e.dir = d; e.vy = -3; e.x += d * 12; }
         Sound.fx('appear');
       }
-      if (b.t > 50) { b.state = 'walk'; b.t = 0; }
+      if (b.t > Difficulty.frames(50)) { b.state = 'walk'; b.t = 0; }
       break;
     case 'hurt':
       grav(); b.vx *= 0.9;
@@ -847,13 +922,15 @@ function updateBoss(b, p) {
   if (U.overlap(b, p)) {
     const fromAbove = p.vy > 0 && p.prevY + p.h <= b.y + 10;
     if (fromAbove || p.wild > 0) {
+      const slam = p.slam && fromAbove; cancelMoves(p);
       p.vy = -7.2; p.y = b.y - p.h;
-      hitBoss(b, p.wild > 0 ? 2 : 4);
-    } else if (b.state !== 'dead') { hurtPlayer(); if (!p.dead) p.vx = U.sign(p.x - b.x) * 3; }
+      hitBoss(b, slam ? 4 : p.wild > 0 ? 2 : 4, slam);
+    } else if (b.state !== 'dead' && hurtPlayer() && !p.dead) p.vx = U.sign(p.x - b.x) * 3 * recoilFactor();
   }
 }
-function hitBoss(b, dmg) {
-  if (b.inv > 0 || b.state === 'dead') return;
+function hitBoss(b, dmg, slam = false) {
+  if (b.inv > 0 || b.state === 'dead' || (slam && b.slamInv > 0)) return;
+  if (slam) b.slamInv = Progression.config.bossSlamInterval;
   b.hp -= dmg; b.inv = dmg >= 4 ? 70 : 12;
   Sound.fx('bosshit'); shake(dmg >= 4 ? 8 : 3);
   addScore(dmg >= 4 ? 1000 : 200, b.x + 8, b.y - 6);
@@ -871,7 +948,7 @@ function hitBoss(b, dmg) {
 function startClear() {
   const p = World.player;
   World.clear = { phase: 'walk', t: 0, kind: World.goal.kind };
-  p.control = false; p.inv = 0;
+  cancelMoves(p); ItemEffects.clear(p); p.control = false; p.inv = 0;
   Sound.stop();
   if (World.clear.kind === 'busstop') {
     World.clear.phase = 'wait';
@@ -934,6 +1011,7 @@ function updateClear() {
 /* ---------------- atualização geral ---------------- */
 function updateWorld() {
   if (App.state === 'transform') return;
+  Exploration.tick();
   const Wd = World, p = Wd.player;
   Wd.t++;
   Wd.busX = (Wd.busX || 0) + Wd.busSpeed;
@@ -945,7 +1023,7 @@ function updateWorld() {
     const far = e.x > Wd.cam.x + W + 64 || e.x + (e.w || 16) < Wd.cam.x - 96;
     if (far && e.kind !== 'lane' && e.kind !== 'car' && e.kind !== 'boss' && !e.dying && e.kind !== 'popcoin') continue;
     updateEnt(e);
-    if (App.state === 'transform') return;
+    if (App.state === 'transform') { PickupLedger.flush(); return; }
   }
   playerVsEnemies();
   updateProjs();
@@ -960,11 +1038,17 @@ function updateWorld() {
   if (!Wd.clear && !p.dead && Wd.goal && p.x + p.w / 2 >= Wd.goal.x + (Wd.goal.kind === 'busstop' ? 4 : 0)) startClear();
   // arena do chefe
   if (Wd.arena && !Wd.arena.active && p.x > Wd.arena.x + 20 && !p.dead) {
-    Wd.arena.active = true; Wd.cam.lock = Wd.arena.x; Wd.bossFight = true;
-    for (let ty = 2; ty < 12; ty++) setTile(Wd.arena.tx - 1, ty, 'S');
-    Wd.boss.state = 'intro'; Wd.boss.t = 0;
-    Wd.banner = 'MEGA BUG!'; Wd.bannerT = 120;
-    Sound.play('boss', true);
+    if (!Difficulty.current().enemies) {
+      Wd.arena.active = true;
+      addEnt({ kind: 'item', item: 'trophy', x: Wd.arena.x + 120, y: 140, w: 12, h: 12, vx: 0, vy: 0, emerge: 0, dir: 1 });
+      Wd.banner = 'EXPEDIENTE ENCERRADO! PEGUE O TROFÉU'; Wd.bannerT = 150;
+    } else {
+      Wd.arena.active = true; Wd.cam.lock = Wd.arena.x; Wd.bossFight = true;
+      for (let ty = 2; ty < 12; ty++) setTile(Wd.arena.tx - 1, ty, 'S');
+      Wd.boss.state = 'intro'; Wd.boss.t = 0;
+      Wd.banner = 'MEGA BUG!'; Wd.bannerT = 120;
+      Sound.play('boss', true);
+    }
   }
   // tempo
   if (!Wd.clear && !p.dead) {
@@ -987,10 +1071,13 @@ function updateWorld() {
   cam.x = U.clamp(cam.x, 0, Wd.w * TS - W);
   if (cam.shake > 0) cam.shake *= 0.85;
   if (cam.shake < 0.3) cam.shake = 0;
+  PickupLedger.flush();
 }
 
 function updateBrakes(Wd) {
   const b = Wd.brake;
+  // Área de prática: o ônibus espera Kinhu sair dos primeiros 32 blocos.
+  if (Wd.player.x < (Wd.def.practiceEnd || 0) * TS && b.phase === 'idle') { Wd.push = 0; return; }
   b.t--;
   Wd.push = 0;
   if (b.phase === 'idle') {
@@ -1062,16 +1149,31 @@ function drawTiles(Wd, cx) {
         }
         case '_': img = T.road[tx % 2]; break;
         case 'B': img = T.brick; break;
+        case 'F':
+          ctx.fillStyle = '#382922'; ctx.fillRect(x, y, 16, 16);
+          ctx.fillStyle = '#bf8549'; ctx.fillRect(x + 1, y + 1, 14, 14);
+          ctx.fillStyle = '#f1bd79'; ctx.fillRect(x + 2, y + 2, 12, 2);
+          ctx.fillStyle = '#674321'; ctx.fillRect(x + 7, y + 1, 2, 14);
+          Font.draw('▼', x + 5, y + 6, '#382922');
+          continue;
+        case 'R': {
+          const pressed = Wd.switches.some(s => s.tx === tx && s.ty === ty && s.pressed);
+          ctx.drawImage(T.ground[1][0], x, y);
+          ctx.fillStyle = '#201b35'; ctx.fillRect(x, y, 16, 6);
+          ctx.fillStyle = pressed ? '#89e4bf' : '#ffe384'; ctx.fillRect(x + 2, y + (pressed ? 3 : 1), 12, pressed ? 2 : 4);
+          Font.draw(pressed ? 'O' : '▼', x + 5, y + 7, '#ffe384');
+          continue;
+        }
         case '?': case 'H': case 'L': case '!': img = T.q[qf]; break;
         case 'U': img = T.used; break;
-        case 'S': img = T.hard[Math.floor(t / 20 + tx) % 2]; break;
+        case 'S': img = T.hard[Comfort.reducedFlash ? 0 : Math.floor(t / 20 + tx) % 2]; break;
         case '=': img = T.plat; break;
         case 'D': img = T.desk; break;
         case 'Y': img = T.seat; break;
         case 'y': img = T.seatBack; break;
         case '|': img = T.pole; break;
         case '-': img = T.rail; break;
-        case '^': img = T.spike[Math.floor(t / 6) % 2]; break;
+        case '^': img = T.spike[Comfort.reducedFlash ? 0 : Math.floor(t / 6) % 2]; break;
         case '~': img = tileAt(tx, ty - 1) === '~' ? T.liquid[Math.floor(t / 10) % 4] : T.liquidTop[Math.floor(t / 10) % 4]; break;
         case 'T': img = T.prop; break;
         case 'X': img = T.shooter; break;
@@ -1126,8 +1228,8 @@ function drawEnemy(e) {
 
 function drawWorld() {
   const Wd = World, cam = Wd.cam, p = Wd.player;
-  const sx = cam.shake ? Math.round((Math.random() - 0.5) * cam.shake) : 0;
-  const sy = cam.shake ? Math.round((Math.random() - 0.5) * cam.shake) : 0;
+  const sx = !Comfort.reducedShake && cam.shake ? Math.round((Math.random() - 0.5) * cam.shake) : 0;
+  const sy = !Comfort.reducedShake && cam.shake ? Math.round((Math.random() - 0.5) * cam.shake) : 0;
   const cx = Math.round(cam.x);
   const bgT = Wd.theme === 'onibus' ? Wd.busX : Wd.t;
   BG.draw(Wd.th.bg, cx, bgT);
@@ -1151,8 +1253,9 @@ function drawWorld() {
     if (!pl.alive || (pl.kind !== 'h' && pl.kind !== 'v' && pl.kind !== 'fall')) continue;
     if (pl.x > cx + W || pl.x + pl.w < cx) continue;
     const img = Wd.theme === 'escritorio' ? OBJ.elevatorPlat : pl.kind === 'fall' ? OBJ.crackPlank : OBJ.plank;
-    const shakeX = pl.kind === 'fall' && pl.state === 'shake' ? (pl.t % 4 < 2 ? 1 : -1) : 0;
+    const shakeX = !Comfort.reducedShake && pl.kind === 'fall' && pl.state === 'shake' ? (pl.t % 4 < 2 ? 1 : -1) : 0;
     ctx.drawImage(img, Math.round(pl.x) + shakeX, Math.round(pl.y));
+    if (pl.kind === 'fall' && pl.state === 'shake') Font.draw('!', pl.x + pl.w / 2 - 2, pl.y - 10, '#ffe384', { outline: true });
     if (pl.kind === 'v' && Wd.theme === 'escritorio') { ctx.fillStyle = '#5a606c'; ctx.fillRect(Math.round(pl.x) + 23, 32, 2, Math.round(pl.y) - 32); }
   }
   for (const e of Wd.ents) {
@@ -1176,9 +1279,16 @@ function drawWorld() {
         break;
       }
       case 'popcoin': ctx.drawImage(SPR.coin[Math.floor(e.t / 3) % 4].r, Math.round(e.x), Math.round(e.y)); break;
-      case 'coin': if (e.t < 340 || e.t % 6 < 3) ctx.drawImage(SPR.coin[Math.floor(e.t / 4) % 4].r, Math.round(e.x - 3), Math.round(e.y - 3)); break;
+      case 'memory':
+        ctx.globalAlpha = e.owned ? 0.55 : 1;
+        ctx.drawImage(SPR.memories[e.slot].r, Math.round(e.x - 2), Math.round(e.y - 2 + Math.sin(Wd.t / 15)));
+        ctx.globalAlpha = 1;
+        Font.draw(e.owned ? 'O' : '★', e.x + 2, e.y - 10, '#ffe384', { outline: true });
+        break;
+      case 'coin': if (Comfort.reducedFlash || e.t < 340 || e.t % 6 < 3) ctx.drawImage(SPR.coin[Math.floor(e.t / 4) % 4].r, Math.round(e.x - 3), Math.round(e.y - 3)); break;
       case 'item': if (e.emerge <= 0) drawItem(e); break;
       case 'boss': drawBoss(e); break;
+      case 'shooter': if (e.timer > 0 && e.timer <= 30 && Math.abs(Wd.player.x - e.x) < 180) Font.draw('!', e.x + 5, e.y - 10, '#ffe384', { outline: true }); break;
       default: if (e.enemy) drawEnemy(e);
     }
   }
@@ -1193,8 +1303,8 @@ function drawWorld() {
       case 'plane': ctx.drawImage(b.dir < 0 ? SPR.plane.l : SPR.plane.r, bx - 1, by - 1); break;
       case 'paper': ctx.drawImage(SPR.paper.r, bx - 1, by - 1); break;
       case 'water': ctx.drawImage(SPR.water.r, bx, by); break;
-      case 'zap': ctx.drawImage(SPR.spark[Math.floor(b.t / 3) % 2].r, bx + 1, by); break;
-      case 'glitch': ctx.drawImage(SPR.glitch[Math.floor(b.t / 3) % 3].r, bx, by); break;
+      case 'zap': ctx.drawImage(SPR.spark[Comfort.reducedFlash ? 0 : Math.floor(b.t / 3) % 2].r, bx + 1, by); break;
+      case 'glitch': ctx.drawImage(SPR.glitch[Comfort.reducedFlash ? 0 : Math.floor(b.t / 3) % 3].r, bx, by); break;
       case 'wave':
         ctx.fillStyle = '#c8f0a0'; ctx.fillRect(bx + 1, by + 4, 8, 6);
         ctx.fillStyle = '#ffffff'; ctx.fillRect(bx + 3 + (b.t % 4 < 2 ? 1 : 0), by + 2, 4, 3);
@@ -1204,47 +1314,55 @@ function drawWorld() {
   // partículas
   for (const q of Wd.parts) {
     if (q.kind === 'text') {
-      if (q.t < q.life - 10 || q.t % 2) Font.draw(q.text, q.x, q.y, q.color);
+      if (Comfort.reducedFlash || q.t < q.life - 10 || q.t % 2) Font.draw(q.text, q.x, q.y, q.color);
       continue;
     }
-    ctx.globalAlpha = q.kind === 'dust' ? Math.max(0, 1 - q.t / q.life) : 1;
+    ctx.globalAlpha = q.kind === 'dust' || q.kind === 'gas' ? Math.max(0, 1 - q.t / q.life) : 1;
     ctx.fillStyle = q.color;
     const s = q.size;
     ctx.fillRect(Math.round(q.x - s / 2), Math.round(q.y - s / 2), s, s);
+    if (q.kind === 'gas') { ctx.fillRect(Math.round(q.x - s), Math.round(q.y), s * 2, s - 1); ctx.fillRect(Math.round(q.x), Math.round(q.y - s), s - 1, s * 2); }
     ctx.globalAlpha = 1;
   }
   ctx.restore();
 }
 
 function drawItem(e) {
-  const spr = { hotdog: SPR.hotdog, coca: SPR.coca, claws: SPR.claws, badge: SPR.badge, trophy: SPR.trophy }[e.item];
-  const bob = e.item === 'coca' && e.emerge <= 0 ? Math.round(Math.sin(e.t * 0.1)) : 0;
+  const spr = { hotdog: SPR.hotdog, coca: SPR.coca, coffee: SPR.coffee, magnet: SPR.magnet, backpack: SPR.backpack, claws: SPR.claws, badge: SPR.badge, trophy: SPR.trophy }[e.item];
+  const bob = ['coca', 'coffee', 'magnet', 'backpack'].includes(e.item) && e.emerge <= 0 ? Math.round(Math.sin(e.t * 0.1)) : 0;
   ctx.drawImage(e.dir < 0 ? spr.l : spr.r, Math.round(e.x - 2), Math.round(e.y - 4 + bob));
 }
 
 function drawBoss(b) {
-  if (b.inv > 0 && b.state !== 'dead' && Math.floor(b.t / 3) % 2) return;
+  if (!Comfort.reducedFlash && b.inv > 0 && b.state !== 'dead' && Math.floor(b.t / 3) % 2) return;
   const S = SPR.boss;
   let spr = S.idle;
   if (b.state === 'spit' && b.t > 14) spr = S.open;
   if (b.state === 'jump' && !b.onGround) spr = S.jump;
-  if (b.state === 'hurt' || (b.state === 'dead' && b.t % 8 < 4)) spr = S.hurt;
+  if (b.state === 'hurt' || (b.state === 'dead' && (Comfort.reducedFlash || b.t % 8 < 4))) spr = S.hurt;
   const bob = b.state === 'walk' ? Math.round(Math.sin(b.t * 0.2)) : 0;
-  const crouch = b.state === 'jump' && b.t < 18 ? 2 : 0;
+  const crouch = b.state === 'jump' && b.t < Difficulty.frames(18) ? 2 : 0;
   ctx.drawImage(b.dir < 0 ? spr.l : spr.r, Math.round(b.x - 6), Math.round(b.y - 10 + bob + crouch));
+  const warning = b.state === 'jump' && b.t < Difficulty.frames(18) ? 'SALTO!' : b.state === 'spit' && b.t < Difficulty.frames(30) ? 'DISPARO!' : b.state === 'summon' && b.t < Difficulty.frames(24) ? 'REFORÇOS!' : null;
+  if (warning) Font.draw(warning, b.x + b.w / 2, Math.max(40, b.y - 23), '#ffe384', { align: 'center', outline: true });
 }
 
 function drawPlayer(p) {
   if (p.hidden) return;
-  if (p.inv > 0 && !p.dead && Math.floor(p.inv / 3) % 2) return;
+  if (!Comfort.reducedFlash && p.inv > 0 && !p.dead && Math.floor(p.inv / 3) % 2) return;
   let set = Game.power === 1 ? SPR.kinhuCoca : SPR.kinhu;
-  if (p.wild > 0 && (p.wild > 120 || Math.floor(p.wild / 4) % 2)) set = SPR.kinhuWild[Math.floor(World.t / 3) % 3];
+  if (p.wild > 0 && (Comfort.reducedFlash || p.wild > 120 || Math.floor(p.wild / 4) % 2)) set = SPR.kinhuWild[Comfort.reducedFlash ? 0 : Math.floor(World.t / 3) % 3];
   let s = set.idle;
   if (p.dead) s = set.hurt;
   else if (p.win) s = set.win;
+  else if (p.slam || p.impactT > 0) s = set.slam;
+  else if (p.dashT > 0) s = set.propel;
   else if (!p.onGround && !p.ride) s = p.vy < 0 ? set.jump : set.fall;
   else if (p.skid) s = set.skid;
   else if (Math.abs(p.vx) > 0.2) s = set.run[Math.floor(p.anim) % 4];
   else if (p.blink < 8) s = set.blink;
   ctx.drawImage(p.facing < 0 ? s.l : s.r, Math.round(p.x - 4), Math.round(p.y - 3));
+  if (Comfort.reducedFlash && p.inv > 0 && !p.dead) Font.draw('O', p.x + 3, p.y - 12, '#a2c4ff', { outline: true });
+  if (p.backpack) ctx.drawImage(SPR.backpack.r, Math.round(p.x + (p.facing < 0 ? 6 : -6)), Math.round(p.y + 5), 8, 8);
+  if (p.slam) Font.draw('▼', Math.round(p.x + 3), Math.round(p.y - 12), '#ffe384', { outline: true });
 }

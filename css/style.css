@@ -59,6 +59,7 @@ canvas {
   cursor: pointer;
 }
 #bar button:hover, #bar button:focus-visible { border-color: var(--gold); color: var(--gold); outline: none; }
+#bar button:disabled { opacity: 0.4; cursor: default; }
 
 /* ---------- toque ---------- */
 #touch { display: none; }
@@ -94,7 +95,22 @@ body.touch #touch {
 .ab button { position: absolute; width: 70px; height: 70px; border-radius: 50%; font-size: 22px; }
 .ab .a { right: 0; top: 0; background: rgba(206, 29, 0, 0.45); }
 .ab .b { left: 0; top: 52px; background: rgba(255, 191, 48, 0.3); }
+.ab .c { left: 0; top: -22px; width: 56px; height: 56px; background: rgba(96, 224, 255, 0.3); }
+#touch button[hidden] { display: none; }
 #touch .start { position: absolute; left: 50%; top: 14px; transform: translateX(-50%); padding: 8px 14px; border-radius: 16px; font-size: 12px; }
+
+@media (max-width: 380px) {
+  body.touch #touch { padding-left: 10px; padding-right: 10px; }
+  .pad { width: 145px; height: 145px; }
+  .pad button { width: 50px; height: 50px; }
+  .pad .up { left: 47px; }
+  .pad .left { top: 47px; }
+  .pad .right { left: 94px; top: 47px; }
+  .pad .down { left: 47px; top: 94px; }
+  .ab { width: 132px; height: 122px; }
+  .ab button { width: 62px; height: 62px; }
+  .ab .c { width: 50px; height: 50px; top: -8px; }
+}
 
 @media (orientation: landscape) {
   body.touch #wrap { justify-content: center; padding-top: 0; }

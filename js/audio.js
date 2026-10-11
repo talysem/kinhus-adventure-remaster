@@ -174,7 +174,7 @@ const SONGS = {
 
 const Sound = {
   ctx: null, master: null, music: null, sfx: null, noise: null, waves: {},
-  VOL: 1, muted: false, song: null, songName: null, pending: null, tempo: 1, timer: null,
+  VOL: 1, musicVolume: 100, effectsVolume: 100, muted: false, song: null, songName: null, pending: null, tempo: 1, timer: null,
   init() {
     if (this.ctx) return;
     const AC = window.AudioContext || window.webkitAudioContext;
@@ -185,14 +185,14 @@ const Sound = {
     comp.threshold.value = -10; comp.knee.value = 8; comp.ratio.value = 6; comp.attack.value = 0.003; comp.release.value = 0.2;
     comp.connect(c.destination);
     this.master = c.createGain(); this.master.gain.value = this.muted ? 0 : this.VOL; this.master.connect(comp);
-    this.music = c.createGain(); this.music.gain.value = 0.9; this.music.connect(this.master);
+    this.music = c.createGain(); this.music.gain.value = 0.9 * this.musicVolume / 100; this.music.connect(this.master);
     // eco (marca registrada do som do SNES)
     const delay = c.createDelay(1); delay.delayTime.value = 0.21;
     const fb = c.createGain(); fb.gain.value = 0.3;
     const wet = c.createGain(); wet.gain.value = 0.28;
     const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2600;
     this.music.connect(delay); delay.connect(lp); lp.connect(fb); fb.connect(delay); lp.connect(wet); wet.connect(this.master);
-    this.sfx = c.createGain(); this.sfx.gain.value = 1.7; this.sfx.connect(this.master);
+    this.sfx = c.createGain(); this.sfx.gain.value = 1.7 * this.effectsVolume / 100; this.sfx.connect(this.master);
     for (const d of [12, 25, 50]) {
       const n = 48, re = new Float32Array(n), im = new Float32Array(n);
       for (let k = 1; k < n; k++) re[k] = (2 / (k * Math.PI)) * Math.sin(k * Math.PI * (d / 100));
@@ -209,6 +209,11 @@ const Sound = {
     if (!this.ctx) return;
     if (this.ctx.state === 'suspended') this.ctx.resume();
     if (this.pending) { const p = this.pending; this.pending = null; this.play(p); }
+  },
+  setVolumes(music, effects) {
+    this.musicVolume = U.clamp(music, 0, 100); this.effectsVolume = U.clamp(effects, 0, 100);
+    if (this.music) this.music.gain.setTargetAtTime(0.9 * this.musicVolume / 100, this.ctx.currentTime, 0.02);
+    if (this.sfx) this.sfx.gain.setTargetAtTime(1.7 * this.effectsVolume / 100, this.ctx.currentTime, 0.02);
   },
   setMuted(m) {
     this.muted = m;
@@ -371,6 +376,12 @@ const Sound = {
       case 'alarm': this.tone(1046, 1046, 0.10, 0.09, { duty: 25 }); this.tone(1568, 1568, 0.10, 0.08, { duty: 25, delay: 0.15 }); break;
       case 'step': this.hiss(0.035, 0.035, { f0: 500, f1: 120 }); break;
       case 'jump': this.tone(260, 640, 0.14, 0.13, { duty: 25 }); break;
+      case 'doublejump': this.tone(420, 980, 0.16, 0.12, { duty: 25 }); this.tone(840, 1320, 0.10, 0.05, { delay: 0.04 }); break;
+      case 'rumble': this.tone(65, 42, 0.45, 0.09, { wave: 'triangle' }); this.hiss(0.35, 0.04, { f0: 180, f1: 80 }); break;
+      case 'propulsion': this.tone(130, 45, 0.22, 0.09, { wave: 'sawtooth' }); this.hiss(0.2, 0.05, { f0: 360, f1: 90 }); break;
+      case 'coffee': this.arp(['C6', 'E6', 'G6', 'C7'], 0.07, 0.09, 50); break;
+      case 'magnet': this.tone(500, 1000, 0.22, 0.10, { wave: 'triangle' }); break;
+      case 'shield': this.tone(600, 220, 0.20, 0.10, { duty: 50 }); this.hiss(0.08, 0.05, { f0: 1200, f1: 400 }); break;
       case 'coin': this.tone(1318, 1318, 0.06, 0.1, { duty: 50 }); this.tone(1976, 1976, 0.22, 0.1, { duty: 50, delay: 0.06 }); break;
       case 'stomp': this.tone(520, 120, 0.12, 0.16, { duty: 50 }); this.hiss(0.08, 0.15, { f0: 900 }); break;
       case 'bump': this.tone(180, 90, 0.09, 0.18, { wave: 'triangle' }); break;

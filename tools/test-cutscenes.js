@@ -26,16 +26,18 @@ const start = () => { App.trans = null; App.newGame(); step(40); assert.equal(Ap
 const events = [];
 Sound.fx = name => events.push([Cutscenes.scene, name]);
 async function run() {
-await IntroArt.preload();
+await Promise.all([IntroArt.preload(), Origin.preload()]);
 assert.equal(IntroArt.status, 'ready'); assert.equal(IntroArt.loaded, 8);
 for (const im of Object.values(IntroArt.images)) assert.equal(im.width, 384);
 start(); App.render(); assert.equal(screen.width, 768, 'abertura em resolução maior');
 const seen = new Set();
-for (let i = 0; i < 2800; i++) { if (App.state === 'story') seen.add(Cutscenes.scene); step(1); if (App.state === 'play') break; }
+for (let i = 0; i < 2900; i++) { if (App.state === 'story') seen.add(Cutscenes.scene); step(1); if (App.state === 'play') break; }
 assert.deepEqual([...seen], [0, 1, 2, 3, 4]);
 assert.equal(App.state, 'play', 'abertura deve chegar ao gameplay automaticamente');
 App.render(); assert.equal(screen.width, 256, 'gameplay deve restaurar a resolução original');
 assert.equal(Game.levelIdx, 0);
+assert.deepStrictEqual(Game.progress.abilities, []);
+assert(!events.some(e => ['propulsion', 'doublejump', 'rumble'].includes(e[1])), 'abertura original sem poderes');
 assert.equal(Save.data.run.level, 0);
 assert.equal(events.filter(e => e[1] === 'notification').length, 1);
 assert.equal(events.filter(e => e[1] === 'thud').length, 1);
@@ -54,6 +56,7 @@ start(); const before = Cutscenes.t; document.hidden = true; step(180);
 assert.equal(Cutscenes.t, before, 'aba oculta congela a abertura'); document.hidden = false;
 // Continuar preserva fase/checkpoint e ignora a abertura, inclusive transição automática.
 Save.data.run = { level: 1, lives: 4, score: 200, coins: 7, hearts: 2, power: 0, checkpoint: false };
+Save.data.campaign = Progression.legacy(1);
 App.trans = null; App.continueRun(); step(240);
 assert.equal(App.state, 'play'); assert.equal(Game.levelIdx, 1); assert.equal(Game.lives, 4);
 start(); assert.equal(Cutscenes.scene, 0);

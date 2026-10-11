@@ -1,15 +1,17 @@
 'use strict';
 // Robô de teste: tenta zerar cada fase segurando "direita" e pulando obstáculos.
 // Serve para achar trechos impossíveis. Uso:
-//   node tools/bot.js [fase(1-5)|all] [inv] [walk] [pastaPrints]
+//   node tools/bot.js [fase(1-5)|all] [inv] [walk] [noitems] [shots=pasta]
+// inv isola a geometria; noitems remove Coca-Cola/Kinhurine. Não mede habilidade humana.
 const path = require('path');
 const fs = require('fs');
 const { boot } = require('./softcanvas');
 const root = path.join(__dirname, '..');
-const { screen } = boot(root, ['js/core.js', 'js/sprites.js', 'js/world.js', 'js/audio.js', 'js/levels.js', 'js/save.js', 'js/game.js', 'js/title.js', 'js/introart.js', 'js/cutscenes.js', 'js/kinhurine.js', 'js/main.js']);
+const { screen } = boot(root, ['js/core.js', 'js/progression.js', 'js/sprites.js', 'js/world.js', 'js/audio.js', 'js/levels.js', 'js/settings.js', 'js/exploration.js', 'js/save.js', 'js/game.js', 'js/title.js', 'js/introart.js', 'js/cutscenes.js', 'js/origin.js', 'js/kinhurine.js', 'js/main.js']);
 const which = process.argv[2] || 'all';
 const INV = process.argv.includes('inv');
 const WALK = process.argv.includes('walk');
+const NO_ITEMS = process.argv.includes('noitems');
 const shotDir = process.argv.find(a => a.startsWith('shots='));
 const shots = shotDir ? shotDir.slice(6) : null;
 if (shots) fs.mkdirSync(shots, { recursive: true });
@@ -92,13 +94,14 @@ function control(Wd) {
       if (!best || d < best.d) best = { d, c: pl.x + pl.w / 2 };
     }
     const tg = control.target;
-    if (tg && tg.w && tg.w <= 64 && p.vy > -3) { press.right = cx < tg.c - 2; press.left = cx > tg.c + 2; }
-    else if (best && p.vy > -1) { press.right = cx < best.c - 3; press.left = cx > best.c + 3; }
+    const aim = cx + p.vx * Math.abs(p.vx) / 0.18;
+    if (tg && tg.w && tg.w <= 64 && p.vy > -3) { press.right = aim < tg.c - 2; press.left = aim > tg.c + 2; }
+    else if (best && p.vy > -1) { press.right = aim < best.c - 3; press.left = aim > best.c + 3; }
   }
   const trophy = Wd.ents.find(e => e.kind === 'item' && e.item === 'trophy');
   if (trophy) { press.right = trophy.x > p.x + 2; press.left = trophy.x < p.x - 2; }
   // chefe: pula em cima
-  if (Wd.bossFight && Wd.boss && Wd.boss.alive) {
+  if (Wd.bossFight && Wd.boss && Wd.boss.alive && Wd.boss.state !== 'dead') {
     const b = Wd.boss;
     const bx = b.x + b.w / 2, px = p.x + p.w / 2;
     press.right = px < bx - 4; press.left = px > bx + 4;
@@ -108,12 +111,14 @@ function control(Wd) {
 
 function runLevel(i) {
   Game.reset(); Game.lives = 99; Game.levelIdx = i; App.trans = null;
+  Game.progress = Progression.legacy(i);
   App.go('play', null, true);
   let frames = 0, deaths = [], best = 0, stuckT = 0, lastX = 0, done = false;
   const log = [];
   while (frames < 60 * 240) {
     frames++;
     const Wd = World;
+    if (NO_ITEMS) { Game.power = 0; Wd.player.wild = 0; ItemEffects.clear(Wd.player); }
     if (INV && Wd.player && !Wd.player.dead) { Wd.player.inv = 2; Game.hearts = 3; }
     control(Wd);
     if (Wd.player && !Wd.player.dead) { (runLevel.hist = runLevel.hist || []).push(`t${Wd.t} x${(Wd.player.x / 16).toFixed(2)} y${Wd.player.y.toFixed(0)} vy${Wd.player.vy.toFixed(1)} g${Wd.player.onGround ? 1 : 0} ${control.why} R${Wd.player.ride ? Math.round(Wd.player.ride.x / 16) : '-'} P[${Wd.plats.filter(q => q.kind === 'fall' && Math.abs(q.x - Wd.player.x) < 120).map(q => Math.round(q.x / 16) + ':' + q.state + ':' + Math.round(q.y)).join(',')}] k${press.right ? 'R' : ''}${press.left ? 'L' : ''}${press.jump ? 'J' : ''}`); if (runLevel.hist.length > 50) runLevel.hist.shift(); }
@@ -133,7 +138,7 @@ function runLevel(i) {
     if (App.state === 'ending') { done = true; break; }
     const p = World.player;
     if (p.x > best) best = p.x;
-    if (Math.abs(p.x - lastX) < 1) stuckT++; else stuckT = 0;
+    if (!Wd.clear && Math.abs(p.x - lastX) < 1) stuckT++; else stuckT = 0;
     lastX = p.x;
     if (stuckT > 400) { log.push('preso em x=' + Math.round(p.x / TS) + ' y=' + Math.round(p.y) + (World.boss ? ' boss ' + World.boss.state + ' bx=' + Math.round(World.boss.x / TS) + ' by=' + Math.round(World.boss.y) + ' hp=' + World.boss.hp : '')); if (process.argv.includes('trace')) console.log(runLevel.hist.slice(-12).join(String.fromCharCode(10))); if (shots) { App.render(); fs.writeFileSync(path.join(shots, `stuck-l${i + 1}.png`), screen.toPNG()); } break; }
   }

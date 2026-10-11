@@ -72,6 +72,17 @@ window.addEventListener('resize', fitScreen);
 
 /* ---------- entrada: teclado, controle e toque ---------- */
 const Input = {
+  device: 'keyboard',
+  preset: 'classic',
+  PRESET_KEY: 'kinhus-adventure:controls',
+  presets: {
+    classic: { name: 'CLÁSSICO: SETAS + Z X C', move: 'SETAS', jump: 'Z / ESPAÇO', run: 'X / SHIFT', propel: 'C', shortJump: 'Z', shortRun: 'X',
+      bindings: { jump: ['Space', 'KeyZ', 'KeyK', 'ArrowUp', 'KeyW'], run: ['KeyX', 'KeyJ', 'ShiftLeft', 'ShiftRight'], propel: ['KeyC'], confirm: ['Enter', 'Space', 'KeyZ', 'KeyK'], back: ['Escape', 'Backspace', 'KeyX'] } },
+    wasd: { name: 'WASD + J K L', move: 'WASD', jump: 'J / ESPAÇO', run: 'K / SHIFT', propel: 'L', shortJump: 'J', shortRun: 'K',
+      bindings: { jump: ['KeyJ', 'Space'], run: ['KeyK', 'ShiftLeft', 'ShiftRight'], propel: ['KeyL'], confirm: ['Enter', 'Space', 'KeyJ'], back: ['Escape', 'Backspace'] } },
+    space: { name: 'WASD + ESPAÇO SHIFT E', move: 'WASD', jump: 'ESPAÇO', run: 'SHIFT', propel: 'E', shortJump: 'ESPAÇO', shortRun: 'SHIFT',
+      bindings: { jump: ['Space'], run: ['ShiftLeft', 'ShiftRight'], propel: ['KeyE'], confirm: ['Enter', 'Space'], back: ['Escape', 'Backspace'] } },
+  },
   keys: {}, hits: {}, touch: {}, cur: {}, prev: {},
   map: {
     left: ['ArrowLeft', 'KeyA'],
@@ -80,6 +91,7 @@ const Input = {
     down: ['ArrowDown', 'KeyS'],
     jump: ['Space', 'KeyZ', 'KeyK', 'ArrowUp', 'KeyW'],
     run: ['KeyX', 'KeyJ', 'ShiftLeft', 'ShiftRight'],
+    propel: ['KeyC'],
     start: ['Enter', 'Escape', 'KeyP'],
     confirm: ['Enter', 'Space', 'KeyZ', 'KeyK'],
     back: ['Escape', 'Backspace', 'KeyX'],
@@ -87,9 +99,36 @@ const Input = {
     full: ['KeyF'],
   },
   anyKey: false,
+  setPreset(id, persist = true) {
+    if (!Object.prototype.hasOwnProperty.call(this.presets, id)) return false;
+    this.preset = id;
+    const bindings = this.presets[id].bindings;
+    for (const action of ['jump', 'run', 'propel', 'confirm', 'back']) this.map[action] = bindings[action].slice();
+    // Toques pendentes continuam sendo reconhecidos após trocar o teclado.
+    for (const action of Object.keys(this.map)) if (!this.map[action].includes('touch-' + action)) this.map[action].push('touch-' + action);
+    this.keys = {}; this.hits = {}; this.cur = {}; this.prev = {}; this.touch = {};
+    if (persist) { try { localStorage.setItem(this.PRESET_KEY, id); } catch (e) { /* funciona sem armazenamento */ } }
+    return true;
+  },
+  loadPreset() {
+    let id = 'classic';
+    try { const saved = localStorage.getItem(this.PRESET_KEY); if (Object.prototype.hasOwnProperty.call(this.presets, saved)) id = saved; } catch (e) { /* padrão */ }
+    this.setPreset(id, false);
+  },
+  label(action, device = this.device, compact = false) {
+    if (device !== 'keyboard') return ({ move: device === 'touch' ? '◄ ►' : 'DIRECIONAL', jump: 'A', run: 'B', propel: device === 'gamepad' ? 'RB' : 'C', down: '▼', confirm: 'A', back: 'B / START' })[action] || '';
+    const p = this.presets[this.preset];
+    if (action === 'confirm') return 'ENTER / ' + p.shortJump;
+    if (action === 'back') return 'ESC';
+    if (action === 'down') return this.preset === 'classic' ? '▼' : 'S';
+    return compact && action === 'jump' ? p.shortJump : compact && action === 'run' ? p.shortRun : p[action] || '';
+  },
+  sceneHint() { return this.device === 'keyboard' ? this.label('confirm') + ': AVANÇAR  ESC: PULAR' : 'A: AVANÇAR  START/B: PULAR'; },
   init() {
+    this.loadPreset();
     const block = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space']);
     window.addEventListener('keydown', e => {
+      this.device = 'keyboard';
       if (block.has(e.code)) e.preventDefault();
       if (!e.repeat) { this.hits[e.code] = true; this.anyKey = true; }
       this.keys[e.code] = true;
@@ -110,12 +149,14 @@ const Input = {
       if (!gp) continue;
       const b = i => gp.buttons[i] && gp.buttons[i].pressed;
       const ax = gp.axes[0] || 0, ay = gp.axes[1] || 0;
+      if (gp.buttons.some(x => x.pressed) || Math.abs(ax) > 0.4 || Math.abs(ay) > 0.5) this.device = 'gamepad';
       if (b(14) || ax < -0.4) cur.left = true;
       if (b(15) || ax > 0.4) cur.right = true;
       if (b(12) || ay < -0.5) cur.up = true;
       if (b(13) || ay > 0.5) cur.down = true;
       if (b(0) || b(3)) { cur.jump = true; cur.confirm = true; }
       if (b(1) || b(2)) { cur.run = true; }
+      if (b(5)) cur.propel = true;
       if (b(1)) cur.back = true;
       if (b(9)) cur.start = true;
       if (Object.keys(cur).some(k => cur[k])) this.anyKey = this.anyKey || gp.buttons.some(x => x.pressed);

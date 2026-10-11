@@ -55,15 +55,15 @@ const Kinhurine = {
       // O plano abre no grito para não cortar nenhuma das seis pontas.
       const inset = t < this.roarAt ? 6 * IntroArt.ease(t / this.roarAt) : 0;
       const sw = 384 - inset * 2, sh = sw * 168 / 256;
-      const shake = t >= this.roarAt && t < this.roarAt + 12 ? (Math.floor(t / 2) % 2 ? 1 : -1) : 0;
+      const shake = !Comfort.reducedShake && t >= this.roarAt && t < this.roarAt + 12 ? (Math.floor(t / 2) % 2 ? 1 : -1) : 0;
       ctx.drawImage(im, Math.round(inset), Math.round(2 + inset * 0.65), Math.round(sw), Math.round(sh), shake, 20, 256, 168);
     } else {
       // Falha de rede não prende o gameplay nem altera a duração do poder.
-      const sprite = SPR.kinhuWild[Math.floor(t / 6) % 3].win.r;
+      const sprite = SPR.kinhuWild[Comfort.reducedFlash ? 0 : Math.floor(t / 6) % 3].win.r;
       ctx.drawImage(sprite, 80, 40, sprite.width * 5, sprite.height * 5);
     }
     // Um brilho curto na extensão do metal; sem estrobo repetido.
-    if (t >= this.roarAt && t < this.roarAt + 6) {
+    if (!Comfort.reducedFlash && t >= this.roarAt && t < this.roarAt + 6) {
       ctx.fillStyle = 'rgba(211,237,255,' + ((this.roarAt + 6 - t) / 6 * 0.38).toFixed(2) + ')';
       ctx.fillRect(0, 20, 256, 168);
     }
@@ -71,7 +71,7 @@ const Kinhurine = {
     Font.draw('PODER DESPERTADO', 128, 7, '#b8d2e4', { align: 'center' });
     Font.draw(t < this.roarAt ? 'GRRRR...' : 'KINHURINE!', 128, 194, '#ffcd64', { align: 'center', scale: 2, outline: true });
     const touch = document.body.classList.contains('touch');
-    Font.draw(touch ? 'TOQUE / A: PULAR' : 'Z / ENTER / A: PULAR', 128, 216, '#9aaac1', { align: 'center' });
+    Font.draw(touch ? 'TOQUE / A: PULAR' : Input.label('confirm') + ': PULAR', 128, 216, '#9aaac1', { align: 'center' });
     const fadeAt = this.duration - 12;
     if (t > fadeAt) { ctx.fillStyle = 'rgba(12,20,42,' + ((t - fadeAt) / 12).toFixed(2) + ')'; ctx.fillRect(0, 0, W, H); }
   },
