@@ -108,8 +108,9 @@ async function run() {
   App.openPause(); App.openGuide(); App.openInfo('help', 1); Input.keys = { ArrowRight: true }; App.update();
   assert.equal(App.helpPage, 2); shot('expansion-help'); Input.keys = {}; App.update(); Input.keys = { ArrowRight: true }; App.update(); assert.equal(App.helpPage, 3);
   Input.keys = {}; App.update(); Input.keys = { ArrowRight: true }; App.update(); assert.equal(App.helpPage, 4);
+  Input.keys = {}; App.update(); Input.keys = { ArrowRight: true }; App.update(); assert.equal(App.helpPage, 5);
   Input.keys = {}; App.update(); Input.keys = { ArrowRight: true }; App.update(); assert.equal(App.helpPage, 0);
-  Input.keys = {}; App.update(); Input.keys = { ArrowLeft: true }; App.update(); assert.equal(App.helpPage, 4);
+  Input.keys = {}; App.update(); Input.keys = { ArrowLeft: true }; App.update(); assert.equal(App.helpPage, 5);
   Input.keys = {}; App.update(); Input.keys = { Escape: true }; App.update(); assert.equal(App.sub, 'guide');
   const preview = new SoftCanvas(192, 96), ctx = preview.getContext('2d');
   ctx.fillStyle = '#00153b'; ctx.fillRect(0, 0, 192, 96);

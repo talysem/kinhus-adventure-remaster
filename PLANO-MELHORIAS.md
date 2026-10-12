@@ -246,10 +246,13 @@ Todos mantêm três corações. Proteção breve após golpe: 3 segundos no Kinh
 
 ## 10. Depois das seis etapas
 
+**Refinamentos complementares implementados:** skatista com freada e aviso `!`, investida em direção fixa, recuperação `▼` e recarga; respeita paredes/bordas e não detecta através de blocos. Bug com escudo frontal introduzido em duas posições seguras do escritório/servidores: latas pela frente são bloqueadas; pisão/barrigada, latas pelas costas e Kinhurine vencem a proteção. Bugs comuns preservados, inimigos ausentes no Kinhu e guia ampliado dentro das seis entradas. `tools/test-enemy-behaviors.js` valida comportamento, modos, colisões, ataques, congelamento e ajuda no fonte/offline. Bot concluiu os cinco cenários sem itens temporários, ignorando golpes comuns para conferir o percurso; dificuldade humana ainda precisa de avaliação.
+
+**Correção identificada na campanha humana:** ao concluir a última fase, o índice avançava para uma sexta fase inexistente enquanto o HUD ainda desenhava o mundo anterior. A exceção parava o RAF logo após o troféu/pontuação. O índice final permanece válido e o HUD consulta a fase visível durante as transições. `tools/test-ending.js` cobre queda/coleta, pontuação, fade com desenho, créditos e retorno ao menu em quatro dificuldades, campanha/replay e controles teclado/toque/gamepad, incluindo persistência da vitória e preservação de campanha no replay. Fonte/offline validados; `tools/test-ending-browser.js` confirma RAF/áudio reais e vitória após recarregar em Chromium isolado.
+
 Não há etapa numerada pendente. Permanecem **validações humanas e sugestões complementares**, que não foram marcadas como implementadas:
 
 - Jogar a campanha e os confrontos com teclado, gamepad físico e celular; avaliar alcance das ações, legibilidade e conforto de dois dedos.
 - Calibrar tempos de medalhas, dificuldades, comida, recargas e distribuição de checkpoints. Considerar segundo checkpoint somente se partidas reais indicarem necessidade.
 - Revisar ritmo, descanso e variedade das cinco fases usando observações dessas partidas.
-- Refinamentos de inimigos ainda propostos: skatista com freada antes de investir e bug com proteção frontal/vulnerabilidade por cima. Os avisos atuais de emissores e minichefes já existem; novas variações seriam uma entrega adicional.
 - Ajustes adicionais do MEGA BUG podem seguir após avaliar suas duas etapas e janelas atuais. Não representam uma sétima etapa já planejada.

@@ -285,6 +285,7 @@ const App = {
       { label: 'HABILIDADES / COMO USAR', desc: ['PODERES CONQUISTADOS E DEMONSTRAÇÕES.'], fn: () => this.openInfo('abilities') },
       { label: 'ITENS / COMO USAR', desc: ['EFEITOS, DURAÇÃO E COMBINAÇÕES.'], fn: () => this.openInfo('help', 1) },
       { label: 'EXPLORAÇÃO / DESAFIOS', desc: ['LEMBRANÇAS E METAS OPCIONAIS.'], fn: () => this.state === 'pause' ? this.openInfo('explore') : this.openSelect() },
+      { label: 'INIMIGOS / COMO ENFRENTAR', desc: ['AVISOS DE INVESTIDA E PROTEÇÕES.'], fn: () => this.openInfo('help', 5) },
       { label: 'VOLTAR', desc: ['RETORNE AO MENU ANTERIOR.'], fn: back },
     ], { title: 'GUIA DO JOGO', panel: 'navigation', back }); Input.clear();
   },
@@ -493,10 +494,15 @@ const App = {
   },
   levelDone() {
     if (this.trans) return;
-    Game.levelIdx++;
     Game.checkpoint = false;
     Game.hearts = Game.maxHearts;
-    if (Game.levelIdx >= LEVELS.length) { this.go('ending'); return; }
+    // O mundo da última fase ainda é desenhado durante o fade dos créditos.
+    // Conserve seu índice válido até a troca de tela.
+    if (Game.levelIdx + 1 >= LEVELS.length) {
+      this.saveProgress(true, true); // Inclui os pontos do tempo no recorde final.
+      this.go('ending'); return;
+    }
+    Game.levelIdx++;
     this.go('intro');
   },
   bossClear() {
@@ -618,11 +624,19 @@ const App = {
     Font.draw('ENTER: SELECIONAR  ESC: VOLTAR', 128, 201, '#ffe384', { align: 'center' });
   },
   updateHelp() {
-    if (Input.pressed('left') || Input.pressed('right')) this.helpPage = ((this.helpPage || 0) + (Input.pressed('right') ? 1 : 4)) % 5;
+    if (Input.pressed('left') || Input.pressed('right')) this.helpPage = ((this.helpPage || 0) + (Input.pressed('right') ? 1 : 5)) % 6;
   },
   drawHelp() {
     ctx.fillStyle = 'rgba(0,21,59,0.94)'; ctx.fillRect(5, 20, W - 10, H - 28);
-    const L = this.helpPage === 4 ? [
+    const L = this.helpPage === 5 ? [
+      ['INIMIGOS / SINAIS', '#ffbf30'], ['', ''],
+      ['SKATISTA: FREIA ANTES DE INVESTIR.', '#ffe384'], ['!: PREPARE O SALTO OU SE AFASTE.', '#e9effb'],
+      ['INVESTE EM LINHA RETA E DESCANSA.', '#e9effb'], ['▼: ABERTURA PARA CONTRA-ATACAR.', '#94e5ef'], ['', ''],
+      ['BUG COM ESCUDO: FRENTE PROTEGIDA.', '#ffe384'], ['LATAS NA FRENTE NÃO CAUSAM DANO.', '#e9effb'],
+      ['▼: PISE OU USE A BARRIGADA.', '#94e5ef'], ['LATAS PELAS COSTAS TAMBÉM FUNCIONAM.', '#e9effb'],
+      ['KINHURINE ATRAVESSA A PROTEÇÃO.', '#e9effb'], ['ENCOSTAR DE LADO AINDA MACHUCA.', '#e9effb'], ['', ''],
+      ['PUM PROPULSOR NÃO CAUSA DANO.', '#a2c4ff'], ['MODO KINHU: INIMIGOS AUSENTES.', '#a2c4ff'],
+    ] : this.helpPage === 4 ? [
       ['MINICHEFES E COSMÉTICOS', '#ffbf30'], ['', ''],
       ['PORTAS DESAFIO: ÔNIBUS/ESCRITÓRIO.', '#ffe384'], ['▲ PARA ENTRAR; SEM CRACHÁ.', '#e9effb'],
       ['90S E 3 CORAÇÕES DO DESAFIO.', '#e9effb'], ['SAÍDA/FALHA PRESERVA A CAMPANHA.', '#e9effb'],
@@ -664,7 +678,7 @@ const App = {
       ['O JOGO SALVA SOZINHO NO NAVEGADOR.', '#a2c4ff'], ['NA PAUSA DÁ PARA BAIXAR O SAVE', '#a2c4ff'], ['E CARREGAR EM OUTRO LUGAR.', '#a2c4ff'],
     ];
     L.forEach(([t, c], i) => { if (t) Font.draw(t.replace('↑', '▲'), W / 2, 28 + i * 10, c, { align: 'center' }); });
-    Font.draw('◄ ►  ' + ((this.helpPage || 0) + 1) + '/5   ENTER / ESC: VOLTAR', 128, 204, '#ffe384', { align: 'center' });
+    Font.draw('◄ ►  ' + ((this.helpPage || 0) + 1) + '/6   ENTER / ESC: VOLTAR', 128, 204, '#ffe384', { align: 'center' });
   },
   drawStory() {
     Cutscenes.draw();
@@ -767,7 +781,7 @@ const App = {
     Font.draw(String(Math.max(0, Wd.time)).padStart(3, '0'), 191, 5, Wd.hurry && (Comfort.reducedFlash || Wd.t % 20 < 10) ? '#ff6040' : '#ffffff');
     Font.draw(Bonus.active ? 'B+' : 'F' + Wd.def.id, 233, 5, '#ffe384');
     if (p.wild > 0) { const w = Math.round((p.wild / 600) * 60); ctx.fillStyle = '#20141c'; ctx.fillRect(3, 27, 62, 4); ctx.fillStyle = ['#ffe040', '#ff80c0', '#60e0ff'][Comfort.reducedFlash ? 0 : Math.floor(Wd.t / 4) % 3]; ctx.fillRect(4, 28, w, 2); }
-    if (!Bonus.active) Font.draw('★' + Exploration.count(Game.levelIdx) + '/3', 91, 27, '#ffe384', { outline: true });
+    if (!Bonus.active) Font.draw('★' + Exploration.count(Wd.idx) + '/3', 91, 27, '#ffe384', { outline: true });
     if (Wd.bannerT > 0 && (Comfort.reducedFlash || Wd.bannerT > 20 || Wd.bannerT % 4 < 2)) Font.draw(Wd.banner, W / 2, 38, '#ffe384', { align: 'center', outline: true });
     if (Wd.bossFight && Wd.boss && Wd.boss.alive && Wd.boss.state !== 'dead') {
       const b = Wd.boss;

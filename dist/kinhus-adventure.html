@@ -1041,10 +1041,12 @@ SPR.board = mkSprite(build(['.kkkkkkkkkkkk.', '..KK......KK..'], { k: '#b06830',
 
 // Bug (criaturinha do sistema)
 const BUG_PAL = { g: '#58d048', G: '#b0f088', d: '#2c8030', w: '#ffffff', e: '#101018', a: '#20301c', r: '#e84858' };
-SPR.bug = [
+const BUG_ROWS = [
   ['....a.....a.....', '.....a...a......', '....gggggggg....', '...gGGgggggggg..', '..gGwwggggwwgg..', '..ggweggggwegg..', '..gggggrrggggg..', '..dggggggggggd..', '...dddddddddd...', '...a.a....a.a...'],
   ['....a.....a.....', '.....a...a......', '....gggggggg....', '...gGGgggggggg..', '..gGwwggggwwgg..', '..ggweggggwegg..', '..gggggrrggggg..', '..dggggggggggd..', '...dddddddddd...', '....a.a..a.a....'],
-].map(r => mkSprite(build(r, BUG_PAL, { h: 16 })));
+];
+SPR.bug = BUG_ROWS.map(r => mkSprite(build(r, BUG_PAL, { h: 16 })));
+SPR.guardBug = BUG_ROWS.map(r => mkSprite(build(r, { ...BUG_PAL, g: '#7187a2', G: '#bed3ec', d: '#26394f', a: '#26394f' }, { h: 16 })));
 SPR.bugFlat = mkSprite(build(['...gGgggggggg...', '..gggeeggeeggg..', '.dddddddddddddd.'], BUG_PAL, { h: 16 }));
 
 const FLY_PAL = { m: '#b058e0', M: '#e8b0ff', D: '#6a2a90', z: '#d8f4ff', w: '#ffffff', e: '#101018', a: '#301040' };
@@ -2573,6 +2575,7 @@ const Sound = {
       case 'bark': this.tone(520, 300, 0.07, 0.15, { duty: 12 }); this.tone(560, 320, 0.08, 0.15, { duty: 12, delay: 0.12 }); break;
       case 'honk': this.tone(330, 330, 0.25, 0.12, { duty: 50 }); this.tone(415, 415, 0.25, 0.08, { duty: 50 }); break;
       case 'brake': this.hiss(0.6, 0.18, { f0: 4500, f1: 2500, q: 8 }); this.tone(1800, 1500, 0.5, 0.04, { duty: 12 }); break;
+      case 'skatebrake': this.hiss(0.18, 0.1, { f0: 3500, f1: 1200, q: 4 }); this.tone(1200, 650, 0.15, 0.04, { duty: 12 }); break;
       case 'steal': this.arp(['G6', 'E6', 'C6', 'G5'], 0.04, 0.08, 12); break;
       case 'tick': this.tone(1800, 1800, 0.025, 0.05, { duty: 25 }); break;
       case 'door': this.hiss(0.4, 0.15, { f0: 800, f1: 300, type: 'lowpass' }); break;
@@ -2601,6 +2604,7 @@ const Sound = {
    m/M plataforma horizontal  v vertical  n plataforma que cai
    V  faixa de carros  A arena do chefe  W chefe  E casa do Kinhu
    inimigos: d cachorro  p pombo  x barata  k skatista  t trombadinha
+             a bug com escudo frontal (pisão ou lata pelas costas)
              l passageira  w colega  i estagiário  u bug  f bug voador  r peão
    ========================================================= */
 
@@ -2848,7 +2852,7 @@ const LEVELS = [
         '######.....########.....########',
         '######.....########.....########'],
       // Novos setores: mesas, arquivos e manutenção dos elevadores.
-      segment32([[11, 6, 'DDDD'], [10, 6, 'cccc'], [11, 17, 'w'], [11, 25, 'DDDD'], [7, 18, '?H?']], true),
+      segment32([[11, 6, 'DDDD'], [10, 6, 'cccc'], [11, 17, 'a'], [11, 25, 'DDDD'], [7, 18, '?H?']], true),
       segment32([[11, 5, 'X'], [11, 13, 'SS'], [11, 22, 'SS'], [10, 22, 'SS'], [8, 21, 'cccc'], [11, 28, 'u']], true),
       segment32([[12, 8, 'IIIIIIII'], [11, 22, 'i'], [9, 9, '======'], [8, 9, 'cccccc'], [6, 26, 'f']], true),
       segment32([[11, 6, 'DDDD'], [11, 18, 'w'], [11, 26, 'DDDD'], [10, 27, 'cc']], true),
@@ -2903,7 +2907,7 @@ const LEVELS = [
         '.....SS....SS....^^^S......u....',
         G32, G32],
       // Corredores de racks; o checkpoint continua imediatamente antes da arena.
-      segment32([[11, 6, 'u'], [7, 12, '?H?'], [12, 22, '~~~'], [13, 22, '~~~'], [9, 21, 'cccc']], true),
+      segment32([[11, 6, 'a'], [7, 12, '?H?'], [12, 22, '~~~'], [13, 22, '~~~'], [9, 21, 'cccc']], true),
       segment32([[11, 6, 'SS'], [11, 16, 'SS'], [10, 16, 'SS'], [8, 15, 'cccc'], [11, 26, 'X'], [6, 24, 'f']], true),
       segment32([[11, 6, '^^^'], [9, 4, '======'], [8, 4, 'cccccc'], [11, 19, 'u'], [11, 26, 'u'], [7, 23, 'B?B']], true),
       segment32([[12, 8, '~~~'], [13, 8, '~~~'], [9, 7, 'cccc'], [11, 19, 'X'], [9, 24, '===='], [8, 24, 'cccc']], true),
@@ -3333,7 +3337,7 @@ const Save = {
 const SOLID = new Set(['#', '_', 'B', '?', 'H', '!', 'L', 'U', 'S', 'Z', 'Y', 'y', 'T', 'X', 'I', '^', 'F', 'R']);
 const ONEWAY = new Set(['=', 'D', '-']);
 const GROUNDISH = new Set(['#', '_', 'I', 'Z']);
-const ENEMY_CHARS = 'dpxktlwiufr';
+const ENEMY_CHARS = 'dpxktlwiufra';
 
 const Game = {
   lives: 3, score: 0, coins: 0, hearts: 3, maxHearts: 3, power: 0,
@@ -3777,12 +3781,13 @@ function makeEnemy(ch, px, bottom) {
     case 'd': return Object.assign(base, at(16, 13), { type: 'dog', state: 'walk', speed: 0.5, score: 200 });
     case 'p': return Object.assign(base, at(14, 10), { type: 'pigeon', baseY: bottom - 16, drop: Difficulty.frames(60), fly: true });
     case 'x': return Object.assign(base, at(12, 6), { type: 'roach', speed: 1.1 });
-    case 'k': return Object.assign(base, at(12, 20), { type: 'skater', speed: 2.1, score: 200 });
+    case 'k': return Object.assign(base, at(12, 20), { type: 'skater', state: 'cruise', st: 0, cool: 0, speed: 0.8, score: 200 });
     case 't': return Object.assign(base, at(12, 20), { type: 'thief', state: 'walk', speed: 0.5, score: 300 });
     case 'l': return Object.assign(base, at(12, 22), { type: 'lady', state: 'idle', speed: 0.25, stomp: 'bounce', swing: 0, cool: Difficulty.frames(60) });
     case 'w': return Object.assign(base, at(12, 21), { type: 'coworker', cool: Difficulty.frames(90), act: 0, score: 200 });
     case 'i': return Object.assign(base, at(12, 20), { type: 'intern', speed: 1.5, score: 200 });
     case 'u': return Object.assign(base, at(12, 9), { type: 'bug', speed: 0.5 });
+    case 'a': return Object.assign(base, at(12, 9), { type: 'bug', armored: true, speed: 0.5 });
     case 'f': return Object.assign(base, at(12, 10), { type: 'flybug', baseY: bottom - 16, fly: true, score: 200 });
     case 'r': return Object.assign(base, at(12, 21), { type: 'worker', speed: 0.45 });
   }
@@ -3847,17 +3852,41 @@ function updateEnemy(e) {
       e.frame = Math.floor(e.t / 4) % 2;
       break;
     case 'bug':
-      walker(false, e.speed);
+      walker(!!e.armored, e.speed);
       e.frame = Math.floor(e.t / 10) % 2;
       break;
     case 'worker':
       walker(true, e.speed);
       e.frame = Math.floor(e.t / 10) % 4;
       break;
-    case 'skater':
-      walker(false, e.speed);
-      e.frame = 0;
+    case 'skater': {
+      const rest = () => { e.vx = 0; e.vy = Math.min(e.vy + 0.4, 6); moveBody(e); };
+      const recover = () => { e.state = 'recover'; e.st = 0; e.vx = 0; };
+      if (e.state === 'cruise') {
+        if (e.cool > 0) e.cool--;
+        walker(true, e.speed);
+        if (!e.cool && e.onGround && !p.dead && Math.abs(pdx) < 100 && Math.abs(pdy) < 24 && ItemEffects.visible(e.x + e.w / 2, e.y + 8, p.x + p.w / 2, p.y + 8)) {
+          e.state = 'brake'; e.st = 0; e.dir = U.sign(pdx) || e.dir; e.vx = 0;
+          Sound.fx('skatebrake'); dust(e.x + e.w / 2, e.y + e.h, 3);
+        }
+      } else if (e.state === 'brake') {
+        rest();
+        if (e.st % 8 === 0) dust(e.x + e.w / 2, e.y + e.h, 1);
+        if (++e.st >= Difficulty.frames(30)) {
+          if (e.onGround && !edgeAhead(e)) { e.state = 'charge'; e.st = 0; }
+          else recover();
+        }
+      } else if (e.state === 'charge') {
+        const direction = e.dir;
+        walker(true, 3);
+        if (++e.st >= Difficulty.frames(42) || e.hitWall || e.dir !== direction) recover();
+      } else {
+        rest();
+        if (++e.st >= Difficulty.frames(60)) { e.state = 'cruise'; e.st = 0; e.cool = Difficulty.frames(90); }
+      }
+      e.frame = Math.floor(e.t / (e.state === 'charge' ? 5 : 10)) % 4;
       break;
+    }
     case 'intern':
       walker(true, e.speed);
       e.frame = Math.floor(e.t / 6) % 4;
@@ -4125,6 +4154,9 @@ function updateProjs() {
           if (e.kind === 'miniboss') Minibosses.hit(e, 1);
           else if (e.kind === 'boss') hitBoss(e, 1);
           else if (e.type === 'lady') { popup(e.x - 4, e.y - 6, 'HMPF!', '#ffc0e0'); Sound.fx('bump'); }
+          else if (e.armored && (-U.sign(b.vx) || U.sign(b.x + b.w / 2 - e.x - e.w / 2)) === e.dir) {
+            popup(e.x - 12, e.y - 14, 'POR CIMA!', '#bed3ec'); Sound.fx('bump'); sparkle(b.x + 3, b.y + 3, 4, '#bed3ec');
+          }
           else killEnemy(e, 'can');
           break;
         }
@@ -4541,9 +4573,9 @@ function drawEnemy(e) {
     case 'dog': spr = e.state === 'bark' ? SPR.dogBark : SPR.dog[e.frame]; ox = -2; oy = -3; break;
     case 'pigeon': spr = SPR.pigeon[e.frame]; ox = -1; oy = -4; break;
     case 'roach': spr = SPR.roach[e.frame]; ox = -2; oy = -10; break;
-    case 'bug': spr = e.squish ? SPR.bugFlat : SPR.bug[e.frame]; ox = -2; oy = -7; break;
+    case 'bug': spr = e.squish ? SPR.bugFlat : (e.armored ? SPR.guardBug : SPR.bug)[e.frame]; ox = -2; oy = -7; break;
     case 'flybug': spr = SPR.flybug[e.frame]; ox = -2; oy = -4; break;
-    case 'skater': spr = SPR.skater.walk[0]; ox = -2; oy = -24 + e.h - 2; break;
+    case 'skater': spr = e.state === 'brake' ? SPR.skater.act : e.state === 'recover' ? SPR.skater.dizzy : SPR.skater.walk[e.frame]; ox = -2; oy = -24 + e.h - 2; break;
     case 'thief': spr = personSprite(SPR.thief, e.frame); break;
     case 'lady': spr = personSprite(SPR.lady, e.frame); break;
     case 'coworker': spr = personSprite(SPR.coworker, e.frame); break;
@@ -4559,7 +4591,17 @@ function drawEnemy(e) {
   else ctx.drawImage(img, dx, dy);
   // acessórios
   if (!e.dying) {
-    if (e.type === 'skater') drawSpr(SPR.board, e.x - 1, e.y + e.h - 3, left);
+    if (e.type === 'skater') {
+      drawSpr(SPR.board, e.x - 1, e.y + e.h - 3, left);
+      if (e.state === 'brake') Font.draw('!', e.x + e.w / 2, e.y - 17, '#ffe384', { align: 'center', outline: true });
+      if (e.state === 'recover') Font.draw('▼', e.x + e.w / 2, e.y - 17, '#94e5ef', { align: 'center', outline: true });
+    }
+    if (e.armored) {
+      const shieldX = Math.round(e.dir < 0 ? e.x - 1 : e.x + e.w - 2), shieldY = Math.round(e.y - 2);
+      ctx.fillStyle = '#26394f'; ctx.fillRect(shieldX, shieldY, 4, 11);
+      ctx.fillStyle = '#bed3ec'; ctx.fillRect(shieldX + 1, shieldY + 1, 2, 8);
+      Font.draw('▼', e.x + e.w / 2, e.y - 17, '#94e5ef', { align: 'center', outline: true });
+    }
     if (e.type === 'intern') drawSpr(SPR.cup, left ? e.x - 3 : e.x + e.w + 1, e.y + 8, left);
     if (e.type === 'lady') {
       const sw = e.swing > 4 && e.swing < 22;
@@ -5993,6 +6035,7 @@ const App = {
       { label: 'HABILIDADES / COMO USAR', desc: ['PODERES CONQUISTADOS E DEMONSTRAÇÕES.'], fn: () => this.openInfo('abilities') },
       { label: 'ITENS / COMO USAR', desc: ['EFEITOS, DURAÇÃO E COMBINAÇÕES.'], fn: () => this.openInfo('help', 1) },
       { label: 'EXPLORAÇÃO / DESAFIOS', desc: ['LEMBRANÇAS E METAS OPCIONAIS.'], fn: () => this.state === 'pause' ? this.openInfo('explore') : this.openSelect() },
+      { label: 'INIMIGOS / COMO ENFRENTAR', desc: ['AVISOS DE INVESTIDA E PROTEÇÕES.'], fn: () => this.openInfo('help', 5) },
       { label: 'VOLTAR', desc: ['RETORNE AO MENU ANTERIOR.'], fn: back },
     ], { title: 'GUIA DO JOGO', panel: 'navigation', back }); Input.clear();
   },
@@ -6201,10 +6244,15 @@ const App = {
   },
   levelDone() {
     if (this.trans) return;
-    Game.levelIdx++;
     Game.checkpoint = false;
     Game.hearts = Game.maxHearts;
-    if (Game.levelIdx >= LEVELS.length) { this.go('ending'); return; }
+    // O mundo da última fase ainda é desenhado durante o fade dos créditos.
+    // Conserve seu índice válido até a troca de tela.
+    if (Game.levelIdx + 1 >= LEVELS.length) {
+      this.saveProgress(true, true); // Inclui os pontos do tempo no recorde final.
+      this.go('ending'); return;
+    }
+    Game.levelIdx++;
     this.go('intro');
   },
   bossClear() {
@@ -6326,11 +6374,19 @@ const App = {
     Font.draw('ENTER: SELECIONAR  ESC: VOLTAR', 128, 201, '#ffe384', { align: 'center' });
   },
   updateHelp() {
-    if (Input.pressed('left') || Input.pressed('right')) this.helpPage = ((this.helpPage || 0) + (Input.pressed('right') ? 1 : 4)) % 5;
+    if (Input.pressed('left') || Input.pressed('right')) this.helpPage = ((this.helpPage || 0) + (Input.pressed('right') ? 1 : 5)) % 6;
   },
   drawHelp() {
     ctx.fillStyle = 'rgba(0,21,59,0.94)'; ctx.fillRect(5, 20, W - 10, H - 28);
-    const L = this.helpPage === 4 ? [
+    const L = this.helpPage === 5 ? [
+      ['INIMIGOS / SINAIS', '#ffbf30'], ['', ''],
+      ['SKATISTA: FREIA ANTES DE INVESTIR.', '#ffe384'], ['!: PREPARE O SALTO OU SE AFASTE.', '#e9effb'],
+      ['INVESTE EM LINHA RETA E DESCANSA.', '#e9effb'], ['▼: ABERTURA PARA CONTRA-ATACAR.', '#94e5ef'], ['', ''],
+      ['BUG COM ESCUDO: FRENTE PROTEGIDA.', '#ffe384'], ['LATAS NA FRENTE NÃO CAUSAM DANO.', '#e9effb'],
+      ['▼: PISE OU USE A BARRIGADA.', '#94e5ef'], ['LATAS PELAS COSTAS TAMBÉM FUNCIONAM.', '#e9effb'],
+      ['KINHURINE ATRAVESSA A PROTEÇÃO.', '#e9effb'], ['ENCOSTAR DE LADO AINDA MACHUCA.', '#e9effb'], ['', ''],
+      ['PUM PROPULSOR NÃO CAUSA DANO.', '#a2c4ff'], ['MODO KINHU: INIMIGOS AUSENTES.', '#a2c4ff'],
+    ] : this.helpPage === 4 ? [
       ['MINICHEFES E COSMÉTICOS', '#ffbf30'], ['', ''],
       ['PORTAS DESAFIO: ÔNIBUS/ESCRITÓRIO.', '#ffe384'], ['▲ PARA ENTRAR; SEM CRACHÁ.', '#e9effb'],
       ['90S E 3 CORAÇÕES DO DESAFIO.', '#e9effb'], ['SAÍDA/FALHA PRESERVA A CAMPANHA.', '#e9effb'],
@@ -6372,7 +6428,7 @@ const App = {
       ['O JOGO SALVA SOZINHO NO NAVEGADOR.', '#a2c4ff'], ['NA PAUSA DÁ PARA BAIXAR O SAVE', '#a2c4ff'], ['E CARREGAR EM OUTRO LUGAR.', '#a2c4ff'],
     ];
     L.forEach(([t, c], i) => { if (t) Font.draw(t.replace('↑', '▲'), W / 2, 28 + i * 10, c, { align: 'center' }); });
-    Font.draw('◄ ►  ' + ((this.helpPage || 0) + 1) + '/5   ENTER / ESC: VOLTAR', 128, 204, '#ffe384', { align: 'center' });
+    Font.draw('◄ ►  ' + ((this.helpPage || 0) + 1) + '/6   ENTER / ESC: VOLTAR', 128, 204, '#ffe384', { align: 'center' });
   },
   drawStory() {
     Cutscenes.draw();
@@ -6475,7 +6531,7 @@ const App = {
     Font.draw(String(Math.max(0, Wd.time)).padStart(3, '0'), 191, 5, Wd.hurry && (Comfort.reducedFlash || Wd.t % 20 < 10) ? '#ff6040' : '#ffffff');
     Font.draw(Bonus.active ? 'B+' : 'F' + Wd.def.id, 233, 5, '#ffe384');
     if (p.wild > 0) { const w = Math.round((p.wild / 600) * 60); ctx.fillStyle = '#20141c'; ctx.fillRect(3, 27, 62, 4); ctx.fillStyle = ['#ffe040', '#ff80c0', '#60e0ff'][Comfort.reducedFlash ? 0 : Math.floor(Wd.t / 4) % 3]; ctx.fillRect(4, 28, w, 2); }
-    if (!Bonus.active) Font.draw('★' + Exploration.count(Game.levelIdx) + '/3', 91, 27, '#ffe384', { outline: true });
+    if (!Bonus.active) Font.draw('★' + Exploration.count(Wd.idx) + '/3', 91, 27, '#ffe384', { outline: true });
     if (Wd.bannerT > 0 && (Comfort.reducedFlash || Wd.bannerT > 20 || Wd.bannerT % 4 < 2)) Font.draw(Wd.banner, W / 2, 38, '#ffe384', { align: 'center', outline: true });
     if (Wd.bossFight && Wd.boss && Wd.boss.alive && Wd.boss.state !== 'dead') {
       const b = Wd.boss;

@@ -7,7 +7,7 @@
 const SOLID = new Set(['#', '_', 'B', '?', 'H', '!', 'L', 'U', 'S', 'Z', 'Y', 'y', 'T', 'X', 'I', '^', 'F', 'R']);
 const ONEWAY = new Set(['=', 'D', '-']);
 const GROUNDISH = new Set(['#', '_', 'I', 'Z']);
-const ENEMY_CHARS = 'dpxktlwiufr';
+const ENEMY_CHARS = 'dpxktlwiufra';
 
 const Game = {
   lives: 3, score: 0, coins: 0, hearts: 3, maxHearts: 3, power: 0,
@@ -451,12 +451,13 @@ function makeEnemy(ch, px, bottom) {
     case 'd': return Object.assign(base, at(16, 13), { type: 'dog', state: 'walk', speed: 0.5, score: 200 });
     case 'p': return Object.assign(base, at(14, 10), { type: 'pigeon', baseY: bottom - 16, drop: Difficulty.frames(60), fly: true });
     case 'x': return Object.assign(base, at(12, 6), { type: 'roach', speed: 1.1 });
-    case 'k': return Object.assign(base, at(12, 20), { type: 'skater', speed: 2.1, score: 200 });
+    case 'k': return Object.assign(base, at(12, 20), { type: 'skater', state: 'cruise', st: 0, cool: 0, speed: 0.8, score: 200 });
     case 't': return Object.assign(base, at(12, 20), { type: 'thief', state: 'walk', speed: 0.5, score: 300 });
     case 'l': return Object.assign(base, at(12, 22), { type: 'lady', state: 'idle', speed: 0.25, stomp: 'bounce', swing: 0, cool: Difficulty.frames(60) });
     case 'w': return Object.assign(base, at(12, 21), { type: 'coworker', cool: Difficulty.frames(90), act: 0, score: 200 });
     case 'i': return Object.assign(base, at(12, 20), { type: 'intern', speed: 1.5, score: 200 });
     case 'u': return Object.assign(base, at(12, 9), { type: 'bug', speed: 0.5 });
+    case 'a': return Object.assign(base, at(12, 9), { type: 'bug', armored: true, speed: 0.5 });
     case 'f': return Object.assign(base, at(12, 10), { type: 'flybug', baseY: bottom - 16, fly: true, score: 200 });
     case 'r': return Object.assign(base, at(12, 21), { type: 'worker', speed: 0.45 });
   }
@@ -521,17 +522,41 @@ function updateEnemy(e) {
       e.frame = Math.floor(e.t / 4) % 2;
       break;
     case 'bug':
-      walker(false, e.speed);
+      walker(!!e.armored, e.speed);
       e.frame = Math.floor(e.t / 10) % 2;
       break;
     case 'worker':
       walker(true, e.speed);
       e.frame = Math.floor(e.t / 10) % 4;
       break;
-    case 'skater':
-      walker(false, e.speed);
-      e.frame = 0;
+    case 'skater': {
+      const rest = () => { e.vx = 0; e.vy = Math.min(e.vy + 0.4, 6); moveBody(e); };
+      const recover = () => { e.state = 'recover'; e.st = 0; e.vx = 0; };
+      if (e.state === 'cruise') {
+        if (e.cool > 0) e.cool--;
+        walker(true, e.speed);
+        if (!e.cool && e.onGround && !p.dead && Math.abs(pdx) < 100 && Math.abs(pdy) < 24 && ItemEffects.visible(e.x + e.w / 2, e.y + 8, p.x + p.w / 2, p.y + 8)) {
+          e.state = 'brake'; e.st = 0; e.dir = U.sign(pdx) || e.dir; e.vx = 0;
+          Sound.fx('skatebrake'); dust(e.x + e.w / 2, e.y + e.h, 3);
+        }
+      } else if (e.state === 'brake') {
+        rest();
+        if (e.st % 8 === 0) dust(e.x + e.w / 2, e.y + e.h, 1);
+        if (++e.st >= Difficulty.frames(30)) {
+          if (e.onGround && !edgeAhead(e)) { e.state = 'charge'; e.st = 0; }
+          else recover();
+        }
+      } else if (e.state === 'charge') {
+        const direction = e.dir;
+        walker(true, 3);
+        if (++e.st >= Difficulty.frames(42) || e.hitWall || e.dir !== direction) recover();
+      } else {
+        rest();
+        if (++e.st >= Difficulty.frames(60)) { e.state = 'cruise'; e.st = 0; e.cool = Difficulty.frames(90); }
+      }
+      e.frame = Math.floor(e.t / (e.state === 'charge' ? 5 : 10)) % 4;
       break;
+    }
     case 'intern':
       walker(true, e.speed);
       e.frame = Math.floor(e.t / 6) % 4;
@@ -799,6 +824,9 @@ function updateProjs() {
           if (e.kind === 'miniboss') Minibosses.hit(e, 1);
           else if (e.kind === 'boss') hitBoss(e, 1);
           else if (e.type === 'lady') { popup(e.x - 4, e.y - 6, 'HMPF!', '#ffc0e0'); Sound.fx('bump'); }
+          else if (e.armored && (-U.sign(b.vx) || U.sign(b.x + b.w / 2 - e.x - e.w / 2)) === e.dir) {
+            popup(e.x - 12, e.y - 14, 'POR CIMA!', '#bed3ec'); Sound.fx('bump'); sparkle(b.x + 3, b.y + 3, 4, '#bed3ec');
+          }
           else killEnemy(e, 'can');
           break;
         }
@@ -1215,9 +1243,9 @@ function drawEnemy(e) {
     case 'dog': spr = e.state === 'bark' ? SPR.dogBark : SPR.dog[e.frame]; ox = -2; oy = -3; break;
     case 'pigeon': spr = SPR.pigeon[e.frame]; ox = -1; oy = -4; break;
     case 'roach': spr = SPR.roach[e.frame]; ox = -2; oy = -10; break;
-    case 'bug': spr = e.squish ? SPR.bugFlat : SPR.bug[e.frame]; ox = -2; oy = -7; break;
+    case 'bug': spr = e.squish ? SPR.bugFlat : (e.armored ? SPR.guardBug : SPR.bug)[e.frame]; ox = -2; oy = -7; break;
     case 'flybug': spr = SPR.flybug[e.frame]; ox = -2; oy = -4; break;
-    case 'skater': spr = SPR.skater.walk[0]; ox = -2; oy = -24 + e.h - 2; break;
+    case 'skater': spr = e.state === 'brake' ? SPR.skater.act : e.state === 'recover' ? SPR.skater.dizzy : SPR.skater.walk[e.frame]; ox = -2; oy = -24 + e.h - 2; break;
     case 'thief': spr = personSprite(SPR.thief, e.frame); break;
     case 'lady': spr = personSprite(SPR.lady, e.frame); break;
     case 'coworker': spr = personSprite(SPR.coworker, e.frame); break;
@@ -1233,7 +1261,17 @@ function drawEnemy(e) {
   else ctx.drawImage(img, dx, dy);
   // acessórios
   if (!e.dying) {
-    if (e.type === 'skater') drawSpr(SPR.board, e.x - 1, e.y + e.h - 3, left);
+    if (e.type === 'skater') {
+      drawSpr(SPR.board, e.x - 1, e.y + e.h - 3, left);
+      if (e.state === 'brake') Font.draw('!', e.x + e.w / 2, e.y - 17, '#ffe384', { align: 'center', outline: true });
+      if (e.state === 'recover') Font.draw('▼', e.x + e.w / 2, e.y - 17, '#94e5ef', { align: 'center', outline: true });
+    }
+    if (e.armored) {
+      const shieldX = Math.round(e.dir < 0 ? e.x - 1 : e.x + e.w - 2), shieldY = Math.round(e.y - 2);
+      ctx.fillStyle = '#26394f'; ctx.fillRect(shieldX, shieldY, 4, 11);
+      ctx.fillStyle = '#bed3ec'; ctx.fillRect(shieldX + 1, shieldY + 1, 2, 8);
+      Font.draw('▼', e.x + e.w / 2, e.y - 17, '#94e5ef', { align: 'center', outline: true });
+    }
     if (e.type === 'intern') drawSpr(SPR.cup, left ? e.x - 3 : e.x + e.w + 1, e.y + 8, left);
     if (e.type === 'lady') {
       const sw = e.swing > 4 && e.swing < 22;

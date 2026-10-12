@@ -13,6 +13,7 @@
    m/M plataforma horizontal  v vertical  n plataforma que cai
    V  faixa de carros  A arena do chefe  W chefe  E casa do Kinhu
    inimigos: d cachorro  p pombo  x barata  k skatista  t trombadinha
+             a bug com escudo frontal (pisão ou lata pelas costas)
              l passageira  w colega  i estagiário  u bug  f bug voador  r peão
    ========================================================= */
 
@@ -260,7 +261,7 @@ const LEVELS = [
         '######.....########.....########',
         '######.....########.....########'],
       // Novos setores: mesas, arquivos e manutenção dos elevadores.
-      segment32([[11, 6, 'DDDD'], [10, 6, 'cccc'], [11, 17, 'w'], [11, 25, 'DDDD'], [7, 18, '?H?']], true),
+      segment32([[11, 6, 'DDDD'], [10, 6, 'cccc'], [11, 17, 'a'], [11, 25, 'DDDD'], [7, 18, '?H?']], true),
       segment32([[11, 5, 'X'], [11, 13, 'SS'], [11, 22, 'SS'], [10, 22, 'SS'], [8, 21, 'cccc'], [11, 28, 'u']], true),
       segment32([[12, 8, 'IIIIIIII'], [11, 22, 'i'], [9, 9, '======'], [8, 9, 'cccccc'], [6, 26, 'f']], true),
       segment32([[11, 6, 'DDDD'], [11, 18, 'w'], [11, 26, 'DDDD'], [10, 27, 'cc']], true),
@@ -315,7 +316,7 @@ const LEVELS = [
         '.....SS....SS....^^^S......u....',
         G32, G32],
       // Corredores de racks; o checkpoint continua imediatamente antes da arena.
-      segment32([[11, 6, 'u'], [7, 12, '?H?'], [12, 22, '~~~'], [13, 22, '~~~'], [9, 21, 'cccc']], true),
+      segment32([[11, 6, 'a'], [7, 12, '?H?'], [12, 22, '~~~'], [13, 22, '~~~'], [9, 21, 'cccc']], true),
       segment32([[11, 6, 'SS'], [11, 16, 'SS'], [10, 16, 'SS'], [8, 15, 'cccc'], [11, 26, 'X'], [6, 24, 'f']], true),
       segment32([[11, 6, '^^^'], [9, 4, '======'], [8, 4, 'cccccc'], [11, 19, 'u'], [11, 26, 'u'], [7, 23, 'B?B']], true),
       segment32([[12, 8, '~~~'], [13, 8, '~~~'], [9, 7, 'cccc'], [11, 19, 'X'], [9, 24, '===='], [8, 24, 'cccc']], true),

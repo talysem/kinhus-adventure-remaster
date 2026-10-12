@@ -280,10 +280,12 @@ SPR.board = mkSprite(build(['.kkkkkkkkkkkk.', '..KK......KK..'], { k: '#b06830',
 
 // Bug (criaturinha do sistema)
 const BUG_PAL = { g: '#58d048', G: '#b0f088', d: '#2c8030', w: '#ffffff', e: '#101018', a: '#20301c', r: '#e84858' };
-SPR.bug = [
+const BUG_ROWS = [
   ['....a.....a.....', '.....a...a......', '....gggggggg....', '...gGGgggggggg..', '..gGwwggggwwgg..', '..ggweggggwegg..', '..gggggrrggggg..', '..dggggggggggd..', '...dddddddddd...', '...a.a....a.a...'],
   ['....a.....a.....', '.....a...a......', '....gggggggg....', '...gGGgggggggg..', '..gGwwggggwwgg..', '..ggweggggwegg..', '..gggggrrggggg..', '..dggggggggggd..', '...dddddddddd...', '....a.a..a.a....'],
-].map(r => mkSprite(build(r, BUG_PAL, { h: 16 })));
+];
+SPR.bug = BUG_ROWS.map(r => mkSprite(build(r, BUG_PAL, { h: 16 })));
+SPR.guardBug = BUG_ROWS.map(r => mkSprite(build(r, { ...BUG_PAL, g: '#7187a2', G: '#bed3ec', d: '#26394f', a: '#26394f' }, { h: 16 })));
 SPR.bugFlat = mkSprite(build(['...gGgggggggg...', '..gggeeggeeggg..', '.dddddddddddddd.'], BUG_PAL, { h: 16 }));
 
 const FLY_PAL = { m: '#b058e0', M: '#e8b0ff', D: '#6a2a90', z: '#d8f4ff', w: '#ffffff', e: '#101018', a: '#301040' };

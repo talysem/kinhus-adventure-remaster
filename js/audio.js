@@ -406,6 +406,7 @@ const Sound = {
       case 'bark': this.tone(520, 300, 0.07, 0.15, { duty: 12 }); this.tone(560, 320, 0.08, 0.15, { duty: 12, delay: 0.12 }); break;
       case 'honk': this.tone(330, 330, 0.25, 0.12, { duty: 50 }); this.tone(415, 415, 0.25, 0.08, { duty: 50 }); break;
       case 'brake': this.hiss(0.6, 0.18, { f0: 4500, f1: 2500, q: 8 }); this.tone(1800, 1500, 0.5, 0.04, { duty: 12 }); break;
+      case 'skatebrake': this.hiss(0.18, 0.1, { f0: 3500, f1: 1200, q: 4 }); this.tone(1200, 650, 0.15, 0.04, { duty: 12 }); break;
       case 'steal': this.arp(['G6', 'E6', 'C6', 'G5'], 0.04, 0.08, 12); break;
       case 'tick': this.tone(1800, 1800, 0.025, 0.05, { duty: 25 }); break;
       case 'door': this.hiss(0.4, 0.15, { f0: 800, f1: 300, type: 'lowpass' }); break;
