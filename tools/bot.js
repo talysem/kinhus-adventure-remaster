@@ -1,7 +1,7 @@
 'use strict';
 // Robô de teste: tenta zerar cada fase segurando "direita" e pulando obstáculos.
 // Serve para achar trechos impossíveis. Uso:
-//   node tools/bot.js [fase(1-5)|all] [inv] [walk] [noitems] [shots=pasta]
+//   node tools/bot.js [fase(1-5)|all] [inv] [walk] [noitems] [bossplan] [difficulty=normal] [shots=pasta]
 // inv isola a geometria; noitems remove Coca-Cola/Kinhurine. Não mede habilidade humana.
 const path = require('path');
 const fs = require('fs');
@@ -12,6 +12,9 @@ const which = process.argv[2] || 'all';
 const INV = process.argv.includes('inv');
 const WALK = process.argv.includes('walk');
 const NO_ITEMS = process.argv.includes('noitems');
+const BOSS_PLAN = process.argv.includes('bossplan');
+const mode = process.argv.find(a => a.startsWith('difficulty='));
+if (mode) { const id = mode.slice(11); if (!Difficulty.valid(id)) throw new Error('Dificuldade inválida: ' + id); Difficulty.select(id); }
 const shotDir = process.argv.find(a => a.startsWith('shots='));
 const shots = shotDir ? shotDir.slice(6) : null;
 if (shots) fs.mkdirSync(shots, { recursive: true });
@@ -106,6 +109,26 @@ function control(Wd) {
     const bx = b.x + b.w / 2, px = p.x + p.w / 2;
     press.right = px < bx - 4; press.left = px > bx + 4;
     if (grounded && Math.abs(bx - px) < 60) press.jump = true;
+    if (BOSS_PLAN) {
+      press.jump = !grounded && p.vy < 0;
+      press.down = false; press.propel = false;
+      const warning = ['jump', 'spit', 'summon'].includes(b.state) && b.t < bossWarningFrames(b.state);
+      if (warning || b.state === 'jump') {
+        let away = px < bx ? -1 : 1;
+        if (px < Wd.arena.x + 36) away = 1;
+        if (px > Wd.arena.x + 220) away = -1;
+        press.left = away < 0; press.right = away > 0;
+        if (warning && Math.abs(b.aimX - px) < 32 && !p.dashCooldown && !p.airPropulsionUsed) press.propel = true;
+        if (grounded && (b.state === 'spit' && b.t > bossWarningFrames('spit') - 12 || b.state === 'jump' && b.vy > 0)) press.jump = true;
+      } else {
+        if (grounded && Math.abs(bx - px) < 86) press.jump = true;
+        if (!grounded && p.vy >= 0 && p.y + p.h < b.y + 4 && Math.abs(bx - px) < 16 && b.state === 'recover' && !Input.cur.jump) {
+          press.down = true; press.jump = true;
+        }
+      }
+      if (grounded && Wd.projs.some(q => q.hostile && Math.abs(q.x - px) < 70 && q.y + q.h > p.y + 12)) press.jump = true;
+      if (!grounded && p.vy < 0 && p.y + p.h < b.y - 35) press.jump = false;
+    }
   }
 }
 
@@ -139,6 +162,8 @@ function runLevel(i) {
     const p = World.player;
     if (p.x > best) best = p.x;
     if (!Wd.clear && Math.abs(p.x - lastX) < 1) stuckT++; else stuckT = 0;
+    // Contra o chefe, ficar na mesma plataforma não é travamento se há dano.
+    if (Wd.bossFight && Wd.boss && Wd.boss.hp !== control.lastBossHP) { stuckT = 0; control.lastBossHP = Wd.boss.hp; }
     lastX = p.x;
     if (stuckT > 400) { log.push('preso em x=' + Math.round(p.x / TS) + ' y=' + Math.round(p.y) + (World.boss ? ' boss ' + World.boss.state + ' bx=' + Math.round(World.boss.x / TS) + ' by=' + Math.round(World.boss.y) + ' hp=' + World.boss.hp : '')); if (process.argv.includes('trace')) console.log(runLevel.hist.slice(-12).join(String.fromCharCode(10))); if (shots) { App.render(); fs.writeFileSync(path.join(shots, `stuck-l${i + 1}.png`), screen.toPNG()); } break; }
   }

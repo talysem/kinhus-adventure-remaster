@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="pt-BR">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kinhu — proposta de sprite</title>
+<style>
+  *{box-sizing:border-box}body{margin:0;background:#0c1422;color:#edf3ff;font:16px/1.5 system-ui,sans-serif}main{max-width:1100px;margin:auto;padding:32px 24px 48px}h1{font-size:30px;line-height:1.15;margin:5px 0 12px}h2{font-size:19px;margin:0}p{margin:8px 0;color:#aebdd3}.eyebrow{font-size:12px;font-weight:700;letter-spacing:.12em;color:#ffbb68}.controls{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:24px 0}select,button{border:1px solid #455570;border-radius:8px;background:#1c2a40;color:#edf3ff;padding:10px 14px;font:inherit;cursor:pointer}button:focus-visible,select:focus-visible{outline:3px solid #ffbb68;outline-offset:2px}button[aria-pressed=true]{background:#a65515;border-color:#ffbb68}.pair{display:grid;grid-template-columns:1fr 1fr;gap:20px}.card{border:1px solid #35445a;background:#162237;border-radius:14px;padding:22px}.card.new{border-color:#8dbfa9;background:#172e31}.tag{display:inline-block;font-size:12px;color:#aebdd3;margin-bottom:6px}.new .tag{color:#b9e5d2}.stage{display:flex;align-items:center;justify-content:center;height:270px;margin:12px 0;background:linear-gradient(0deg,#263c52 0 2px,transparent 2px),#101b2b;border-radius:8px}canvas{image-rendering:pixelated;image-rendering:crisp-edges}.zoom{width:200px;height:240px}.scene{display:block;width:100%;height:auto;margin:12px auto 0;max-width:512px}.details{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:28px;align-items:center}.reference{width:100%;max-width:480px;image-rendering:pixelated;border-radius:10px}.note{font-size:14px}.list{padding-left:20px;color:#c8d5e7}.list li{margin:8px 0}.small{font-size:13px}a{color:#ffbb68}@media(max-width:660px){main{padding:22px 14px}.pair,.details{grid-template-columns:1fr}.stage{height:260px}h1{font-size:25px}.card{padding:18px}}
+</style>
+<main>
+  <div class="eyebrow">PROPOSTA VISUAL · KINHU V2</div>
+  <h1>Kinhu original, com três ajustes</h1>
+  <p>Sem sorriso, barriga maior e bermuda azul. A barba, os óculos, o cabelo e as cores continuam os do original.</p>
+  <div class="controls">
+    <label for="pose">Pose</label><select id="pose"><option value="idle">Parado</option><option value="run">Correndo</option><option value="jump">Pulo</option><option value="fall">Queda</option><option value="slam">Barrigada</option><option value="propel">Arrancada</option><option value="win">Vitória</option><option value="hurt">Dano</option><option value="skid">Freada</option></select>
+    <button id="direction" aria-pressed="false">Virar para a esquerda</button><button id="pause" aria-pressed="false">Pausar animação</button>
+  </div>
+  <section class="pair" aria-label="Comparação do sprite">
+    <article class="card"><span class="tag">VERSÃO ANTERIOR</span><h2>Original</h2><div class="stage"><canvas class="zoom" id="old" width="20" height="24" aria-label="Sprite original ampliado"></canvas></div><p class="small">Visual anterior, guardado para comparação.</p></article>
+    <article class="card new"><span class="tag">APROVADO E INTEGRADO</span><h2>Original com os ajustes pedidos</h2><div class="stage"><canvas class="zoom" id="new" width="20" height="24" aria-label="Novo sprite ampliado"></canvas></div><p class="small">Barba e óculos originais; sem sorriso, barriga maior e bermuda.</p></article>
+  </section>
+  <section class="pair" style="margin-top:20px" aria-label="Comparação no jogo">
+    <article class="card"><h2>Original no cenário</h2><canvas class="scene" id="old-scene" width="256" height="224"></canvas></article>
+    <article class="card new"><h2>Proposta no cenário</h2><canvas class="scene" id="new-scene" width="256" height="224"></canvas></article>
+  </section>
+  <section class="details">
+    <img class="reference" src="../../cutscenes/runtime/05-corrida.png" alt="Kinhu calvo, com barba marrom curta, óculos pretos, camiseta laranja, bermuda azul e tênis na cutscene">
+    <div><h2>Ajustes sobre o original</h2><ul class="list"><li>Boca e dentes removidos, preenchidos com a barba original.</li><li>Camiseta mais arredondada e barriga maior na frente.</li><li>Bermuda azul, joelhos à mostra e os mesmos tênis.</li><li>Barba, óculos, cabelo e paleta preservados.</li></ul><p class="note">Visual aprovado e integrado ao jogo e à versão offline. Todas as animações, poderes, camisetas e o HUD usam os ajustes. Mantidos 20 × 24 pixels e a posição dos pés.</p><a href="../../../dist/kinhus-adventure.html">Jogar a versão offline atualizada</a></div>
+  </section>
+</main>
+<script>
+  const pose=document.getElementById('pose'), direction=document.getElementById('direction'), pause=document.getElementById('pause');
+  const images={};let left=false,paused=false,clock=0,last=0;
+  const names=['idle','blink','run0','run1','run2','run3','jump','fall','hurt','win','skid','propel','slam'];
+  const load=(key,src)=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>{images[key]=image;resolve()};image.onerror=reject;image.src=src});
+  function render(){
+    const key=pose.value==='run'?'run'+Math.floor(clock/115)%4:pose.value==='idle'&&Math.floor(clock/1500)%4===3?'blink':pose.value;
+    const column=names.indexOf(key),row=left?24:0;
+    for(const id of ['old','new']){
+      const canvas=document.getElementById(id),ctx=canvas.getContext('2d');ctx.imageSmoothingEnabled=false;ctx.clearRect(0,0,20,24);ctx.drawImage(images[id],column*20,row,20,24,0,0,20,24);
+      const scene=document.getElementById(id+'-scene'),s=scene.getContext('2d');s.imageSmoothingEnabled=false;s.drawImage(images.background,0,0);
+      const rise=pose.value==='jump'?24:pose.value==='fall'?16:pose.value==='slam'?18:0;
+      s.drawImage(images[id],column*20,row,20,24,66,168-rise,20,24);
+    }
+  }
+  pose.addEventListener('change',()=>{clock=0;render()});
+  direction.addEventListener('click',()=>{left=!left;direction.setAttribute('aria-pressed',String(left));direction.textContent=left?'Virar para a direita':'Virar para a esquerda';render()});
+  pause.addEventListener('click',()=>{paused=!paused;pause.setAttribute('aria-pressed',String(paused));pause.textContent=paused?'Retomar animação':'Pausar animação'});
+  Promise.all([load('old','original.png'),load('new','proposta.png'),load('background','cenario.png')]).then(()=>{render();requestAnimationFrame(function tick(now){if(last&&!paused)clock+=Math.min(100,now-last);last=now;render();requestAnimationFrame(tick)})});
+</script>
+</html>

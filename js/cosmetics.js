@@ -2,7 +2,7 @@
 const Cosmetics = {
   KEY: 'kinhus-adventure:cosmetic', selected: 'original',
   styles: {
-    original: { name: 'ORIGINAL', tips: () => ['VISUAL CLÁSSICO DO KINHU.', 'SEM ALTERAR A FÍSICA.'], earned: () => true },
+    original: { name: 'ORIGINAL', tips: () => ['CAMISETA LARANJA DO KINHU.', 'SEM ALTERAR A FÍSICA.'], earned: () => true },
     blue: { name: 'CAMISETA AZUL', tips: p => ['COLETE 3 LEMBRANÇAS NO PERFIL.', 'PROGRESSO: ' + p.memories.length + '/3'], earned: p => p.memories.length >= 3 },
     green: { name: 'CAMISETA VERDE', tips: p => ['COMPLETE A COLEÇÃO DE 15 LEMBRANÇAS.', 'PROGRESSO: ' + p.memories.length + '/15'], earned: p => p.memories.length >= 15 },
     purple: { name: 'CAMISETA ROXA', tips: p => ['CONQUISTE 3 MEDALHAS DIFERENTES.', 'PROGRESSO: ' + Cosmetics.medals(p) + '/3'], earned: p => Cosmetics.medals(p) >= 3 },

@@ -631,11 +631,12 @@ const App = {
     const L = this.helpPage === 5 ? [
       ['INIMIGOS / SINAIS', '#ffbf30'], ['', ''],
       ['SKATISTA: FREIA ANTES DE INVESTIR.', '#ffe384'], ['!: PREPARE O SALTO OU SE AFASTE.', '#e9effb'],
-      ['INVESTE EM LINHA RETA E DESCANSA.', '#e9effb'], ['▼: ABERTURA PARA CONTRA-ATACAR.', '#94e5ef'], ['', ''],
+      ['INVESTE EM LINHA RETA E DESCANSA.', '#e9effb'], ['▼: ABERTURA PARA CONTRA-ATACAR.', '#94e5ef'],
       ['BUG COM ESCUDO: FRENTE PROTEGIDA.', '#ffe384'], ['LATAS NA FRENTE NÃO CAUSAM DANO.', '#e9effb'],
       ['▼: PISE OU USE A BARRIGADA.', '#94e5ef'], ['LATAS PELAS COSTAS TAMBÉM FUNCIONAM.', '#e9effb'],
-      ['KINHURINE ATRAVESSA A PROTEÇÃO.', '#e9effb'], ['ENCOSTAR DE LADO AINDA MACHUCA.', '#e9effb'], ['', ''],
-      ['PUM PROPULSOR NÃO CAUSA DANO.', '#a2c4ff'], ['MODO KINHU: INIMIGOS AUSENTES.', '#a2c4ff'],
+      ['KINHURINE ATRAVESSA A PROTEÇÃO.', '#e9effb'], ['ENCOSTAR DE LADO AINDA MACHUCA.', '#e9effb'],
+      ['MEGA BUG: ! AVISA; ▼ DESCANSA.', '#ffe384'], ['▼: BARRIGADA 6; PISÃO 4 DE DANO.', '#e9effb'],
+      ['PUM ESQUIVA, SEM INVENCIBILIDADE.', '#a2c4ff'], ['MODO KINHU: INIMIGOS AUSENTES.', '#a2c4ff'],
     ] : this.helpPage === 4 ? [
       ['MINICHEFES E COSMÉTICOS', '#ffbf30'], ['', ''],
       ['PORTAS DESAFIO: ÔNIBUS/ESCRITÓRIO.', '#ffe384'], ['▲ PARA ENTRAR; SEM CRACHÁ.', '#e9effb'],
@@ -674,7 +675,7 @@ const App = {
       ['COMO JOGAR', '#ffbf30'], ['', ''],
       [Input.label('move') + ': ANDAR', '#e9effb'], [Input.label('jump') + ': PULAR', '#e9effb'], [Input.label('run') + ': CORRER', '#e9effb'],
       [Input.label('run', Input.device, true) + ' COM COCA: JOGAR LATAS', '#e9effb'], [Input.label('down') + ' + PULAR: DESCER PLATAFORMA', '#e9effb'], ['ENTER: PAUSA   M: SOM   F: TELA CHEIA', '#e9effb'], ['', ''],
-      ['CACHORRO-QUENTE: +1 CORAÇÃO', '#ffb0a0'], ['COCA-COLA: PODER DE ARREMESSO', '#ffd0a0'], ['GARRAS: MODO KINHURINE!', '#ffe384'], ['CRACHÁ: VIDA EXTRA', '#a0ffa0'], ['', ''],
+      ['CACHORRO-QUENTE: +1 CORAÇÃO', '#ffb0a0'], ['COCA-COLA: PODER DE ARREMESSO', '#ffd0a0'], ['GARRAS: MODO KINHURINE!', '#ffe384'], ['CRACHÁ: VIDA EXTRA', '#a0ffa0'], ['BATER O PONTO: +1 CORAÇÃO UMA VEZ.', '#a0ffa0'],
       ['O JOGO SALVA SOZINHO NO NAVEGADOR.', '#a2c4ff'], ['NA PAUSA DÁ PARA BAIXAR O SAVE', '#a2c4ff'], ['E CARREGAR EM OUTRO LUGAR.', '#a2c4ff'],
     ];
     L.forEach(([t, c], i) => { if (t) Font.draw(t.replace('↑', '▲'), W / 2, 28 + i * 10, c, { align: 'center' }); });
@@ -785,6 +786,9 @@ const App = {
     if (Wd.bannerT > 0 && (Comfort.reducedFlash || Wd.bannerT > 20 || Wd.bannerT % 4 < 2)) Font.draw(Wd.banner, W / 2, 38, '#ffe384', { align: 'center', outline: true });
     if (Wd.bossFight && Wd.boss && Wd.boss.alive && Wd.boss.state !== 'dead') {
       const b = Wd.boss;
+      const hint = b.state === 'recover' ? '▼: BARRIGADA 6; PISÃO 4 DE DANO.' : b.state === 'jump' && b.t < bossWarningFrames('jump') ? '!: SALTO. ' + Input.label('propel', Input.device, true) + ' PARA ESQUIVAR.' : b.state === 'spit' && b.t < bossWarningFrames('spit') ? '!: DISPARO. SAIA DA MIRA AMARELA.' : b.state === 'summon' && b.t < bossWarningFrames('summon') ? '!: REFORÇOS. PREPARE O SALTO.' : 'PULE AS ONDAS; ESPERE O SINAL ▼.';
+      ctx.fillStyle = 'rgba(0,21,59,0.85)'; ctx.fillRect(4, 47, 248, 12);
+      Font.draw(hint, W / 2, 50, '#e9effb', { align: 'center', outline: true });
       Font.draw('MEGA BUG', W / 2, 202, '#a0ff80', { align: 'center', outline: true });
       ctx.fillStyle = '#20141c'; ctx.fillRect(W / 2 - 51, 212, 102, 6);
       ctx.fillStyle = '#3a1020'; ctx.fillRect(W / 2 - 50, 213, 100, 4);

@@ -99,6 +99,17 @@ function kinhuRows(legs, opt = {}) {
     top[2] = '..hhhhhhLLLLsssh....';
     top[3] = '...hhhhhsssssssss...';
   }
+  // Visual aprovado: barba/óculos originais, sem sorriso, barriga maior e bermuda.
+  const revised = top.map(row => row.split(''));
+  for (const y of [8, 9]) for (let x = 0; x < 20; x++) if (revised[y][x] === 'w' || revised[y][x] === 'm') revised[y][x] = 'b';
+  for (const y of [13, 14, 15]) {
+    if (!['s', 'S'].includes(revised[y][17])) revised[y][17] = y === 15 ? 'r' : 'o';
+    if (!['s', 'S'].includes(revised[y][18])) revised[y][18] = 'r';
+  }
+  revised[17][16] = 'r'; revised[17][17] = 'r';
+  revised[18][16] = 'j'; revised[18][17] = 'J';
+  top = revised.map(row => row.join(''));
+  legs = legs.map((row, y) => y ? row.replace(/j/g, 's').replace(/J/g, 'S') : row);
   if (opt.bob) top = top.slice(1).concat([top[top.length - 1]]);
   const rows = top.concat(legs, ['....................']);
   if (opt.claws) {

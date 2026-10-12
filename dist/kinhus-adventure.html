@@ -860,6 +860,17 @@ function kinhuRows(legs, opt = {}) {
     top[2] = '..hhhhhhLLLLsssh....';
     top[3] = '...hhhhhsssssssss...';
   }
+  // Visual aprovado: barba/óculos originais, sem sorriso, barriga maior e bermuda.
+  const revised = top.map(row => row.split(''));
+  for (const y of [8, 9]) for (let x = 0; x < 20; x++) if (revised[y][x] === 'w' || revised[y][x] === 'm') revised[y][x] = 'b';
+  for (const y of [13, 14, 15]) {
+    if (!['s', 'S'].includes(revised[y][17])) revised[y][17] = y === 15 ? 'r' : 'o';
+    if (!['s', 'S'].includes(revised[y][18])) revised[y][18] = 'r';
+  }
+  revised[17][16] = 'r'; revised[17][17] = 'r';
+  revised[18][16] = 'j'; revised[18][17] = 'J';
+  top = revised.map(row => row.join(''));
+  legs = legs.map((row, y) => y ? row.replace(/j/g, 's').replace(/J/g, 'S') : row);
   if (opt.bob) top = top.slice(1).concat([top[top.length - 1]]);
   const rows = top.concat(legs, ['....................']);
   if (opt.claws) {
@@ -3179,7 +3190,7 @@ const Exploration = {
 const Cosmetics = {
   KEY: 'kinhus-adventure:cosmetic', selected: 'original',
   styles: {
-    original: { name: 'ORIGINAL', tips: () => ['VISUAL CLÁSSICO DO KINHU.', 'SEM ALTERAR A FÍSICA.'], earned: () => true },
+    original: { name: 'ORIGINAL', tips: () => ['CAMISETA LARANJA DO KINHU.', 'SEM ALTERAR A FÍSICA.'], earned: () => true },
     blue: { name: 'CAMISETA AZUL', tips: p => ['COLETE 3 LEMBRANÇAS NO PERFIL.', 'PROGRESSO: ' + p.memories.length + '/3'], earned: p => p.memories.length >= 3 },
     green: { name: 'CAMISETA VERDE', tips: p => ['COMPLETE A COLEÇÃO DE 15 LEMBRANÇAS.', 'PROGRESSO: ' + p.memories.length + '/15'], earned: p => p.memories.length >= 15 },
     purple: { name: 'CAMISETA ROXA', tips: p => ['CONQUISTE 3 MEDALHAS DIFERENTES.', 'PROGRESSO: ' + Cosmetics.medals(p) + '/3'], earned: p => Cosmetics.medals(p) >= 3 },
@@ -3979,6 +3990,7 @@ function updateEnt(e) {
     case 'checkpoint':
       if (!e.on && p.x + p.w / 2 > e.x + 8 && !p.dead) {
         e.on = true; Game.checkpoint = true; Sound.fx('check'); popup(e.x - 20, e.y - 6, 'BATEU O PONTO!', '#80ff80');
+        if (Game.hearts < Game.maxHearts) { Game.hearts++; popup(e.x + 3, e.y - 17, '+♥', '#ff8090'); }
         sparkle(e.x + 8, e.y + 4, 10, '#80ff80');
         App.saveProgress();
       }
@@ -4226,6 +4238,13 @@ function playerVsEnemies() {
 function makeBoss(px, bottom) {
   return { kind: 'boss', x: px - 10, y: bottom - 30, w: 36, h: 30, vx: 0, vy: 0, hp: Difficulty.current().bossHP, maxHp: Difficulty.current().bossHP, state: 'sleep', t: 0, dir: -1, inv: 0, slamInv: 0, phase: 1, step: 0, onGround: true };
 }
+function bossWarningFrames(state) { return Difficulty.frames(state === 'jump' ? 30 : 36); }
+function aimBossAttack(b, p) {
+  b.aimX = p.x + p.w / 2; b.aimY = p.y + 8;
+  b.dir = U.sign(b.aimX - b.x - b.w / 2) || b.dir;
+  b.attackVX = U.clamp((b.aimX - b.x - b.w / 2) / 48, -2.6, 2.6);
+}
+function recoverBoss(b) { b.state = 'recover'; b.t = 0; b.vx = 0; }
 function updateBoss(b, p) {
   b.t++;
   if (b.inv > 0) b.inv--;
@@ -4241,36 +4260,45 @@ function updateBoss(b, p) {
       if (b.t > Difficulty.frames(b.phase === 2 ? 70 : 100)) {
         const seq = b.phase === 2 ? ['jump', 'spit', 'summon', 'jump', 'spit'] : ['jump', 'spit', 'jump', 'spit'];
         b.state = seq[b.step++ % seq.length]; b.t = 0; b.vx = 0;
+        aimBossAttack(b, p); Sound.fx('warn');
       }
       break;
     case 'jump':
-      if (b.t < Difficulty.frames(18)) { b.vx = 0; grav(); break; }
-      if (b.t === Difficulty.frames(18)) { b.vy = -7.6; b.vx = U.clamp(pdx / 48, -2.6, 2.6); b.onGround = false; }
-      { const was = b.onGround; grav(); if (b.onGround && b.t > Difficulty.frames(18) + 2 && !was) {
+      if (b.t === 1 && b.aimX === undefined) aimBossAttack(b, p);
+      if (b.t < bossWarningFrames('jump')) { b.vx = 0; grav(); break; }
+      if (b.t === bossWarningFrames('jump')) { b.vy = -7.6; b.vx = b.attackVX; b.onGround = false; }
+      { const was = b.onGround; grav(); if (b.onGround && b.t > bossWarningFrames('jump') + 2 && !was) {
         shake(12); Sound.fx('thud'); dust(b.x + 6, b.y + b.h, 5); dust(b.x + b.w - 6, b.y + b.h, 5);
-        for (const d of [-1, 1]) World.projs.push({ type: 'wave', x: b.x + b.w / 2 - 5 + d * 14, y: b.y + b.h - 10, w: 10, h: 10, vx: d * (b.phase === 2 ? 2.6 : 2.1), vy: 0, life: 200, hostile: true, t: 0 });
-        b.state = 'walk'; b.t = 0; b.vx = 0;
+        for (const d of [-1, 1]) World.projs.push({ type: 'wave', x: b.x + b.w / 2 - 5 + d * 14, y: b.y + b.h - 10, w: 10, h: 10, vx: d * (b.phase === 2 ? 2.6 : 2.1) * Difficulty.current().speed, vy: 0, life: 200, hostile: true, t: 0 });
+        recoverBoss(b);
       } }
       break;
     case 'spit':
+      if (b.t === 1 && b.aimX === undefined) aimBossAttack(b, p);
       b.vx = 0; grav();
-      if (b.t === Difficulty.frames(30)) {
+      if (b.t === bossWarningFrames('spit')) {
         const n = b.phase === 2 ? 3 : 1;
         for (let i = 0; i < n; i++) {
-          const ang = Math.atan2(p.y + 8 - (b.y + 18), pdx) + (i - (n - 1) / 2) * 0.35;
-          World.projs.push({ type: 'glitch', x: b.x + b.w / 2 - 5, y: b.y + 14, w: 10, h: 10, vx: Math.cos(ang) * 2.1, vy: Math.sin(ang) * 2.1, life: 240, hostile: true, t: 0 });
+          const ang = Math.atan2(b.aimY - (b.y + 18), b.aimX - b.x - b.w / 2) + (i - (n - 1) / 2) * 0.35;
+          const speed = 2.1 * Difficulty.current().speed;
+          World.projs.push({ type: 'glitch', x: b.x + b.w / 2 - 5, y: b.y + 14, w: 10, h: 10, vx: Math.cos(ang) * speed, vy: Math.sin(ang) * speed, life: 240, hostile: true, t: 0 });
         }
         Sound.fx('zap');
       }
-      if (b.t > Difficulty.frames(56)) { b.state = 'walk'; b.t = 0; }
+      if (b.t >= bossWarningFrames('spit') + Difficulty.frames(20)) recoverBoss(b);
       break;
     case 'summon':
       b.vx = 0; grav();
-      if (b.t === Difficulty.frames(24) && World.ents.filter(e => e.type === 'bug' && e.alive && !e.dying).length < 3) {
-        for (const d of [-1, 1]) { const e = addEnt(makeEnemy('u', b.x + b.w / 2 - 8, b.y + b.h)); e.dir = d; e.vy = -3; e.x += d * 12; }
+      if (b.t === bossWarningFrames('summon')) {
+        const count = World.ents.filter(e => e.type === 'bug' && e.alive && !e.dying).length;
+        for (const d of [-1, 1].slice(0, Math.max(0, 3 - count))) { const e = addEnt(makeEnemy('u', b.x + b.w / 2 - 8, b.y + b.h)); e.dir = d; e.vy = -3; e.x += d * 12; }
         Sound.fx('appear');
       }
-      if (b.t > Difficulty.frames(50)) { b.state = 'walk'; b.t = 0; }
+      if (b.t >= bossWarningFrames('summon') + Difficulty.frames(14)) recoverBoss(b);
+      break;
+    case 'recover':
+      b.vx = 0; grav();
+      if (b.t >= Difficulty.frames(b.phase === 2 ? 48 : 60)) { b.state = 'walk'; b.t = 0; }
       break;
     case 'hurt':
       grav(); b.vx *= 0.9;
@@ -4294,7 +4322,7 @@ function updateBoss(b, p) {
     if (fromAbove || p.wild > 0) {
       const slam = p.slam && fromAbove; cancelMoves(p);
       p.vy = -7.2; p.y = b.y - p.h;
-      hitBoss(b, slam ? 4 : p.wild > 0 ? 2 : 4, slam);
+      hitBoss(b, slam ? (b.state === 'recover' ? 6 : 4) : p.wild > 0 ? 2 : 4, slam);
     } else if (b.state !== 'dead' && hurtPlayer() && !p.dead) p.vx = U.sign(p.x - b.x) * 3 * recoilFactor();
   }
 }
@@ -4425,7 +4453,7 @@ function updateWorld() {
   }
   // tempo
   if (Bonus.active) Bonus.tick();
-  else if (!Wd.clear && !p.dead) {
+  else if (!Wd.clear && !p.dead && !(Wd.bossFight && Wd.boss && Wd.boss.state === 'dead')) {
     if (++Wd.timeT >= 48) {
       Wd.timeT = 0; Wd.time--;
       if (Wd.time === 100 && !Wd.hurry) { Wd.hurry = true; Sound.fx('warn'); Sound.tempo = 1.25; Wd.banner = 'ANDA LOGO, KINHU!'; Wd.bannerT = 100; }
@@ -4721,17 +4749,27 @@ function drawItem(e) {
 }
 
 function drawBoss(b) {
-  if (!Comfort.reducedFlash && b.inv > 0 && b.state !== 'dead' && Math.floor(b.t / 3) % 2) return;
+  const visible = Comfort.reducedFlash || !b.inv || b.state === 'dead' || Math.floor(b.t / 3) % 2 === 0;
   const S = SPR.boss;
   let spr = S.idle;
   if (b.state === 'spit' && b.t > 14) spr = S.open;
   if (b.state === 'jump' && !b.onGround) spr = S.jump;
   if (b.state === 'hurt' || (b.state === 'dead' && (Comfort.reducedFlash || b.t % 8 < 4))) spr = S.hurt;
   const bob = b.state === 'walk' ? Math.round(Math.sin(b.t * 0.2)) : 0;
-  const crouch = b.state === 'jump' && b.t < Difficulty.frames(18) ? 2 : 0;
-  ctx.drawImage(b.dir < 0 ? spr.l : spr.r, Math.round(b.x - 6), Math.round(b.y - 10 + bob + crouch));
-  const warning = b.state === 'jump' && b.t < Difficulty.frames(18) ? 'SALTO!' : b.state === 'spit' && b.t < Difficulty.frames(30) ? 'DISPARO!' : b.state === 'summon' && b.t < Difficulty.frames(24) ? 'REFORÇOS!' : null;
+  const crouch = b.state === 'jump' && b.t < bossWarningFrames('jump') ? 2 : b.state === 'recover' ? 2 : 0;
+  if (visible) ctx.drawImage(b.dir < 0 ? spr.l : spr.r, Math.round(b.x - 6), Math.round(b.y - 10 + bob + crouch));
+  const warning = ['jump', 'spit', 'summon'].includes(b.state) && b.t < bossWarningFrames(b.state) ? ({ jump: '! SALTO', spit: '! DISPARO', summon: '! REFORÇOS' })[b.state] : null;
   if (warning) Font.draw(warning, b.x + b.w / 2, Math.max(40, b.y - 23), '#ffe384', { align: 'center', outline: true });
+  if (b.state === 'recover') Font.draw('▼', b.x + b.w / 2, b.y - 24, '#94e5ef', { align: 'center', outline: true });
+  // Mira fixa anunciada no disparo; atravessa só o ar e para em blocos.
+  if (b.state === 'spit' && warning && b.aimX !== undefined) {
+    const x = b.x + b.w / 2, y = b.y + 18, distance = Math.hypot(b.aimX - x, b.aimY - y);
+    for (let d = 8; d < distance; d += 8) {
+      const px = x + (b.aimX - x) * d / distance, py = y + (b.aimY - y) * d / distance;
+      if (isSolid(tileAt(Math.floor(px / TS), Math.floor(py / TS)))) break;
+      ctx.fillStyle = '#ffe384'; ctx.fillRect(Math.round(px), Math.round(py), 2, 2);
+    }
+  }
 }
 
 function drawPlayer(p) {
@@ -6381,11 +6419,12 @@ const App = {
     const L = this.helpPage === 5 ? [
       ['INIMIGOS / SINAIS', '#ffbf30'], ['', ''],
       ['SKATISTA: FREIA ANTES DE INVESTIR.', '#ffe384'], ['!: PREPARE O SALTO OU SE AFASTE.', '#e9effb'],
-      ['INVESTE EM LINHA RETA E DESCANSA.', '#e9effb'], ['▼: ABERTURA PARA CONTRA-ATACAR.', '#94e5ef'], ['', ''],
+      ['INVESTE EM LINHA RETA E DESCANSA.', '#e9effb'], ['▼: ABERTURA PARA CONTRA-ATACAR.', '#94e5ef'],
       ['BUG COM ESCUDO: FRENTE PROTEGIDA.', '#ffe384'], ['LATAS NA FRENTE NÃO CAUSAM DANO.', '#e9effb'],
       ['▼: PISE OU USE A BARRIGADA.', '#94e5ef'], ['LATAS PELAS COSTAS TAMBÉM FUNCIONAM.', '#e9effb'],
-      ['KINHURINE ATRAVESSA A PROTEÇÃO.', '#e9effb'], ['ENCOSTAR DE LADO AINDA MACHUCA.', '#e9effb'], ['', ''],
-      ['PUM PROPULSOR NÃO CAUSA DANO.', '#a2c4ff'], ['MODO KINHU: INIMIGOS AUSENTES.', '#a2c4ff'],
+      ['KINHURINE ATRAVESSA A PROTEÇÃO.', '#e9effb'], ['ENCOSTAR DE LADO AINDA MACHUCA.', '#e9effb'],
+      ['MEGA BUG: ! AVISA; ▼ DESCANSA.', '#ffe384'], ['▼: BARRIGADA 6; PISÃO 4 DE DANO.', '#e9effb'],
+      ['PUM ESQUIVA, SEM INVENCIBILIDADE.', '#a2c4ff'], ['MODO KINHU: INIMIGOS AUSENTES.', '#a2c4ff'],
     ] : this.helpPage === 4 ? [
       ['MINICHEFES E COSMÉTICOS', '#ffbf30'], ['', ''],
       ['PORTAS DESAFIO: ÔNIBUS/ESCRITÓRIO.', '#ffe384'], ['▲ PARA ENTRAR; SEM CRACHÁ.', '#e9effb'],
@@ -6424,7 +6463,7 @@ const App = {
       ['COMO JOGAR', '#ffbf30'], ['', ''],
       [Input.label('move') + ': ANDAR', '#e9effb'], [Input.label('jump') + ': PULAR', '#e9effb'], [Input.label('run') + ': CORRER', '#e9effb'],
       [Input.label('run', Input.device, true) + ' COM COCA: JOGAR LATAS', '#e9effb'], [Input.label('down') + ' + PULAR: DESCER PLATAFORMA', '#e9effb'], ['ENTER: PAUSA   M: SOM   F: TELA CHEIA', '#e9effb'], ['', ''],
-      ['CACHORRO-QUENTE: +1 CORAÇÃO', '#ffb0a0'], ['COCA-COLA: PODER DE ARREMESSO', '#ffd0a0'], ['GARRAS: MODO KINHURINE!', '#ffe384'], ['CRACHÁ: VIDA EXTRA', '#a0ffa0'], ['', ''],
+      ['CACHORRO-QUENTE: +1 CORAÇÃO', '#ffb0a0'], ['COCA-COLA: PODER DE ARREMESSO', '#ffd0a0'], ['GARRAS: MODO KINHURINE!', '#ffe384'], ['CRACHÁ: VIDA EXTRA', '#a0ffa0'], ['BATER O PONTO: +1 CORAÇÃO UMA VEZ.', '#a0ffa0'],
       ['O JOGO SALVA SOZINHO NO NAVEGADOR.', '#a2c4ff'], ['NA PAUSA DÁ PARA BAIXAR O SAVE', '#a2c4ff'], ['E CARREGAR EM OUTRO LUGAR.', '#a2c4ff'],
     ];
     L.forEach(([t, c], i) => { if (t) Font.draw(t.replace('↑', '▲'), W / 2, 28 + i * 10, c, { align: 'center' }); });
@@ -6535,6 +6574,9 @@ const App = {
     if (Wd.bannerT > 0 && (Comfort.reducedFlash || Wd.bannerT > 20 || Wd.bannerT % 4 < 2)) Font.draw(Wd.banner, W / 2, 38, '#ffe384', { align: 'center', outline: true });
     if (Wd.bossFight && Wd.boss && Wd.boss.alive && Wd.boss.state !== 'dead') {
       const b = Wd.boss;
+      const hint = b.state === 'recover' ? '▼: BARRIGADA 6; PISÃO 4 DE DANO.' : b.state === 'jump' && b.t < bossWarningFrames('jump') ? '!: SALTO. ' + Input.label('propel', Input.device, true) + ' PARA ESQUIVAR.' : b.state === 'spit' && b.t < bossWarningFrames('spit') ? '!: DISPARO. SAIA DA MIRA AMARELA.' : b.state === 'summon' && b.t < bossWarningFrames('summon') ? '!: REFORÇOS. PREPARE O SALTO.' : 'PULE AS ONDAS; ESPERE O SINAL ▼.';
+      ctx.fillStyle = 'rgba(0,21,59,0.85)'; ctx.fillRect(4, 47, 248, 12);
+      Font.draw(hint, W / 2, 50, '#e9effb', { align: 'center', outline: true });
       Font.draw('MEGA BUG', W / 2, 202, '#a0ff80', { align: 'center', outline: true });
       ctx.fillStyle = '#20141c'; ctx.fillRect(W / 2 - 51, 212, 102, 6);
       ctx.fillStyle = '#3a1020'; ctx.fillRect(W / 2 - 50, 213, 100, 4);
